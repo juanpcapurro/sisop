@@ -1,0 +1,76 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+0	Session.vim	/^normal! 0$/;"	m
+06|	Session.vim	/^normal! 06|$/;"	m
+07|	Session.vim	/^normal! 07|$/;"	m
+ASFLAGS	makefile	/^ASFLAGS = $(CFLAGS)$/;"	m
+ASMS	makefile	/^ASMS     := $(wildcard *.S)$/;"	m
+CFLAGS	makefile	/^CFLAGS := -m32 -g -std=c99 -Wall -Wextra -Wpedantic$/;"	m
+Cambiar la directiva .ascii por .asciz y mostrar c   mo habr   a que reescribir la l   nea code  push  $len	resolucion.tex	/^        \\code{.set} hace que el símbolo \\code{len} tenga el valor de la expresión después de la coma, y \\code{.} guarda la dirección de la instrucción actual, entonces \\code{. - msg} guarda la diferencia entre la dirección actual y el tag \\code{msg}, lo que resulta ser el largo del string.$/;"	b
+Creaci   n de stacks en el kernel	resolucion.tex	/^\\subsection{Ej: x86-dwarf}$/;"	s
+Ej  kern1-cmdline	resolucion.tex	/^\\subsection{Ej: kern1-stack}$/;"	u
+Ej  kern1-meminfo	resolucion.tex	/^\\subsection{Ej: kern1-cmdline}$/;"	u
+Ej  kern1-stack	resolucion.tex	/^\\section{Creación de stacks en el kernel}$/;"	u
+Ej  x86-argv	resolucion.tex	/^\\subsection{Ej: x86-errno}$/;"	u
+Ej  x86-call	resolucion.tex	/^        \\code{push \\$len -1}$/;"	u
+Ej  x86-dwarf	resolucion.tex	/^\\subsection{Ej: x86-frames}$/;"	u
+Ej  x86-ebp	resolucion.tex	/^\\section{Stack frames y calling conventions}$/;"	u
+Ej  x86-errno	resolucion.tex	/^\\subsection{Ej: x86-ebp}$/;"	u
+Ej  x86-frames	resolucion.tex	/^\\subsection{Ej: x86-argv}$/;"	u
+Ej  x86-libc	resolucion.tex	/^    \\subsubsection{Mostrar en una sesión de GDB cómo imprimir las mismas instrucciones usando la directiva \\code{x \\$pc }y el modificador adecuado. Después, usar el comando \\code{stepi} para avanzar la ejecución hasta la llamada a \\code{write}. En ese momento, mostrar los primeros cuatro valores de la pila justo antes e inmediatamente después de ejecutar la instrucción \\code{call}, y explicar cada uno de ellos.}$/;"	u
+Ej  x86-ret	resolucion.tex	/^\\subsection{Ej: x86-libc}$/;"	u
+Ej  x86-watch	resolucion.tex	/^\\subsection{Ej: x86-ret}$/;"	u
+Ej  x86-write	resolucion.tex	/^\\section{Llamadas a biblioteca y llamadas a sistema}$/;"	u
+Explicar el efecto del operador . en la l   nea code  .set len  . - msg.	resolucion.tex	/^        Eso es posible debido a que \\code{sizeof} es un operador y no una función.$/;"	b
+Funcionar   a el programa si se declarase msg como const char  msg  ...     Por qu   	resolucion.tex	/^        Es necesario restar \\code{1} al resultado de \\code{sizeof} porque definir de esa forma a \\code{msg} le agrega un byte \\code{'\\0'} al final del string.$/;"	b
+Llamadas a biblioteca y llamadas a sistema	resolucion.tex	/^\\end{titlepage}$/;"	s
+Mostrar en una sesi   n de GDB c   mo imprimir las mismas instrucciones usando la directiva code  x  $pc	resolucion.tex	/^\\subsection{Ej: x86-call}$/;"	b
+OBJS_ASM	makefile	/^OBJS_ASM := $(patsubst %.S,%.o,$(wildcard *.S))$/;"	m
+OBJS_C	makefile	/^OBJS_C 	 := $(patsubst %.c,%.o,$(wildcard *.c))$/;"	m
+Por qu   raz   n se puede escribir sizeof msg en lugar de sizeof  msg  	resolucion.tex	/^        El programa no funciona correctamente ya que el operador \\code{sizeof} devuelve 4, el tamaño del puntero \\code{msg}, y no el tamaño de memoria alojada al contenido al que apunta.$/;"	b
+Por qu   se le resta 1 al resultado de sizeof 	resolucion.tex	/^\\subsection{Ej: x86-write}$/;"	b
+SRCS	makefile	/^SRCS     := $(wildcard *.c)$/;"	m
+SessionLoad	Session.vim	/^let SessionLoad = 1$/;"	v
+Stack frames y calling conventions	resolucion.tex	/^\\subsection{Ej: x86-watch}$/;"	s
+_start	sys_argv.S	/^_start:$/;"	l
+_start	sys_strlen.S	/^_start:$/;"	l
+backtrace	backtrace.c	/^void backtrace(){$/;"	f
+bar	backtrace.c	/^void bar(int paramAB){$/;"	f
+foo	backtrace.c	/^void foo(int paramA,int paramB){$/;"	f
+lookup_frames	backtrace.c	/^void lookup_frames(uint32_t* frame_addr, uint32_t deepness){$/;"	f
+loop	libc_argv2.S	/^loop:$/;"	l
+main	backtrace.c	/^int main(){$/;"	f
+main	errno.c	/^int main(void) {$/;"	f
+main	hello.c	/^int main(void) {$/;"	f
+main	int80_hi.S	/^main:$/;"	l
+main	libc_argv.S	/^main:$/;"	l
+main	libc_argv2.S	/^main:$/;"	l
+main	libc_hello.S	/^main:$/;"	l
+main	libc_puts.S	/^main:$/;"	l
+main	perror.c	/^int main(void) {$/;"	f
+main	write2.S	/^main:$/;"	l
+msg	errno.c	/^const char msg[] = "Escribiendo a nadie\\n";$/;"	v
+msg	hello.c	/^const char *msg = "Hello, world!\\n";$/;"	v
+msg	int80_hi.S	/^msg:$/;"	l
+msg	libc_hello.S	/^msg:$/;"	l
+msg	libc_puts.S	/^msg:$/;"	l
+msg	perror.c	/^const char msg[] = "Escribiendo a nadie\\n";$/;"	v
+msg	sys_strlen.S	/^msg:$/;"	l
+my_exit	exit.c	/^void my_exit(int status) {$/;"	f
+okay	write2.S	/^okay:$/;"	l
+ret_addr	libc_hello.S	/^ret_addr:$/;"	l
+s:l	Session.vim	/^let s:l = 18 - ((17 * winheight(0) + 20) \/ 41)$/;"	v
+s:l	Session.vim	/^let s:l = 312 - ((20 * winheight(0) + 10) \/ 21)$/;"	v
+s:l	Session.vim	/^let s:l = 5 - ((4 * winheight(0) + 31) \/ 63)$/;"	v
+s:l	Session.vim	/^let s:l = 603 - ((602 * winheight(0) + 20) \/ 41)$/;"	v
+s:so_save	Session.vim	/^let s:so_save = &so | let s:siso_save = &siso | set so=0 siso=0$/;"	v
+s:sx	Session.vim	/^let s:sx = expand("<sfile>:p:r")."x.vim"$/;"	v
+s:wipebuf	Session.vim	/^  let s:wipebuf = bufnr('%')$/;"	v
+write	perror.c	8;"	d	file:
+write2	write2.S	/^write2:$/;"	l
+zo	Session.vim	/^normal! zo$/;"	m
+zt	Session.vim	/^normal! zt$/;"	m

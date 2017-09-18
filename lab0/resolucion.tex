@@ -1,0 +1,111 @@
+\documentclass[a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[width=1.00cm, height=0.00cm, left=2.00cm, right=2.00cm, top=2.00cm, bottom=2.00cm]{geometry}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{multirow}
+\usepackage{url}
+\usepackage{tabularx}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{authblk}
+\usepackage[T1]{fontenc}
+\usepackage{ascii}
+\usepackage{textcomp}
+\usepackage{eurosym}
+\usepackage{subcaption}
+\usepackage[absolute]{textpos}
+
+\usepackage{tikz,amsmath, amssymb,bm,color}
+\usetikzlibrary{decorations.text}
+\usetikzlibrary{decorations.pathreplacing}
+\usetikzlibrary{snakes,matrix,positioning,backgrounds,fit,shapes.geometric}
+\usetikzlibrary{patterns}
+\usetikzlibrary{arrows}
+
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot[CE,CO]{Juan Pablo Capurro}
+\fancyfoot[LE,RO]{\thepage}
+
+\title{Lab kern0}
+\author {Juan Pablo Capurro}
+
+\lstset{showstringspaces=false}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% hacer que lstlisting no se corte
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage{float}
+
+\floatstyle{plain} % optionally change the style of the new float
+\newfloat{Code}{H}{myc}
+\lstloadlanguages{make, C}
+\lstset{basicstyle=\ttfamily\footnotesize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%% para poder hacer \code{}, obviamente copypasteado de SO%%%%%%%%
+\definecolor{light-gray}{gray}{0.95}
+\newcommand{\code}[1]{\colorbox{light-gray}{\texttt{#1}}}
+
+\begin{document}
+\maketitle
+
+\section{kern0-hlt}
+\subsection{comparacion entre loop infinito e instruccion halt}
+\begin{tabular}{|l|c|c|}
+    \hline \textbf{Version}           & \textbf{Usage} & \textbf{Events/S}\\
+    \hline Loop infinito              & 978ms/S        & 229\\
+    \hline Instruccion \code{hlt} & 2ms/S          & 60 \\
+    \hline
+\end{tabular}
+\bigskip
+\begin{lstlisting}[language=C, gobble=4, tabsize=4]
+	#include <stdio.h>
+	int main(void){
+        int i=0;
+        printf("Hello, World!");
+        for (i=0; i<1; i++)
+            printf("\n");
+        return 0;
+	}
+\end{lstlisting}
+\section{kern0-gdb}
+\subsection{¿Por qué hace falta el modificador \code{x} al imprimir \code{\%eax}, y no así \code{\%esp}?}
+\begin{lstlisting}[gobble=4,tabsize=4]
+    (qemu) info registers
+    EAX=2badb002 EBX=00009500 ECX=00100000 EDX=00000511
+    ESI=00000000 EDI=00102000 EBP=00000000 ESP=00006f0c
+    EIP=00100000 EFL=00000006 [-----P-] CPL=0 II=0 A20=1 SMM=0 HLT=0
+    ES =0010 00000000 ffffffff 00cf9300 DPL=0 DS   [-WA]
+    CS =0008 00000000 ffffffff 00cf9a00 DPL=0 CS32 [-R-]
+    SS =0010 00000000 ffffffff 00cf9300 DPL=0 DS   [-WA]
+    DS =0010 00000000 ffffffff 00cf9300 DPL=0 DS   [-WA]
+    FS =0010 00000000 ffffffff 00cf9300 DPL=0 DS   [-WA]
+    GS =0010 00000000 ffffffff 00cf9300 DPL=0 DS   [-WA]
+    LDT=0000 00000000 0000ffff 00008200 DPL=0 LDT
+    TR =0000 00000000 0000ffff 00008b00 DPL=0 TSS32-busy
+    GDT=     000caa68 00000027
+    IDT=     00000000 000003ff
+    CR0=00000011 CR2=00000000 CR3=00000000 CR4=00000000
+    DR0=00000000 DR1=00000000 DR2=00000000 DR3=00000000
+    DR6=ffff0ff0 DR7=00000400
+    EFER=0000000000000000
+    FCW=037f FSW=0000 [ST=0] FTW=00 MXCSR=00001f80
+    FPR0=0000000000000000 0000 FPR1=0000000000000000 0000
+    FPR2=0000000000000000 0000 FPR3=0000000000000000 0000
+    FPR4=0000000000000000 0000 FPR5=0000000000000000 0000
+    FPR6=0000000000000000 0000 FPR7=0000000000000000 0000
+    XMM00=00000000000000000000000000000000 XMM01=00000000000000000000000000000000
+    XMM02=00000000000000000000000000000000 XMM03=00000000000000000000000000000000
+    XMM04=00000000000000000000000000000000 XMM05=00000000000000000000000000000000
+    XMM06=00000000000000000000000000000000 XMM07=00000000000000000000000000000000
+\end{lstlisting}
+
+\end{document}
+
