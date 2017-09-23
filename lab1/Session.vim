@@ -8,11 +8,15 @@ if expand('%') == '' && !&modified && line('$') <= 1 && getline(1) == ''
 endif
 set shortmess=aoO
 badd +1 term://.//19560:/usr/bin/zsh
-badd +1 makefile
-badd +0 kern1.c
+badd +2 makefile
+badd +3 kern1.c
+badd +798 resolucion.md
+badd +1 write.c
+badd +19 decls.h
+badd +110 ~/.config/nvim/init.vim
 argglobal
 silent! argdel *
-edit kern1.c
+edit decls.h
 set splitbelow splitright
 wincmd _ | wincmd |
 split
@@ -40,15 +44,15 @@ setlocal fdl=0
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-let s:l = 1 - ((0 * winheight(0) + 20) / 41)
+let s:l = 6 - ((5 * winheight(0) + 20) / 41)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-1
-normal! 0
+6
+normal! 020|
 wincmd w
 argglobal
-edit makefile
+edit kern1.c
 setlocal fdm=syntax
 setlocal fde=0
 setlocal fmr={{{,}}}
@@ -57,11 +61,17 @@ setlocal fdl=0
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-let s:l = 1 - ((0 * winheight(0) + 20) / 41)
+7
+normal! zo
+10
+normal! zo
+13
+normal! zo
+let s:l = 23 - ((22 * winheight(0) + 20) / 41)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-1
+23
 normal! 0
 wincmd w
 argglobal
@@ -74,13 +84,14 @@ setlocal fdl=0
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-let s:l = 3 - ((1 * winheight(0) + 10) / 21)
+let s:l = 400 - ((20 * winheight(0) + 10) / 21)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-3
+400
 normal! 0
 wincmd w
+2wincmd w
 exe '1resize ' . ((&lines * 41 + 33) / 66)
 exe 'vert 1resize ' . ((&columns * 82 + 82) / 164)
 exe '2resize ' . ((&lines * 41 + 33) / 66)

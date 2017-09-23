@@ -763,6 +763,8 @@ $4 = (<data variable, no debug info> *) 0x101000
 ```
 
 ## kern1-cmdline
+
+
 #### Mostrar cómo implementar la misma concatenación, de manera correcta, usando `strncat(3)`
 ```C
 #include "decls.h"
@@ -798,4 +800,208 @@ Al pasárselo a una función, sin embargo, muestra `4` u `8` dependiendo de la a
 El estandar de C especifica que al pasar un vector a una función, este se accede como un puntero, descartando toda información vinculada al poco tratamiento especial que reciben los vectores en C.
 
 ## kern1-meminfo 
+
+## kern1.c
+```C
+#include "decls.h"
+#include "multiboot.h"
+#include "./lib/string.h"
+#define BUF_LEN 256
+#define SHORT_BUF_LEN 16
+
+void kmain(const multiboot_info_t *mbi) {
+    //print bootloader parameters
+    console_out("kern1 loading.............");
+    if (!mbi){
+       console_out("couldnt find multiboot info.");
+    }else{
+        if( mbi->flags & MULTIBOOT_INFO_CMDLINE ){
+            char* cmdline = (char*)mbi->cmdline;
+            char buf[BUF_LEN]= "cmdline: ";
+            strlcat(buf, cmdline,BUF_LEN);
+            console_out(buf);
+        }else{
+            console_out("couldnt find bootloader parameters");
+        }
+    }
+    //print aviable memory
+    uint32_t low_mem  = mbi->mem_lower;//in kb
+    uint32_t high_mem = (mbi->mem_upper)>>10;//in kb, converted to mb
+    char buf[BUF_LEN] = "low memory: ";
+    char num_as_str[SHORT_BUF_LEN];
+    fmt_int(low_mem, num_as_str, SHORT_BUF_LEN);
+    strlcat(buf,num_as_str,BUF_LEN);
+    strlcat(buf," KiB",BUF_LEN);
+    console_out(buf);
+
+    strlcpy(buf,"high memory: ", BUF_LEN);
+    fmt_int(high_mem, num_as_str, SHORT_BUF_LEN);
+    strlcat(buf,num_as_str,BUF_LEN);
+    strlcat(buf," MiB",BUF_LEN);
+    console_out(buf);
+}
+```
+## boot.S
+```asm
+#include "multiboot.h"
+#define KSTACK_SIZE 8192
+
+.align 4
+multiboot:
+    .long MULTIBOOT_HEADER_MAGIC
+    .long 0
+    .long -(MULTIBOOT_HEADER_MAGIC)
+
+.globl _start
+_start:
+    // Paso 1: Configurar el stack antes de llamar a kmain.
+    movl $0, %ebp
+    movl $kstack, %esp
+    push %ebp
+    // Paso 2: pasar la información multiboot a kmain.
+    cmp $MULTIBOOT_BOOTLOADER_MAGIC,%eax
+    cmovne zero,%ebx
+    push %ebx
+    call kmain
+halt:
+    hlt
+    jmp halt
+
+.data
+.p2align 12
+kstack:
+    .space KSTACK_SIZE
+zero: 
+    .long 0
+```
+
+## decls.h
+
+```C
+#ifndef KERN1_DECL_H
+#define KERN1_DECL_H
+
+#include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
+
+#define BLACK_ON_WHITE    0x70
+#define GREEN_ON_BLACK    0x02
+#define GREEN_ON_GREEN    0x2a
+#define DOS_BSOD_COLORS   0x1f
+#define BLACK_ON_YELLOW   0xe0
+
+#define LARGO_LINEA       80
+#define CANT_LINEAS       25
+
+// write.c (función de kern0-vga copiada no-static).
+void vga_write(const char *s, int8_t linea, uint8_t color);
+void console_out(const char *string);
+
+bool fmt_int(uint32_t value, char *str, size_t bufsize);
+
+#endif
+```
+## write.c
+
+```C
+#include<stdbool.h>
+#include<stdint.h>
+#include"decls.h"
+
+volatile void* const VGABUF = (volatile char*) 0xb8000;
+uint64_t power(uint32_t base, uint32_t exponent);
+
+void vga_write(const char *string, int8_t linea, uint8_t color){
+    if(linea<0)
+        linea = CANT_LINEAS-linea;
+
+    volatile char *buf = ( (char*)VGABUF )+ 2*linea*LARGO_LINEA;//multiplico por dos para contemplar el byte de color
+    bool reached_EOS   = false;
+
+    for (uint8_t i = 0; i<LARGO_LINEA;i++){
+        if(!string[i])
+            reached_EOS=true;
+
+        uint8_t color_index     = 2*i+1;
+        uint8_t character_index = 2*i;
+
+        buf[color_index]     = (char) color;
+        buf[character_index] = reached_EOS ? 0 : string[i];
+    }
+}
+void console_out(const char* string){
+    static int current_line = 0;
+    vga_write(string, current_line, GREEN_ON_BLACK);
+    current_line++;
+    if(current_line >= CANT_LINEAS)
+        current_line=0;
+}
+bool fmt_int(uint32_t value, char *str, size_t bufsize){
+    const int RADIX = 10;
+    uint32_t partial =value;
+    if(10 &&value >= power(RADIX, bufsize)){
+        return false;
+    }
+    int length =0;
+    do{
+        partial /= RADIX;
+        length++;
+    }while (partial >0);
+    partial = value;
+
+    for(int i=length-1 ; i>=0 ; i--){
+        str[i]='0'+ partial % RADIX;
+        partial /= RADIX;
+    }
+    str[length]='\0';
+    return true;
+}
+uint64_t power(uint32_t base, uint32_t exponent){
+    uint64_t result = 1;
+    for (uint32_t i =0; i< exponent; i++)
+        result *= base;
+    return result;
+}
+```
+
+## makefile
+
+```makefile
+CFLAGS        := -m32 -nostartfiles -ffreestanding -g -std=c99 -Wall -Wextra -Wpedantic -std=c99 -O0 -fno-omit-frame-pointer -fno-pic -nopie
+CPPFLAGS      := -nostdlibinc -idirafter lib
+ASFLAGS       := $(CFLAGS)
+CC            := clang
+LIBGCC := $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
+
+KERN_C_SRCS    := write.c kern1.c ./lib/*.c
+KERN_ASM_SRCS  := boot.S
+KERN_OBJS      := $(patsubst %S,%o,$(KERN_ASM_SRCS))
+KERN_OBJS      += $(patsubst %c,%o,$(KERN_C_SRCS))
+KERN           := kern1
+PROG           := kern1
+QEMU           := qemu-system-i386 -serial mon:stdio
+QEMU_EXTRA     := -append "'param1=hola param2=adios'"
+BOOT           := -kernel $(KERN)
+
+$(KERN): boot.o $(KERN_OBJS)
+	ld -m elf_i386 -Ttext 0x100000 $^ $(LIBGCC) -o $@
+	# Verificar imagen Multiboot v1.
+	grub-file --is-x86-multiboot $@
+	objdump -d $@ >$@.asm
+
+clean:
+	rm -f $(PROG) *.o 
+
+qemu: $(KERN)
+	$(QEMU) $(BOOT) $(QEMU_EXTRA)
+
+qemu-gdb: $(KERN)
+	$(QEMU) -kernel $(KERN) -S -gdb tcp:127.0.0.1:7508 $(BOOT)
+
+gdb:
+	gdb -q -s kern1 -n -ex 'target remote 127.0.0.1:7508'
+
+.PHONY: clean
+```
 

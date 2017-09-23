@@ -5,22 +5,21 @@
 !_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
 !_TAG_PROGRAM_VERSION	5.9~svn20110310	//
 0	lab0/Session.vim	/^normal! 0$/;"	m
-011|	lab1/Session.vim	/^normal! 011|$/;"	m
+0	lab1/Session.vim	/^normal! 0$/;"	m
 019|	lab0/Session.vim	/^normal! 019|$/;"	m
-029|	lab1/Session.vim	/^normal! 029|$/;"	m
-040|	lab1/Session.vim	/^normal! 040|$/;"	m
+020|	lab1/Session.vim	/^normal! 020|$/;"	m
 07|	lab0/Session.vim	/^normal! 07|$/;"	m
 ASFLAGS	lab0/makefile	/^ASFLAGS := -m32$/;"	m
 ASFLAGS	lab1/makefile	/^ASFLAGS       := $(CFLAGS)$/;"	m
 ASSERT	lab1/lib/string.c	33;"	d	file:
-BLACK_ON_WHITE	lab1/kern1.c	3;"	d	file:
+BLACK_ON_WHITE	lab1/decls.h	8;"	d
 BLACK_ON_YELLOW	lab0/kern0.c	5;"	d	file:
-BLACK_ON_YELLOW	lab1/write.c	6;"	d	file:
+BLACK_ON_YELLOW	lab1/decls.h	12;"	d
 BOOT	lab0/makefile	/^BOOT    := -kernel $(KERN)$/;"	m
 BOOT	lab1/makefile	/^BOOT           := -kernel $(KERN)$/;"	m
 BUF_LEN	lab1/kern1.c	4;"	d	file:
 CANT_LINEAS	lab0/kern0.c	2;"	d	file:
-CANT_LINEAS	lab1/write.c	3;"	d	file:
+CANT_LINEAS	lab1/decls.h	15;"	d
 CC	lab0/makefile	/^CC      := clang$/;"	m
 CC	lab1/makefile	/^CC            := clang$/;"	m
 CFLAGS	lab0/makefile	/^CFLAGS  := -m32 -O1 -ffreestanding -g -Wconversion -std=c99 -Wall -Wextra -Wpedantic $/;"	m
@@ -30,7 +29,7 @@ CRC	lab0/boot.S	/^#define CRC ( -(MAGIC + FLAGS) )$/;"	d
 Cambiar la directiva .ascii por .asciz y mostrar c   mo habr   a que reescribir la l   nea code  push  $len	lab1/resolucion.tex	/^        \\code{.set} hace que el símbolo \\code{len} tenga el valor de la expresión después de la coma, y \\code{.} guarda la dirección de la instrucción actual, entonces \\code{. - msg} guarda la diferencia entre la dirección actual y el tag \\code{msg}, lo que resulta ser el largo del string.$/;"	b
 Creaci   n de stacks en el kernel	lab1/resolucion.tex	/^\\subsection{Ej: x86-dwarf}$/;"	s
 DOS_BSOD_COLORS	lab0/kern0.c	4;"	d	file:
-DOS_BSOD_COLORS	lab1/write.c	5;"	d	file:
+DOS_BSOD_COLORS	lab1/decls.h	11;"	d
 Disassembly	lab0/kern0.asm	/^Disassembly of section .text:$/;"	l
 Disassembly	lab0/noinline.asm	/^Disassembly of section .text:$/;"	l
 Disassembly	lab1/kern1.asm	/^Disassembly of section .text:$/;"	l
@@ -50,8 +49,9 @@ Ej  x86-write	lab1/resolucion.tex	/^\\section{Llamadas a biblioteca y llamadas a
 Explicar el efecto del operador . en la l   nea code  .set len  . - msg.	lab1/resolucion.tex	/^        Eso es posible debido a que \\code{sizeof} es un operador y no una función.$/;"	b
 FLAGS	lab0/boot.S	/^#define FLAGS 0$/;"	d
 Funcionar   a el programa si se declarase msg como const char  msg  ...     Por qu   	lab1/resolucion.tex	/^        Es necesario restar \\code{1} al resultado de \\code{sizeof} porque definir de esa forma a \\code{msg} le agrega un byte \\code{'\\0'} al final del string.$/;"	b
+GREEN_ON_BLACK	lab1/decls.h	9;"	d
 GREEN_ON_GREEN	lab0/kern0.c	3;"	d	file:
-GREEN_ON_GREEN	lab1/write.c	4;"	d	file:
+GREEN_ON_GREEN	lab1/decls.h	10;"	d
 KERN	lab0/makefile	/^KERN    := kern0$/;"	m
 KERN	lab1/makefile	/^KERN           := kern1$/;"	m
 KERN1_DECL_H	lab1/decls.h	2;"	d
@@ -60,7 +60,8 @@ KERN_C_SRCS	lab1/makefile	/^KERN_C_SRCS    := write.c kern1.c .\/lib\/*.c$/;"	m
 KERN_OBJS	lab1/makefile	/^KERN_OBJS      := $(patsubst %S,%o,$(KERN_ASM_SRCS))$/;"	m
 KSTACK_SIZE	lab1/boot.S	/^#define KSTACK_SIZE 8192$/;"	d
 LARGO_LINEA	lab0/kern0.c	1;"	d	file:
-LARGO_LINEA	lab1/write.c	2;"	d	file:
+LARGO_LINEA	lab1/decls.h	14;"	d
+LIBGCC	lab1/makefile	/^LIBGCC := $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)$/;"	m
 Llamadas a biblioteca y llamadas a sistema	lab1/resolucion.tex	/^\\end{titlepage}$/;"	s
 MAGIC	lab0/boot.S	/^#define MAGIC 0x1BADB002$/;"	d
 MULTIBOOT_AOUT_KLUDGE	lab1/multiboot.h	61;"	d
@@ -98,6 +99,7 @@ Por qu   se le resta 1 al resultado de sizeof 	lab1/resolucion.tex	/^\\subsectio
 QEMU	lab0/makefile	/^QEMU    := qemu-system-i386 -serial mon:stdio$/;"	m
 QEMU	lab1/makefile	/^QEMU           := qemu-system-i386 -serial mon:stdio$/;"	m
 QEMU_EXTRA	lab1/makefile	/^QEMU_EXTRA     := -append "'param1=hola param2=adios'"$/;"	m
+SHORT_BUF_LEN	lab1/kern1.c	5;"	d	file:
 SOURCES	lab0/makefile	/^SOURCES := $(wildcard *.c)$/;"	m
 SessionLoad	lab0/Session.vim	/^let SessionLoad = 1$/;"	v
 SessionLoad	lab1/Session.vim	/^let SessionLoad = 1$/;"	v
@@ -122,6 +124,7 @@ cmdline	lab1/multiboot.h	/^    uint32_t cmdline;$/;"	m	struct:multiboot_mod_list
 comienzo	lab0/kern0.c	/^void comienzo(void){$/;"	f
 comparacion entre loop infinito e instruccion halt	lab0/resolucion.tex	/^\\section{kern0-hlt}$/;"	u
 config_table	lab1/multiboot.h	/^    uint32_t config_table;$/;"	m	struct:multiboot_info
+console_out	lab1/write.c	/^void console_out(const char* string){$/;"	f
 depth	lab1/multiboot.h	/^    uint32_t depth;$/;"	m	struct:multiboot_header
 drives_addr	lab1/multiboot.h	/^    uint32_t drives_addr;$/;"	m	struct:multiboot_info
 drives_length	lab1/multiboot.h	/^    uint32_t drives_length;$/;"	m	struct:multiboot_info
@@ -129,6 +132,7 @@ elf_sec	lab1/multiboot.h	/^        multiboot_elf_section_header_table_t elf_sec;
 entry_addr	lab1/multiboot.h	/^    uint32_t entry_addr;$/;"	m	struct:multiboot_header
 flags	lab1/multiboot.h	/^    uint32_t flags;$/;"	m	struct:multiboot_header
 flags	lab1/multiboot.h	/^    uint32_t flags;$/;"	m	struct:multiboot_info
+fmt_int	lab1/write.c	/^bool fmt_int(uint32_t value, char *str, size_t bufsize){$/;"	f
 halt	lab1/boot.S	/^halt:$/;"	l
 header_addr	lab1/multiboot.h	/^    uint32_t header_addr;$/;"	m	struct:multiboot_header
 height	lab1/multiboot.h	/^    uint32_t height;$/;"	m	struct:multiboot_header
@@ -194,6 +198,7 @@ my_write	lab1/backtrace.c	/^void my_write(int fd, const void *msg, size_t count)
 num	lab1/multiboot.h	/^    uint32_t num;$/;"	m	struct:multiboot_elf_section_header_table
 okay	lab1/write2.S	/^okay:$/;"	l
 pad	lab1/multiboot.h	/^    uint32_t pad;$/;"	m	struct:multiboot_mod_list
+power	lab1/write.c	/^uint64_t power(uint32_t base, uint32_t exponent){$/;"	f
 recurse	lab1/backtrace.c	/^void recurse(int level) {$/;"	f
 reserved	lab1/multiboot.h	/^    uint32_t reserved;$/;"	m	struct:multiboot_aout_symbol_table
 ret_addr	lab1/libc_hello.S	/^ret_addr:$/;"	l
@@ -201,9 +206,9 @@ s:l	lab0/Session.vim	/^let s:l = 5 - ((4 * winheight(0) + 26) \/ 53)$/;"	v
 s:l	lab0/Session.vim	/^let s:l = 52 - ((0 * winheight(0) + 26) \/ 52)$/;"	v
 s:l	lab0/Session.vim	/^let s:l = 60 - ((7 * winheight(0) + 26) \/ 52)$/;"	v
 s:l	lab0/Session.vim	/^let s:l = 85 - ((35 * winheight(0) + 26) \/ 52)$/;"	v
-s:l	lab1/Session.vim	/^let s:l = 4 - ((3 * winheight(0) + 22) \/ 44)$/;"	v
-s:l	lab1/Session.vim	/^let s:l = 498 - ((1 * winheight(0) + 7) \/ 14)$/;"	v
-s:l	lab1/Session.vim	/^let s:l = 728 - ((14 * winheight(0) + 22) \/ 44)$/;"	v
+s:l	lab1/Session.vim	/^let s:l = 23 - ((22 * winheight(0) + 20) \/ 41)$/;"	v
+s:l	lab1/Session.vim	/^let s:l = 400 - ((20 * winheight(0) + 10) \/ 21)$/;"	v
+s:l	lab1/Session.vim	/^let s:l = 6 - ((5 * winheight(0) + 20) \/ 41)$/;"	v
 s:so_save	lab0/Session.vim	/^let s:so_save = &so | let s:siso_save = &siso | set so=0 siso=0$/;"	v
 s:so_save	lab1/Session.vim	/^let s:so_save = &so | let s:siso_save = &siso | set so=0 siso=0$/;"	v
 s:sx	lab0/Session.vim	/^let s:sx = expand("<sfile>:p:r")."x.vim"$/;"	v
@@ -241,7 +246,6 @@ vga_write	lab1/write.c	/^void vga_write(const char *string, int8_t linea, uint8_
 width	lab1/multiboot.h	/^    uint32_t width;$/;"	m	struct:multiboot_header
 write	lab1/perror.c	8;"	d	file:
 write2	lab1/write2.S	/^write2:$/;"	l
-zc	lab1/Session.vim	/^normal! zc$/;"	m
 zero	lab1/boot.S	/^zero: $/;"	l
 zo	lab0/Session.vim	/^normal! zo$/;"	m
 zo	lab1/Session.vim	/^normal! zo$/;"	m

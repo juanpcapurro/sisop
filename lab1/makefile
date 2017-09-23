@@ -2,6 +2,7 @@ CFLAGS        := -m32 -nostartfiles -ffreestanding -g -std=c99 -Wall -Wextra -Wp
 CPPFLAGS      := -nostdlibinc -idirafter lib
 ASFLAGS       := $(CFLAGS)
 CC            := clang
+LIBGCC := $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
 
 KERN_C_SRCS    := write.c kern1.c ./lib/*.c
 KERN_ASM_SRCS  := boot.S
@@ -14,7 +15,7 @@ QEMU_EXTRA     := -append "'param1=hola param2=adios'"
 BOOT           := -kernel $(KERN)
 
 $(KERN): boot.o $(KERN_OBJS)
-	ld -m elf_i386 -Ttext 0x100000 $^ -o $@
+	ld -m elf_i386 -Ttext 0x100000 $^ $(LIBGCC) -o $@
 	# Verificar imagen Multiboot v1.
 	grub-file --is-x86-multiboot $@
 	objdump -d $@ >$@.asm

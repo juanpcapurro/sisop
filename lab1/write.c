@@ -1,14 +1,9 @@
-
-#define LARGO_LINEA 80
-#define CANT_LINEAS 25
-#define GREEN_ON_GREEN 0x2a
-#define DOS_BSOD_COLORS 0x1f
-#define BLACK_ON_YELLOW 0xe0
-
 #include<stdbool.h>
 #include<stdint.h>
+#include"decls.h"
 
 volatile void* const VGABUF = (volatile char*) 0xb8000;
+uint64_t power(uint32_t base, uint32_t exponent);
 
 void vga_write(const char *string, int8_t linea, uint8_t color){
     if(linea<0)
@@ -27,4 +22,37 @@ void vga_write(const char *string, int8_t linea, uint8_t color){
         buf[color_index]     = (char) color;
         buf[character_index] = reached_EOS ? 0 : string[i];
     }
+}
+void console_out(const char* string){
+    static int current_line = 0;
+    vga_write(string, current_line, GREEN_ON_BLACK);
+    current_line++;
+    if(current_line >= CANT_LINEAS)
+        current_line=0;
+}
+bool fmt_int(uint32_t value, char *str, size_t bufsize){
+    const int RADIX = 10;
+    uint32_t partial =value;//qemu crashes if i reuse it
+    if(10 &&value >= power(RADIX, bufsize)){
+        return false;
+    }
+    int length =0;
+    do{
+        partial /= RADIX;
+        length++;
+    }while (partial >0);
+    partial = value;
+
+    for(int i=length-1 ; i>=0 ; i--){
+        str[i]='0'+ partial % RADIX;
+        partial /= RADIX;
+    }
+    str[length]='\0';
+    return true;
+}
+uint64_t power(uint32_t base, uint32_t exponent){
+    uint64_t result = 1;
+    for (uint32_t i =0; i< exponent; i++)
+        result *= base;
+    return result;
 }
