@@ -21,20 +21,20 @@ Las tres instrucciones `push` ponen los argumentos con los que llamar a `write` 
 #### Mostrar un `hex dump` de la salida del programa en assembler. 
 
 ```
-    $ ./libc_hello | od -t x1 -c
-    0000000  48  65  6c  6c  6f  2c  20  77  6f  72  6c  64  21  0a
-              H   e   l   l   o   ,       w   o   r   l   d   !  \n
-    0000016
+$ ./libc_hello | od -t x1 -c
+0000000  48  65  6c  6c  6f  2c  20  77  6f  72  6c  64  21  0a
+          H   e   l   l   o   ,       w   o   r   l   d   !  \n
+0000016
 ```
 
 #### Cambiar la directiva `.ascii` por `.asciz` y mostrar el hex dump resultante con el nuevo código. ¿Qué está ocurriendo?
 
 El string ahora es terminado en `'\0'`, por lo que se imprime este caracter extra.
 ```
-    $ ./libc_hello | od -t x1 -c
-    0000000  48  65  6c  6c  6f  2c  20  77  6f  72  6c  64  21  0a  00
-              H   e   l   l   o   ,       w   o   r   l   d   !  \n  \0
-    0000017
+$ ./libc_hello | od -t x1 -c
+0000000  48  65  6c  6c  6f  2c  20  77  6f  72  6c  64  21  0a  00
+          H   e   l   l   o   ,       w   o   r   l   d   !  \n  \0
+0000017
 ```
 
 #### Mostrar cómo habría que reescribir la línea `push $len` para que el código siga escribiendo el número correcto de bytes. (Nota: no cambiar la definición de len.)
@@ -46,52 +46,52 @@ El string ahora es terminado en `'\0'`, por lo que se imprime este caracter extr
 ##### Mostrar en una sesión de GDB cómo imprimir las mismas instrucciones usando la directiva x $pc y el modificador adecuado. Después, usar el comando stepi (step instruction) para avanzar la ejecución hasta la llamada a write. En ese momento, mostrar los primeros cuatro valores de la pila justo antes e inmediatamente después de ejecutar la instrucción call, y explicar cada uno de ellos.
 
 ```
-    Reading symbols from ./libc_hello...(no debugging symbols found)...done.
-    (gdb) b main
-    Breakpoint 1 at 0x804846b
-    (gdb) r
-    Starting program: /home/vasectomio/sisop/lab1/libc_hello
+Reading symbols from ./libc_hello...(no debugging symbols found)...done.
+(gdb) b main
+Breakpoint 1 at 0x804846b
+(gdb) r
+Starting program: /home/vasectomio/sisop/lab1/libc_hello
 
-    Breakpoint 1, 0x0804846b in main ()
-    (gdb) x/12i $pc
-    => 0x804846b <main>:    push   $0x804a024
-       0x8048470 <main+5>:  call   0x8048330 <strlen@plt>
-       0x8048475 <main+10>: push   %eax
-       0x8048476 <main+11>: push   $0x804a024
-       0x804847b <main+16>: push   $0x1
-       0x804847d <main+18>: call   0x8048350 <write@plt>
-       0x8048482 <main+23>: push   $0x7
-       0x8048484 <main+25>: call   0x8048320 <_exit@plt>
-       0x8048489 <main+30>: xchg   %ax,%ax
-       0x804848b <main+32>: xchg   %ax,%ax
-       0x804848d <main+34>: xchg   %ax,%ax
-       0x804848f <main+36>: nop
-    (gdb) stepi
-    0x08048470 in main ()
-    (gdb)
-    0x08048330 in strlen@plt ()
-    (gdb) finis
-    Run till exit from #0  0x08048330 in strlen@plt ()
-    0x08048475 in main ()
-    (gdb) stepi
-    0x08048476 in main ()
-    (gdb)
-    0x0804847b in main ()
-    (gdb)
-    0x0804847d in main ()
-    (gdb) x/5i $pc
-    => 0x804847d <main+18>: call   0x8048350 <write@plt>
-       0x8048482 <main+23>: push   $0x7
-       0x8048484 <main+25>: call   0x8048320 <_exit@plt>
-       0x8048489 <main+30>: xchg   %ax,%ax
-       0x804848b <main+32>: xchg   %ax,%ax
-    (gdb) x/4w $esp
-    0xffffcd8c:     0x00000001      0x0804a024      0x0000000e      0x0804a024
-    (gdb) stepi
-    0x08048350 in write@plt ()
-    (gdb) x/4w $esp
-    0xffffcd88:     0x08048482      0x00000001      0x0804a024      0x0000000e
-    (gdb)
+Breakpoint 1, 0x0804846b in main ()
+(gdb) x/12i $pc
+=> 0x804846b <main>:    push   $0x804a024
+   0x8048470 <main+5>:  call   0x8048330 <strlen@plt>
+   0x8048475 <main+10>: push   %eax
+   0x8048476 <main+11>: push   $0x804a024
+   0x804847b <main+16>: push   $0x1
+   0x804847d <main+18>: call   0x8048350 <write@plt>
+   0x8048482 <main+23>: push   $0x7
+   0x8048484 <main+25>: call   0x8048320 <_exit@plt>
+   0x8048489 <main+30>: xchg   %ax,%ax
+   0x804848b <main+32>: xchg   %ax,%ax
+   0x804848d <main+34>: xchg   %ax,%ax
+   0x804848f <main+36>: nop
+(gdb) stepi
+0x08048470 in main ()
+(gdb)
+0x08048330 in strlen@plt ()
+(gdb) finis
+Run till exit from #0  0x08048330 in strlen@plt ()
+0x08048475 in main ()
+(gdb) stepi
+0x08048476 in main ()
+(gdb)
+0x0804847b in main ()
+(gdb)
+0x0804847d in main ()
+(gdb) x/5i $pc
+=> 0x804847d <main+18>: call   0x8048350 <write@plt>
+   0x8048482 <main+23>: push   $0x7
+   0x8048484 <main+25>: call   0x8048320 <_exit@plt>
+   0x8048489 <main+30>: xchg   %ax,%ax
+   0x804848b <main+32>: xchg   %ax,%ax
+(gdb) x/4w $esp
+0xffffcd8c:     0x00000001      0x0804a024      0x0000000e      0x0804a024
+(gdb) stepi
+0x08048350 in write@plt ()
+(gdb) x/4w $esp
+0xffffcd88:     0x08048482      0x00000001      0x0804a024      0x0000000e
+(gdb)
 ```
 Valores de la pila antes de la llamada a `write`
 `0x00000001`: Primer argumento de `write`, el _file descriptor_.
@@ -110,44 +110,44 @@ Valores de la pila después de la llamada a `write`
 ##### Compilar y ejecutar el archivo completo int80_hi.S. Mostrar la salida de `nm --undefined` para este nuevo binario.
 
 ```
-     ~/sisop/lab1 $
-    $ gcc int80_hi.S -m32 -I/usr/include/x86_64-linux-gnu -o int80_hi
-     ~/sisop/lab1 $
-    $ ./int80_hi
-    Hello, world!
-     X $ ~/sisop/lab1 $
-    $ nm -u int80_hi
-             w __gmon_start__
-             w _ITM_deregisterTMCloneTable
-             w _ITM_registerTMCloneTable
-             w _Jv_RegisterClasses
-             U __libc_start_main@@GLIBC_2.0
+ ~/sisop/lab1 $
+$ gcc int80_hi.S -m32 -I/usr/include/x86_64-linux-gnu -o int80_hi
+ ~/sisop/lab1 $
+$ ./int80_hi
+Hello, world!
+ X $ ~/sisop/lab1 $
+$ nm -u int80_hi
+         w __gmon_start__
+         w _ITM_deregisterTMCloneTable
+         w _ITM_registerTMCloneTable
+         w _Jv_RegisterClasses
+         U __libc_start_main@@GLIBC_2.0
 ```
 
 ##### Escribir una versión modificada, llamada sys_strlen.S, en la que se calcule la longitud del mensaje usando strlen (el código será muy parecido al de ejercicios anteriores).
 
 sys_strlen.S
-```C
-    #include <sys/syscall.h>  // SYS_write, SYS_exit
-    // See: <https://en.wikibooks.org/wiki/X86_Assembly/Interfacing_with_Linux>.
+```asm
+#include <sys/syscall.h>  // SYS_write, SYS_exit
+// See: <https://en.wikibooks.org/wiki/X86_Assembly/Interfacing_with_Linux>.
 
-    .globl main
-    main:
-            pushl $msg
-            call strlen
-            mov %eax,%edx
-            mov $SYS_write, %eax // %eax == syscall number
-            mov $1, %ebx         // %ebx == first argument (fd)
-            mov $msg, %ecx       // %ecx == second argument (buf)
-            int $0x80
+.globl main
+main:
+        pushl $msg
+        call strlen
+        mov %eax,%edx
+        mov $SYS_write, %eax // %eax == syscall number
+        mov $1, %ebx         // %ebx == first argument (fd)
+        mov $msg, %ecx       // %ecx == second argument (buf)
+        int $0x80
 
-            mov $SYS_exit, %eax
-            mov $7, %ebx
-            int $0x80
+        mov $SYS_exit, %eax
+        mov $7, %ebx
+        int $0x80
 
-    .data
-    msg:
-            .asciz "Hello, world!\n"
+.data
+msg:
+        .asciz "Hello, world!\n"
 ```
 
 #### En la convención de llamadas de GCC, ciertos registros son caller-saved (por ejemplo %ecx) y ciertos otros callee-saved (por ejemplo %ebx). Responder:
@@ -183,19 +183,19 @@ no, ninguno de los dos compila con `-nostdlib`
 ```
 
 #### Mostrar la salida de `nm --undefined` para el binario _sys_strlen_, y explicar las diferencias respecto a _int80_hi_.
-
 ```
-    $ nm --undefined int80_hi
-             w __gmon_start__
-             w _ITM_deregisterTMCloneTable
-             w _ITM_registerTMCloneTable
-             w _Jv_RegisterClasses
-             U __libc_start_main@@GLIBC_2.0
-     ~/sisop/lab1 $
-    $ nm --undefined sys_strlen
-             U strlen@@GLIBC_2.0
+$ nm --undefined int80_hi
+ w __gmon_start__
+ w _ITM_deregisterTMCloneTable
+ w _ITM_registerTMCloneTable
+ w _Jv_RegisterClasses
+ U __libc_start_main@@GLIBC_2.0
+ ~/sisop/lab1 $
+$ nm --undefined sys_strlen
+ U strlen@@GLIBC_2.0
 ```
 La diferencia radica en que _int80_hi_ hace uso de los archivos de inicio de _glibc_, mientras que en _sys_strlen_, la ejecución comienza directamente en la etiqueta `_start`.
+
 
 ## x86-ret
 
@@ -203,20 +203,20 @@ La diferencia radica en que _int80_hi_ hace uso de los archivos de inicio de _gl
 
 En tal caso, el valor de retorno debe ser dejado en `eax`
 ```asm
-    .globl main
-    main:
-        mov $SYS_write, %eax // %eax == syscall number
-        mov $1, %ebx         // %ebx == 1st argument (fd)
-        mov $msg, %ecx       // %ecx == 2nd argument (buf)
-        mov $len, %edx       // %edx == 3rd argument (count)
-        int $0x80
+.globl main
+main:
+    mov $SYS_write, %eax // %eax == syscall number
+    mov $1, %ebx         // %ebx == 1st argument (fd)
+    mov $msg, %ecx       // %ecx == 2nd argument (buf)
+    mov $len, %edx       // %edx == 3rd argument (count)
+    int $0x80
 
-        mov $0, %eax
-        ret
-    .data
-    msg:
-    .asciz "Hello, world!\n"
-    .set len, . - msg
+    mov $0, %eax
+    ret
+.data
+msg:
+.asciz "Hello, world!\n"
+.set len, . - msg
 ```
 
 #### Se pide también escribir un nuevo programa, `libc_puts.S`, que use una instrucción ret en lugar de una llamada a `_exit`.
@@ -290,56 +290,54 @@ End of assembler dump.
 ```
 
 ## x86-watch 
-
 guión de gdb
 ```
-    Reading symbols from ./libc_puts...(no debugging symbols found)...done.
-    (gdb) b main
-    Breakpoint 1 at 0x804840b
-    (gdb) r
-    Starting program: /home/vasectomio/sisop/lab1/libc_puts
-    Breakpoint 1, 0x0804840b in main ()
-    (gdb) watch $ebx==55 && ($eax==0x01 || $eax==0xfc)
-    Watchpoint 2: $ebx==55 && ($eax==0x01 || $eax==0xfc)
-    (gdb) c
-    Continuing.
-    Hello, world!
-    Watchpoint 2: $ebx==55 && ($eax==0x01 || $eax==0xfc)
-    Old value = 0
-    New value = 1
-    0xf7ea27d1 in _exit () from /lib/i386-linux-gnu/libc.so.6
-    (gdb) where
-    0  0xf7ea27d1 in _exit () from /lib/i386-linux-gnu/libc.so.6
-    1  0xf7e2094a in ?? () from /lib/i386-linux-gnu/libc.so.6
-    2  0xf7e209ef in exit () from /lib/i386-linux-gnu/libc.so.6
-    3  0xf7e0a643 in __libc_start_main () from /lib/i386-linux-gnu/libc.so.6
-    4  0x08048331 in _start ()
-    (gdb) info shared
-    From        To          Syms Read   Shared Object Library
-    0xf7fd9860  0xf7ff273d  Yes (*)     /lib/ld-linux.so.2
-    0xf7e09750  0xf7f351bd  Yes (*)     /lib/i386-linux-gnu/libc.so.6
-    (*): Shared library is missing debugging information.
-    (gdb)
+Reading symbols from ./libc_puts...(no debugging symbols found)...done.
+(gdb) b main
+Breakpoint 1 at 0x804840b
+(gdb) r
+Starting program: /home/vasectomio/sisop/lab1/libc_puts
+Breakpoint 1, 0x0804840b in main ()
+(gdb) watch $ebx==55 && ($eax==0x01 || $eax==0xfc)
+Watchpoint 2: $ebx==55 && ($eax==0x01 || $eax==0xfc)
+(gdb) c
+Continuing.
+Hello, world!
+Watchpoint 2: $ebx==55 && ($eax==0x01 || $eax==0xfc)
+Old value = 0
+New value = 1
+0xf7ea27d1 in _exit () from /lib/i386-linux-gnu/libc.so.6
+(gdb) where
+0  0xf7ea27d1 in _exit () from /lib/i386-linux-gnu/libc.so.6
+1  0xf7e2094a in ?? () from /lib/i386-linux-gnu/libc.so.6
+2  0xf7e209ef in exit () from /lib/i386-linux-gnu/libc.so.6
+3  0xf7e0a643 in __libc_start_main () from /lib/i386-linux-gnu/libc.so.6
+4  0x08048331 in _start ()
+(gdb) info shared
+From        To          Syms Read   Shared Object Library
+0xf7fd9860  0xf7ff273d  Yes (*)     /lib/ld-linux.so.2
+0xf7e09750  0xf7f351bd  Yes (*)     /lib/i386-linux-gnu/libc.so.6
+(*): Shared library is missing debugging information.
+(gdb)
 ```
-salida de `cat /proc/`pidof libc_puts`/maps`
+salida de cat /proc/pidof libc_puts/maps
 ```
-    $ cat /proc/`pidof libc_puts`/maps
-    08048000-08049000 r-xp 00000000 08:05 540438                             /home/vasectomio/sisop/lab1/libc_puts
-    08049000-0804a000 r-xp 00000000 08:05 540438                             /home/vasectomio/sisop/lab1/libc_puts
-    0804a000-0804b000 rwxp 00001000 08:05 540438                             /home/vasectomio/sisop/lab1/libc_puts
-    0804b000-0806c000 rwxp 00000000 00:00 0                                  [heap]
-    f7df2000-f7fa2000 r-xp 00000000 08:05 918417                             /lib/i386-linux-gnu/libc-2.23.so
-    f7fa2000-f7fa4000 r-xp 001af000 08:05 918417                             /lib/i386-linux-gnu/libc-2.23.so
-    f7fa4000-f7fa5000 rwxp 001b1000 08:05 918417                             /lib/i386-linux-gnu/libc-2.23.so
-    f7fa5000-f7fa8000 rwxp 00000000 00:00 0 
-    f7fd4000-f7fd6000 rwxp 00000000 00:00 0 
-    f7fd6000-f7fd8000 r--p 00000000 00:00 0                                  [vvar]
-    f7fd8000-f7fd9000 r-xp 00000000 00:00 0                                  [vdso]
-    f7fd9000-f7ffb000 r-xp 00000000 08:05 916570                             /lib/i386-linux-gnu/ld-2.23.so
-    f7ffb000-f7ffc000 rwxp 00000000 00:00 0 
-    f7ffc000-f7ffd000 r-xp 00022000 08:05 916570                             /lib/i386-linux-gnu/ld-2.23.so
-    f7ffd000-f7ffe000 rwxp 00023000 08:05 916570                             /lib/i386-linux-gnu/ld-2.23.so
-    fffdd000-ffffe000 rwxp 00000000 00:00 0 
+08048000-08049000 r-xp 00000000 08:05 540438                             /home/vasectomio/sisop/lab1/libc_puts
+08049000-0804a000 r-xp 00000000 08:05 540438                             /home/vasectomio/sisop/lab1/libc_puts
+0804a000-0804b000 rwxp 00001000 08:05 540438                             /home/vasectomio/sisop/lab1/libc_puts
+0804b000-0806c000 rwxp 00000000 00:00 0                                  [heap]
+f7df2000-f7fa2000 r-xp 00000000 08:05 918417                             /lib/i386-linux-gnu/libc-2.23.so
+f7fa2000-f7fa4000 r-xp 001af000 08:05 918417                             /lib/i386-linux-gnu/libc-2.23.so
+f7fa4000-f7fa5000 rwxp 001b1000 08:05 918417                             /lib/i386-linux-gnu/libc-2.23.so
+f7fa5000-f7fa8000 rwxp 00000000 00:00 0 
+f7fd4000-f7fd6000 rwxp 00000000 00:00 0 
+f7fd6000-f7fd8000 r--p 00000000 00:00 0                                  [vvar]
+f7fd8000-f7fd9000 r-xp 00000000 00:00 0                                  [vdso]
+f7fd9000-f7ffb000 r-xp 00000000 08:05 916570                             /lib/i386-linux-gnu/ld-2.23.so
+f7ffb000-f7ffc000 rwxp 00000000 00:00 0 
+f7ffc000-f7ffd000 r-xp 00022000 08:05 916570                             /lib/i386-linux-gnu/ld-2.23.so
+f7ffd000-f7ffe000 rwxp 00023000 08:05 916570                             /lib/i386-linux-gnu/ld-2.23.so
+fffdd000-ffffe000 rwxp 00000000 00:00 0 
 ```
 si bien no coinciden exactamente los nombres de los archivos, parece que en el filesystem hay información de versiones que es abstraída al programa en ejecución, porque los módulos `libc` y `ld` están presentes en ambos listados, como bibliotecas dinámicas `.so`
 
@@ -357,13 +355,13 @@ Se sobreescribe el `1` que había sido pasado a `write`, como ese valor no vuelv
 #### La versión C no restaura el valor original de los registros %esp y %ebp. Cambiar la llamada a _exit(7) por return 7, y mostrar en qué cambia el código generado. ¿Se restaura ahora el valor original de `%ebp`?
 A partir de la primer instrucción `mov` el código difiere, agregando instrucciones que restauran el estado del stack y los registros para retornar de una llamada a función. Se restaura `ebp`
 ```
-   0x0804843f <+52>:    mov    $0x7,%eax
-   0x08048444 <+57>:    lea    -0x8(%ebp),%esp
-   0x08048447 <+60>:    pop    %ecx
-   0x08048448 <+61>:    pop    %edi
-   0x08048449 <+62>:    pop    %ebp
-   0x0804844a <+63>:    lea    -0x4(%ecx),%esp
-   0x0804844d <+66>:    ret
+ 0x0804843f <+52>:    mov    $0x7,%eax
+ 0x08048444 <+57>:    lea    -0x8(%ebp),%esp
+ 0x08048447 <+60>:    pop    %ecx
+ 0x08048448 <+61>:    pop    %edi
+ 0x08048449 <+62>:    pop    %ebp
+ 0x0804844a <+63>:    lea    -0x4(%ecx),%esp
+ 0x0804844d <+66>:    ret
 ```
 
 #### ¿Qué ocurre con `%ebp` usando `my_exit()`?
@@ -590,7 +588,6 @@ Num     Type           Disp Enb Address    What
         ignore next 943 hits
 (gdb)
 ```
-
 ## x86-frames
 #### Responder, conociendo el valor de `%ebp` durante la ejecución de una determinada función f:
 
@@ -602,10 +599,105 @@ La dirección de retorno se encuentra en `4(%ebp)`
 El valor del `%ebp` de la función anterior se encuentra en `(%ebp)`
 ##### ¿dónde se encuentra la dirección a la que retornará la función que invocó a `f`?
 La dirección de retorno de la función que llamó a `f` se encuentra en `4(4(%ebp))`
+código de `backtrace`
+``` C 
+void lookup_frames(uint32_t* frame_addr, uint32_t deepness){
+    void* arg1 = frame_addr ? *(frame_addr+2) : NULL;
+    void* arg2 = frame_addr ? *(frame_addr+3) : NULL;
+    void* arg3 = frame_addr ? *(frame_addr+4) : NULL;
+    uint32_t* previous_frame = *frame_addr;
 
-*backtrace.c*
-```C 
+    printf("#%d [%p] %p ( %p %p %p )\n",deepness, frame_addr,*(frame_addr+1), arg1, arg2, arg3);
+    if(previous_frame){
+        lookup_frames(previous_frame, deepness +1);
+    }
+}
+void backtrace(){
+    lookup_frames(*(uint32_t*)__builtin_frame_address(0), 0);
+}
+```
+ejecución de gdb
+```
+Reading symbols from ./backtrace...done.
+(gdb) b backtrace
+Breakpoint 1 at 0x804855d: file backtrace.c, line 16.
+(gdb) r
+Starting program: /home/vasectomio/sisop/lab1/backtrace
 
+Breakpoint 1, backtrace () at backtrace.c:16
+16          lookup_frames(*(uint32_t*)__builtin_frame_address(0), 0);
+(gdb) bt
+#0  backtrace () at backtrace.c:16
+#1  0x0804857d in my_write (fd=2, msg=0x80486e1, count=15) at backtrace.c:19
+#2  0x080485e4 in recurse (level=0) at backtrace.c:28
+#3  0x080485ce in recurse (level=1) at backtrace.c:26
+#4  0x080485ce in recurse (level=2) at backtrace.c:26
+#5  0x080485ce in recurse (level=3) at backtrace.c:26
+#6  0x080485ce in recurse (level=4) at backtrace.c:26
+#7  0x080485ce in recurse (level=5) at backtrace.c:26
+#8  0x080485fa in start_call_tree () at backtrace.c:32
+#9  0x08048616 in main () at backtrace.c:36
+(gdb) n
+#0 [0xffffcc98] 0x80485e4 ( 0x2 0x80486e1 0xf )
+#1 [0xffffccb8] 0x80485ce ( (nil) (nil) 0xf7ffdad0 )
+#2 [0xffffccd8] 0x80485ce ( 0x1 0x1 0xf7fd5b48 )
+#3 [0xffffccf8] 0x80485ce ( 0x2 0x1 0xc2 )
+#4 [0xffffcd18] 0x80485ce ( 0x3 0xf7ffd918 0xffffcd40 )
+#5 [0xffffcd38] 0x80485ce ( 0x4 0x2f 0xf7dfddc8 )
+#6 [0xffffcd58] 0x80485fa ( 0x5 0x3 0xf7e1fa50 )
+#7 [0xffffcd78] 0x8048616 ( 0xf7fa33dc 0xffffcda0 (nil) )
+#8 [0xffffcd88] 0xf7e09637 ( 0xf7fa3000 0xf7fa3000 (nil) )
+17      }
+(gdb) p/x $ebp
+$1 = 0xffffcc88 //La especifiación dice que no debe mostrar la propia backtrace
+(gdb) up
+#1  0x0804857d in my_write (fd=2, msg=0x80486e1, count=15) at backtrace.c:19
+19          backtrace();
+(gdb) p/x $ebp
+$2 = 0xffffcc98
+(gdb) up
+#2  0x080485e4 in recurse (level=0) at backtrace.c:28
+28              my_write(2, "Hello, world!\n", 15);
+(gdb) p/x $ebp
+$3 = 0xffffccb8
+(gdb) up
+#3  0x080485ce in recurse (level=1) at backtrace.c:26
+26              recurse(level - 1);
+(gdb) p/x $ebp
+$4 = 0xffffccd8
+(gdb) up
+#4  0x080485ce in recurse (level=2) at backtrace.c:26
+26              recurse(level - 1);
+(gdb) p/x $ebp
+$5 = 0xffffccf8
+(gdb) up
+#5  0x080485ce in recurse (level=3) at backtrace.c:26
+26              recurse(level - 1);
+(gdb) p/x $ebp
+$6 = 0xffffcd18
+(gdb) up
+#6  0x080485ce in recurse (level=4) at backtrace.c:26
+26              recurse(level - 1);
+(gdb) p/x $ebp
+$7 = 0xffffcd38
+(gdb) up
+#7  0x080485ce in recurse (level=5) at backtrace.c:26
+26              recurse(level - 1);
+(gdb) p/x $ebp
+$8 = 0xffffcd58
+(gdb) up
+#8  0x080485fa in start_call_tree () at backtrace.c:32
+32          recurse(5);
+(gdb) p/x $ebp
+$9 = 0xffffcd78
+(gdb) up
+#9  0x08048616 in main () at backtrace.c:36
+36          start_call_tree();
+(gdb) p/x $ebp
+$10 = 0xffffcd88
+(gdb) up
+Initial frame selected; you cannot go up.
+(gdb)
 ```
 ## x86-dwarf 
 
@@ -613,7 +705,97 @@ La dirección de retorno de la función que llamó a `f` se encuentra en `4(4(%e
 
 ## kern1-stack
 
+#### Explicar: ¿qué significa “estar alineado”?
+Que una región de memoria esté alineada  a `n` bytes significa que su dirección de inicio debe ser un múltiplo de `n`.
+
+#### Mostrar la sintaxis de C/GCC para alinear a 32 bits el arreglo kstack anterior.
+
+```C
+unsigned char kstack[8192]__attribute__((aligned(4)));
+```
+
+#### ¿A qué valor se está inicializando kstack? ¿Varía entre la versión C y la versión ASM? 
+En C, se está reservando la memoria pero no se la modifica, es decir, no será inicializado y contendrá basura. En ASM, la directiva `.space` al no pasársele ningún parámetro inicializa la memoria en 0.
+
+#### Explicar la diferencia entre las directivas `.align` y `.p2align` de as, y mostrar cómo alinear el stack del kernel a 4 KiB usando cada una de ellas.
+`.align` tiene como primer parámetro a cuántos bytes alinear la memoria, mientras que en `.p2align` el primer parámetro `.p2align n` determina un alineamiento de `2^(n)` bytes, ya que `n` es _la cantidad de bits que debe tener en cero el location counter antes de su único 1_.
+
+```asm
+.data
+.align 4096
+kstack:
+    .space 8192
+```
+```asm
+.data
+.p2align 12
+kstack:
+    .space 8192
+```
+#### mostrar en una sesión de GDB los valores de `%esp` y `%eip` al entrar en kmain, así como los valores almacenados en el stack en ese momento.
+
+```
+(gdb) b kmain
+Breakpoint 1 at 0x1000ec: file kern1.c, line 5.
+(gdb) c
+Continuing.
+Breakpoint 1, kmain (mbi=0x9500) at kern1.c:5
+5           vga_write("kern1 loading.............", 8, 0x70);
+(gdb) p $ebp
+$1 = (void *) 0x100ff0
+(gdb) p $eip
+$2 = (void (*)()) 0x1000ec <kmain+6>
+(gdb) p $esp
+$3 = (void *) 0x100fe8
+(gdb) p &kstack
+$4 = (<data variable, no debug info> *) 0x101000
+(gdb) bt
+#0  kmain (mbi=0x9500) at kern1.c:5
+#1  0x00100029 in _start () at boot.S:30
+(gdb) x/10w $esp
+0x100fe8:       0       0       0       1048617
+0x100ff8:       38144   0       0       0
+0x101008:       0       0
+(gdb) x/10wx $esp
+0x100fe8:       0x00000000      0x00000000      0x00000000      0x00100029
+0x100ff8:       0x00009500      0x00000000      0x00000000      0x00000000
+0x101008:       0x00000000      0x00000000
+```
+
 ## kern1-cmdline
+#### Mostrar cómo implementar la misma concatenación, de manera correcta, usando `strncat(3)`
+```C
+#include "decls.h"
+#include "multiboot.h"
+#define BLACK_ON_WHITE 0x70
+#define BUF_LEN 256
+
+void kmain(const multiboot_info_t *mbi) {
+    vga_write("kern1 loading.............", 1, BLACK_ON_WHITE);
+    if (!mbi){
+        vga_write("couldnt find multiboot info.", 2, BLACK_ON_WHITE);
+    }else{
+        if( mbi->flags & MULTIBOOT_INFO_CMDLINE ){
+            char* cmdline = (char*)mbi->cmdline;
+            char buf[BUF_LEN]= "cmdline: ";
+            strlcat(buf, cmdline,BUF_LEN);
+            vga_write(buf,2,BLACK_ON_WHITE);
+        }else{
+            vga_write("couldnt find bootloader parameters", 3, BLACK_ON_WHITE);
+        }
+    }
+}
+```
+
+#### Explicar cómo se comporta strlcat(3) si, erróneamente, se declarase buf con tamaño 12. ¿Introduce algún error el código?
+Si se declara `buf` con tamaño `12` con una constante o un define, y por ende también se le pasa `12` a _strlcat_, el código en el peor de los casos no mostrará todos los argumentos pasados.
+Si se declara `buf` de largo `12` pero se llama a _strlcat_ con tercer parámetro `256`, hará accesos inválidos a memoria.
+
+#### Compilar el siguiente programa, y explicar por qué se imprimen dos líneas distintas, en lugar de la misma dos veces:
+
+La primer línea muestra el tamaño del vector, porque la variable en ese contexto es de tipo vector y el compilador tiene la información de su largo.
+Al pasárselo a una función, sin embargo, muestra `4` u `8` dependiendo de la arquitectura, que es el tamaño del `char*` mediante el que se accede a la memoria del vector.
+El estandar de C especifica que al pasar un vector a una función, este se accede como un puntero, descartando toda información vinculada al poco tratamiento especial que reciben los vectores en C.
 
 ## kern1-meminfo 
 

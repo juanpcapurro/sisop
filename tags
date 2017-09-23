@@ -1,0 +1,249 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+0	lab0/Session.vim	/^normal! 0$/;"	m
+011|	lab1/Session.vim	/^normal! 011|$/;"	m
+019|	lab0/Session.vim	/^normal! 019|$/;"	m
+029|	lab1/Session.vim	/^normal! 029|$/;"	m
+040|	lab1/Session.vim	/^normal! 040|$/;"	m
+07|	lab0/Session.vim	/^normal! 07|$/;"	m
+ASFLAGS	lab0/makefile	/^ASFLAGS := -m32$/;"	m
+ASFLAGS	lab1/makefile	/^ASFLAGS       := $(CFLAGS)$/;"	m
+ASSERT	lab1/lib/string.c	33;"	d	file:
+BLACK_ON_WHITE	lab1/kern1.c	3;"	d	file:
+BLACK_ON_YELLOW	lab0/kern0.c	5;"	d	file:
+BLACK_ON_YELLOW	lab1/write.c	6;"	d	file:
+BOOT	lab0/makefile	/^BOOT    := -kernel $(KERN)$/;"	m
+BOOT	lab1/makefile	/^BOOT           := -kernel $(KERN)$/;"	m
+BUF_LEN	lab1/kern1.c	4;"	d	file:
+CANT_LINEAS	lab0/kern0.c	2;"	d	file:
+CANT_LINEAS	lab1/write.c	3;"	d	file:
+CC	lab0/makefile	/^CC      := clang$/;"	m
+CC	lab1/makefile	/^CC            := clang$/;"	m
+CFLAGS	lab0/makefile	/^CFLAGS  := -m32 -O1 -ffreestanding -g -Wconversion -std=c99 -Wall -Wextra -Wpedantic $/;"	m
+CFLAGS	lab1/makefile	/^CFLAGS        := -m32 -nostartfiles -ffreestanding -g -std=c99 -Wall -Wextra -Wpedantic -std=c99 -O0 -fno-omit-frame-pointer -fno-pic -nopie$/;"	m
+CPPFLAGS	lab1/makefile	/^CPPFLAGS      := -nostdlibinc -idirafter lib$/;"	m
+CRC	lab0/boot.S	/^#define CRC ( -(MAGIC + FLAGS) )$/;"	d
+Cambiar la directiva .ascii por .asciz y mostrar c   mo habr   a que reescribir la l   nea code  push  $len	lab1/resolucion.tex	/^        \\code{.set} hace que el símbolo \\code{len} tenga el valor de la expresión después de la coma, y \\code{.} guarda la dirección de la instrucción actual, entonces \\code{. - msg} guarda la diferencia entre la dirección actual y el tag \\code{msg}, lo que resulta ser el largo del string.$/;"	b
+Creaci   n de stacks en el kernel	lab1/resolucion.tex	/^\\subsection{Ej: x86-dwarf}$/;"	s
+DOS_BSOD_COLORS	lab0/kern0.c	4;"	d	file:
+DOS_BSOD_COLORS	lab1/write.c	5;"	d	file:
+Disassembly	lab0/kern0.asm	/^Disassembly of section .text:$/;"	l
+Disassembly	lab0/noinline.asm	/^Disassembly of section .text:$/;"	l
+Disassembly	lab1/kern1.asm	/^Disassembly of section .text:$/;"	l
+Ej  kern1-cmdline	lab1/resolucion.tex	/^\\subsection{Ej: kern1-stack}$/;"	u
+Ej  kern1-meminfo	lab1/resolucion.tex	/^\\subsection{Ej: kern1-cmdline}$/;"	u
+Ej  kern1-stack	lab1/resolucion.tex	/^\\section{Creación de stacks en el kernel}$/;"	u
+Ej  x86-argv	lab1/resolucion.tex	/^\\subsection{Ej: x86-errno}$/;"	u
+Ej  x86-call	lab1/resolucion.tex	/^        \\code{push \\$len -1}$/;"	u
+Ej  x86-dwarf	lab1/resolucion.tex	/^\\subsection{Ej: x86-frames}$/;"	u
+Ej  x86-ebp	lab1/resolucion.tex	/^\\section{Stack frames y calling conventions}$/;"	u
+Ej  x86-errno	lab1/resolucion.tex	/^\\subsection{Ej: x86-ebp}$/;"	u
+Ej  x86-frames	lab1/resolucion.tex	/^\\subsection{Ej: x86-argv}$/;"	u
+Ej  x86-libc	lab1/resolucion.tex	/^    \\subsubsection{Mostrar en una sesión de GDB cómo imprimir las mismas instrucciones usando la directiva \\code{x \\$pc }y el modificador adecuado. Después, usar el comando \\code{stepi} para avanzar la ejecución hasta la llamada a \\code{write}. En ese momento, mostrar los primeros cuatro valores de la pila justo antes e inmediatamente después de ejecutar la instrucción \\code{call}, y explicar cada uno de ellos.}$/;"	u
+Ej  x86-ret	lab1/resolucion.tex	/^\\subsection{Ej: x86-libc}$/;"	u
+Ej  x86-watch	lab1/resolucion.tex	/^\\subsection{Ej: x86-ret}$/;"	u
+Ej  x86-write	lab1/resolucion.tex	/^\\section{Llamadas a biblioteca y llamadas a sistema}$/;"	u
+Explicar el efecto del operador . en la l   nea code  .set len  . - msg.	lab1/resolucion.tex	/^        Eso es posible debido a que \\code{sizeof} es un operador y no una función.$/;"	b
+FLAGS	lab0/boot.S	/^#define FLAGS 0$/;"	d
+Funcionar   a el programa si se declarase msg como const char  msg  ...     Por qu   	lab1/resolucion.tex	/^        Es necesario restar \\code{1} al resultado de \\code{sizeof} porque definir de esa forma a \\code{msg} le agrega un byte \\code{'\\0'} al final del string.$/;"	b
+GREEN_ON_GREEN	lab0/kern0.c	3;"	d	file:
+GREEN_ON_GREEN	lab1/write.c	4;"	d	file:
+KERN	lab0/makefile	/^KERN    := kern0$/;"	m
+KERN	lab1/makefile	/^KERN           := kern1$/;"	m
+KERN1_DECL_H	lab1/decls.h	2;"	d
+KERN_ASM_SRCS	lab1/makefile	/^KERN_ASM_SRCS  := boot.S$/;"	m
+KERN_C_SRCS	lab1/makefile	/^KERN_C_SRCS    := write.c kern1.c .\/lib\/*.c$/;"	m
+KERN_OBJS	lab1/makefile	/^KERN_OBJS      := $(patsubst %S,%o,$(KERN_ASM_SRCS))$/;"	m
+KSTACK_SIZE	lab1/boot.S	/^#define KSTACK_SIZE 8192$/;"	d
+LARGO_LINEA	lab0/kern0.c	1;"	d	file:
+LARGO_LINEA	lab1/write.c	2;"	d	file:
+Llamadas a biblioteca y llamadas a sistema	lab1/resolucion.tex	/^\\end{titlepage}$/;"	s
+MAGIC	lab0/boot.S	/^#define MAGIC 0x1BADB002$/;"	d
+MULTIBOOT_AOUT_KLUDGE	lab1/multiboot.h	61;"	d
+MULTIBOOT_BOOTLOADER_MAGIC	lab1/multiboot.h	38;"	d
+MULTIBOOT_HEADER	lab1/multiboot.h	29;"	d
+MULTIBOOT_HEADER_MAGIC	lab1/multiboot.h	35;"	d
+MULTIBOOT_INFO_ALIGN	lab1/multiboot.h	47;"	d
+MULTIBOOT_INFO_AOUT_SYMS	lab1/multiboot.h	77;"	d
+MULTIBOOT_INFO_APM_TABLE	lab1/multiboot.h	94;"	d
+MULTIBOOT_INFO_BOOTDEV	lab1/multiboot.h	68;"	d
+MULTIBOOT_INFO_BOOT_LOADER_NAME	lab1/multiboot.h	91;"	d
+MULTIBOOT_INFO_CMDLINE	lab1/multiboot.h	70;"	d
+MULTIBOOT_INFO_CONFIG_TABLE	lab1/multiboot.h	88;"	d
+MULTIBOOT_INFO_DRIVE_INFO	lab1/multiboot.h	85;"	d
+MULTIBOOT_INFO_ELF_SHDR	lab1/multiboot.h	79;"	d
+MULTIBOOT_INFO_MEMORY	lab1/multiboot.h	66;"	d
+MULTIBOOT_INFO_MEM_MAP	lab1/multiboot.h	82;"	d
+MULTIBOOT_INFO_MODS	lab1/multiboot.h	72;"	d
+MULTIBOOT_INFO_VIDEO_INFO	lab1/multiboot.h	97;"	d
+MULTIBOOT_MEMORY_AVAILABLE	lab1/multiboot.h	200;"	d
+MULTIBOOT_MEMORY_INFO	lab1/multiboot.h	55;"	d
+MULTIBOOT_MEMORY_RESERVED	lab1/multiboot.h	201;"	d
+MULTIBOOT_MOD_ALIGN	lab1/multiboot.h	44;"	d
+MULTIBOOT_PAGE_ALIGN	lab1/multiboot.h	52;"	d
+MULTIBOOT_SEARCH	lab1/multiboot.h	32;"	d
+MULTIBOOT_UNSUPPORTED	lab1/multiboot.h	41;"	d
+MULTIBOOT_VIDEO_MODE	lab1/multiboot.h	58;"	d
+Mostrar en una sesi   n de GDB c   mo imprimir las mismas instrucciones usando la directiva code  x  $pc	lab1/resolucion.tex	/^\\subsection{Ej: x86-call}$/;"	b
+OBJECTS	lab0/makefile	/^OBJECTS := $(patsubst %.c,%.o,$(wildcard *.c))$/;"	m
+PINTOS_LIB_STRING_H	lab1/lib/string.h	35;"	d
+PROG	lab1/makefile	/^PROG           := kern1$/;"	m
+Por qu   hace falta el modificador code  x	lab0/resolucion.tex	/^\\section{kern0-gdb}$/;"	u
+Por qu   raz   n se puede escribir sizeof msg en lugar de sizeof  msg  	lab1/resolucion.tex	/^        El programa no funciona correctamente ya que el operador \\code{sizeof} devuelve 4, el tamaño del puntero \\code{msg}, y no el tamaño de memoria alojada al contenido al que apunta.$/;"	b
+Por qu   se le resta 1 al resultado de sizeof 	lab1/resolucion.tex	/^\\subsection{Ej: x86-write}$/;"	b
+QEMU	lab0/makefile	/^QEMU    := qemu-system-i386 -serial mon:stdio$/;"	m
+QEMU	lab1/makefile	/^QEMU           := qemu-system-i386 -serial mon:stdio$/;"	m
+QEMU_EXTRA	lab1/makefile	/^QEMU_EXTRA     := -append "'param1=hola param2=adios'"$/;"	m
+SOURCES	lab0/makefile	/^SOURCES := $(wildcard *.c)$/;"	m
+SessionLoad	lab0/Session.vim	/^let SessionLoad = 1$/;"	v
+SessionLoad	lab1/Session.vim	/^let SessionLoad = 1$/;"	v
+Stack frames y calling conventions	lab1/resolucion.tex	/^\\subsection{Ej: x86-watch}$/;"	s
+VGABUF	lab0/kern0.c	/^static volatile char* const VGABUF = (volatile char*) 0xb8000;$/;"	v	file:
+VGABUF	lab1/write.c	/^volatile void* const VGABUF = (volatile char*) 0xb8000;$/;"	v
+_start	lab1/boot.S	/^_start:$/;"	l
+_start	lab1/sys_argv.S	/^_start:$/;"	l
+_start	lab1/sys_strlen.S	/^_start:$/;"	l
+addr	lab1/multiboot.h	/^    uint32_t addr;$/;"	m	struct:multiboot_aout_symbol_table
+addr	lab1/multiboot.h	/^    uint32_t addr;$/;"	m	struct:multiboot_elf_section_header_table
+addr	lab1/multiboot.h	/^    uint64_t addr;$/;"	m	struct:multiboot_mmap_entry
+aout_sym	lab1/multiboot.h	/^        multiboot_aout_symbol_table_t aout_sym;$/;"	m	union:multiboot_info::__anon1
+apm_table	lab1/multiboot.h	/^    uint32_t apm_table;$/;"	m	struct:multiboot_info
+backtrace	lab1/backtrace.c	/^void backtrace(){$/;"	f
+boot_device	lab1/multiboot.h	/^    uint32_t boot_device;$/;"	m	struct:multiboot_info
+boot_loader_name	lab1/multiboot.h	/^    uint32_t boot_loader_name;$/;"	m	struct:multiboot_info
+bss_end_addr	lab1/multiboot.h	/^    uint32_t bss_end_addr;$/;"	m	struct:multiboot_header
+checksum	lab1/multiboot.h	/^    uint32_t checksum;$/;"	m	struct:multiboot_header
+cmdline	lab1/multiboot.h	/^    uint32_t cmdline;$/;"	m	struct:multiboot_info
+cmdline	lab1/multiboot.h	/^    uint32_t cmdline;$/;"	m	struct:multiboot_mod_list
+comienzo	lab0/kern0.c	/^void comienzo(void){$/;"	f
+comparacion entre loop infinito e instruccion halt	lab0/resolucion.tex	/^\\section{kern0-hlt}$/;"	u
+config_table	lab1/multiboot.h	/^    uint32_t config_table;$/;"	m	struct:multiboot_info
+depth	lab1/multiboot.h	/^    uint32_t depth;$/;"	m	struct:multiboot_header
+drives_addr	lab1/multiboot.h	/^    uint32_t drives_addr;$/;"	m	struct:multiboot_info
+drives_length	lab1/multiboot.h	/^    uint32_t drives_length;$/;"	m	struct:multiboot_info
+elf_sec	lab1/multiboot.h	/^        multiboot_elf_section_header_table_t elf_sec;$/;"	m	union:multiboot_info::__anon1
+entry_addr	lab1/multiboot.h	/^    uint32_t entry_addr;$/;"	m	struct:multiboot_header
+flags	lab1/multiboot.h	/^    uint32_t flags;$/;"	m	struct:multiboot_header
+flags	lab1/multiboot.h	/^    uint32_t flags;$/;"	m	struct:multiboot_info
+halt	lab1/boot.S	/^halt:$/;"	l
+header_addr	lab1/multiboot.h	/^    uint32_t header_addr;$/;"	m	struct:multiboot_header
+height	lab1/multiboot.h	/^    uint32_t height;$/;"	m	struct:multiboot_header
+kern0	lab0/kern0.asm	/^kern0:     file format elf32-i386$/;"	l
+kern0	lab0/noinline.asm	/^kern0:     file format elf32-i386$/;"	l
+kern0-gdb	lab0/resolucion.tex	/^\\end{lstlisting}$/;"	s
+kern0-hlt	lab0/resolucion.tex	/^\\maketitle$/;"	s
+kern1	lab1/kern1.asm	/^kern1:     file format elf32-i386$/;"	l
+kmain	lab1/kern1.c	/^void kmain(const multiboot_info_t *mbi) {$/;"	f
+kstack	lab1/boot.S	/^kstack:$/;"	l
+len	lab1/multiboot.h	/^    uint64_t len;$/;"	m	struct:multiboot_mmap_entry
+load_addr	lab1/multiboot.h	/^    uint32_t load_addr;$/;"	m	struct:multiboot_header
+load_end_addr	lab1/multiboot.h	/^    uint32_t load_end_addr;$/;"	m	struct:multiboot_header
+lookup_frames	lab1/backtrace.c	/^void lookup_frames(uint32_t* frame_addr, uint32_t deepness){$/;"	f
+loop	lab1/libc_argv2.S	/^loop:$/;"	l
+magic	lab1/multiboot.h	/^    uint32_t magic;$/;"	m	struct:multiboot_header
+main	lab1/backtrace.c	/^int main(void) {$/;"	f
+main	lab1/errno.c	/^int main(void) {$/;"	f
+main	lab1/hello.c	/^int main(void) {$/;"	f
+main	lab1/int80_hi.S	/^main:$/;"	l
+main	lab1/libc_argv.S	/^main:$/;"	l
+main	lab1/libc_argv2.S	/^main:$/;"	l
+main	lab1/libc_hello.S	/^main:$/;"	l
+main	lab1/libc_puts.S	/^main:$/;"	l
+main	lab1/perror.c	/^int main(void) {$/;"	f
+main	lab1/write2.S	/^main:$/;"	l
+mem_lower	lab1/multiboot.h	/^    uint32_t mem_lower;$/;"	m	struct:multiboot_info
+mem_upper	lab1/multiboot.h	/^    uint32_t mem_upper;$/;"	m	struct:multiboot_info
+memchr	lab1/lib/string.c	/^memchr (const void *block_, int ch_, size_t size)$/;"	f
+memcmp	lab1/lib/string.c	/^memcmp (const void *a_, const void *b_, size_t size)$/;"	f
+memcpy	lab1/lib/string.c	/^memcpy (void *dst_, const void *src_, size_t size)$/;"	f
+memmove	lab1/lib/string.c	/^memmove (void *dst_, const void *src_, size_t size)$/;"	f
+memset	lab1/lib/string.c	/^memset (void *dst_, int value, size_t size)$/;"	f
+mmap_addr	lab1/multiboot.h	/^    uint32_t mmap_addr;$/;"	m	struct:multiboot_info
+mmap_length	lab1/multiboot.h	/^    uint32_t mmap_length;$/;"	m	struct:multiboot_info
+mod_end	lab1/multiboot.h	/^    uint32_t mod_end;$/;"	m	struct:multiboot_mod_list
+mod_start	lab1/multiboot.h	/^    uint32_t mod_start;$/;"	m	struct:multiboot_mod_list
+mode_type	lab1/multiboot.h	/^    uint32_t mode_type;$/;"	m	struct:multiboot_header
+mods_addr	lab1/multiboot.h	/^    uint32_t mods_addr;$/;"	m	struct:multiboot_info
+mods_count	lab1/multiboot.h	/^    uint32_t mods_count;$/;"	m	struct:multiboot_info
+msg	lab1/errno.c	/^const char msg[] = "Escribiendo a nadie\\n";$/;"	v
+msg	lab1/hello.c	/^const char *msg = "Hello, world!\\n";$/;"	v
+msg	lab1/int80_hi.S	/^msg:$/;"	l
+msg	lab1/libc_hello.S	/^msg:$/;"	l
+msg	lab1/libc_puts.S	/^msg:$/;"	l
+msg	lab1/perror.c	/^const char msg[] = "Escribiendo a nadie\\n";$/;"	v
+msg	lab1/sys_strlen.S	/^msg:$/;"	l
+multiboot	lab0/boot.S	/^multiboot:$/;"	l
+multiboot	lab1/boot.S	/^multiboot:$/;"	l
+multiboot_aout_symbol_table	lab1/multiboot.h	/^struct multiboot_aout_symbol_table {$/;"	s
+multiboot_aout_symbol_table_t	lab1/multiboot.h	/^typedef struct multiboot_aout_symbol_table multiboot_aout_symbol_table_t;$/;"	t	typeref:struct:multiboot_aout_symbol_table
+multiboot_elf_section_header_table	lab1/multiboot.h	/^struct multiboot_elf_section_header_table {$/;"	s
+multiboot_elf_section_header_table_t	lab1/multiboot.h	/^    multiboot_elf_section_header_table_t;$/;"	t	typeref:struct:multiboot_elf_section_header_table
+multiboot_header	lab1/multiboot.h	/^struct multiboot_header {$/;"	s
+multiboot_info	lab1/multiboot.h	/^struct multiboot_info {$/;"	s
+multiboot_info_t	lab1/multiboot.h	/^typedef struct multiboot_info multiboot_info_t;$/;"	t	typeref:struct:multiboot_info
+multiboot_memory_map_t	lab1/multiboot.h	/^typedef struct multiboot_mmap_entry multiboot_memory_map_t;$/;"	t	typeref:struct:multiboot_mmap_entry
+multiboot_mmap_entry	lab1/multiboot.h	/^struct multiboot_mmap_entry {$/;"	s
+multiboot_mod_list	lab1/multiboot.h	/^struct multiboot_mod_list {$/;"	s
+multiboot_module_t	lab1/multiboot.h	/^typedef struct multiboot_mod_list multiboot_module_t;$/;"	t	typeref:struct:multiboot_mod_list
+my_exit	lab1/exit.c	/^void my_exit(int status) {$/;"	f
+my_write	lab1/backtrace.c	/^void my_write(int fd, const void *msg, size_t count) {$/;"	f
+num	lab1/multiboot.h	/^    uint32_t num;$/;"	m	struct:multiboot_elf_section_header_table
+okay	lab1/write2.S	/^okay:$/;"	l
+pad	lab1/multiboot.h	/^    uint32_t pad;$/;"	m	struct:multiboot_mod_list
+recurse	lab1/backtrace.c	/^void recurse(int level) {$/;"	f
+reserved	lab1/multiboot.h	/^    uint32_t reserved;$/;"	m	struct:multiboot_aout_symbol_table
+ret_addr	lab1/libc_hello.S	/^ret_addr:$/;"	l
+s:l	lab0/Session.vim	/^let s:l = 5 - ((4 * winheight(0) + 26) \/ 53)$/;"	v
+s:l	lab0/Session.vim	/^let s:l = 52 - ((0 * winheight(0) + 26) \/ 52)$/;"	v
+s:l	lab0/Session.vim	/^let s:l = 60 - ((7 * winheight(0) + 26) \/ 52)$/;"	v
+s:l	lab0/Session.vim	/^let s:l = 85 - ((35 * winheight(0) + 26) \/ 52)$/;"	v
+s:l	lab1/Session.vim	/^let s:l = 4 - ((3 * winheight(0) + 22) \/ 44)$/;"	v
+s:l	lab1/Session.vim	/^let s:l = 498 - ((1 * winheight(0) + 7) \/ 14)$/;"	v
+s:l	lab1/Session.vim	/^let s:l = 728 - ((14 * winheight(0) + 22) \/ 44)$/;"	v
+s:so_save	lab0/Session.vim	/^let s:so_save = &so | let s:siso_save = &siso | set so=0 siso=0$/;"	v
+s:so_save	lab1/Session.vim	/^let s:so_save = &so | let s:siso_save = &siso | set so=0 siso=0$/;"	v
+s:sx	lab0/Session.vim	/^let s:sx = expand("<sfile>:p:r")."x.vim"$/;"	v
+s:sx	lab1/Session.vim	/^let s:sx = expand("<sfile>:p:r")."x.vim"$/;"	v
+s:wipebuf	lab0/Session.vim	/^  let s:wipebuf = bufnr('%')$/;"	v
+s:wipebuf	lab1/Session.vim	/^  let s:wipebuf = bufnr('%')$/;"	v
+shndx	lab1/multiboot.h	/^    uint32_t shndx;$/;"	m	struct:multiboot_elf_section_header_table
+size	lab1/multiboot.h	/^    uint32_t size;$/;"	m	struct:multiboot_elf_section_header_table
+size	lab1/multiboot.h	/^    uint32_t size;$/;"	m	struct:multiboot_mmap_entry
+start_call_tree	lab1/backtrace.c	/^void start_call_tree() {$/;"	f
+strchr	lab1/lib/string.c	/^strchr (const char *string, int c_)$/;"	f
+strcmp	lab1/lib/string.c	/^strcmp (const char *a_, const char *b_)$/;"	f
+strcspn	lab1/lib/string.c	/^strcspn (const char *string, const char *stop)$/;"	f
+strlcat	lab1/lib/string.c	/^strlcat (char *dst, const char *src, size_t size)$/;"	f
+strlcpy	lab1/lib/string.c	/^strlcpy (char *dst, const char *src, size_t size)$/;"	f
+strlen	lab1/lib/string.c	/^strlen (const char *string)$/;"	f
+strnlen	lab1/lib/string.c	/^strnlen (const char *string, size_t maxlen)$/;"	f
+strpbrk	lab1/lib/string.c	/^strpbrk (const char *string, const char *stop)$/;"	f
+strrchr	lab1/lib/string.c	/^strrchr (const char *string, int c_)$/;"	f
+strsize	lab1/multiboot.h	/^    uint32_t strsize;$/;"	m	struct:multiboot_aout_symbol_table
+strspn	lab1/lib/string.c	/^strspn (const char *string, const char *skip)$/;"	f
+strstr	lab1/lib/string.c	/^strstr (const char *haystack, const char *needle)$/;"	f
+strtok_r	lab1/lib/string.c	/^strtok_r (char *s, const char *delimiters, char **save_ptr)$/;"	f
+tabsize	lab1/multiboot.h	/^    uint32_t tabsize;$/;"	m	struct:multiboot_aout_symbol_table
+type	lab1/multiboot.h	/^    uint32_t type;$/;"	m	struct:multiboot_mmap_entry
+u	lab1/multiboot.h	/^    } u;$/;"	m	struct:multiboot_info	typeref:union:multiboot_info::__anon1
+vbe_control_info	lab1/multiboot.h	/^    uint32_t vbe_control_info;$/;"	m	struct:multiboot_info
+vbe_interface_len	lab1/multiboot.h	/^    uint16_t vbe_interface_len;$/;"	m	struct:multiboot_info
+vbe_interface_off	lab1/multiboot.h	/^    uint16_t vbe_interface_off;$/;"	m	struct:multiboot_info
+vbe_interface_seg	lab1/multiboot.h	/^    uint16_t vbe_interface_seg;$/;"	m	struct:multiboot_info
+vbe_mode	lab1/multiboot.h	/^    uint16_t vbe_mode;$/;"	m	struct:multiboot_info
+vbe_mode_info	lab1/multiboot.h	/^    uint32_t vbe_mode_info;$/;"	m	struct:multiboot_info
+vga_write	lab0/kern0.c	/^inline static void vga_write(const char *string, int8_t linea, uint8_t color){$/;"	f	file:
+vga_write	lab1/write.c	/^void vga_write(const char *string, int8_t linea, uint8_t color){$/;"	f
+width	lab1/multiboot.h	/^    uint32_t width;$/;"	m	struct:multiboot_header
+write	lab1/perror.c	8;"	d	file:
+write2	lab1/write2.S	/^write2:$/;"	l
+zc	lab1/Session.vim	/^normal! zc$/;"	m
+zero	lab1/boot.S	/^zero: $/;"	l
+zo	lab0/Session.vim	/^normal! zo$/;"	m
+zo	lab1/Session.vim	/^normal! zo$/;"	m
+zt	lab0/Session.vim	/^normal! zt$/;"	m
+zt	lab1/Session.vim	/^normal! zt$/;"	m
