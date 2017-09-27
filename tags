@@ -136,6 +136,11 @@ fmt_int	lab1/write.c	/^bool fmt_int(uint32_t value, char *str, size_t bufsize){$
 halt	lab1/boot.S	/^halt:$/;"	l
 header_addr	lab1/multiboot.h	/^    uint32_t header_addr;$/;"	m	struct:multiboot_header
 height	lab1/multiboot.h	/^    uint32_t height;$/;"	m	struct:multiboot_header
+inc	kern2/inc.c	/^int inc(int x) {$/;"	f
+inc2	kern2/inc.c	/^int inc2(int x) {$/;"	f
+inc_p_0	kern2/inc_p.c	/^void inc_p_0(int *p) {$/;"	f
+inc_p_1	kern2/inc_p.c	/^void inc_p_1(int *p) {$/;"	f
+inc_p_2	kern2/inc_p.c	/^void inc_p_2(int *p) {$/;"	f
 kern0	lab0/kern0.asm	/^kern0:     file format elf32-i386$/;"	l
 kern0	lab0/noinline.asm	/^kern0:     file format elf32-i386$/;"	l
 kern0-gdb	lab0/resolucion.tex	/^\\end{lstlisting}$/;"	s
@@ -149,6 +154,7 @@ load_end_addr	lab1/multiboot.h	/^    uint32_t load_end_addr;$/;"	m	struct:multib
 lookup_frames	lab1/backtrace.c	/^void lookup_frames(uint32_t* frame_addr, uint32_t deepness){$/;"	f
 loop	lab1/libc_argv2.S	/^loop:$/;"	l
 magic	lab1/multiboot.h	/^    uint32_t magic;$/;"	m	struct:multiboot_header
+main	kern2/inc_p.c	/^int main(void) {$/;"	f
 main	lab1/backtrace.c	/^int main(void) {$/;"	f
 main	lab1/errno.c	/^int main(void) {$/;"	f
 main	lab1/hello.c	/^int main(void) {$/;"	f
