@@ -1,5 +1,6 @@
-
-# Lab kern2
+% Lab kern2
+% Juan Pablo Capurro - 98194
+% 29/9/2017
 
 ## asm-inc 
 
@@ -97,69 +98,72 @@ Al permitirle a GCC hacer inline automático de las funciones, la variante _1_ s
 
 #### ¿En qué cambia el código generado (incluyendo el código de main) si se declara my_write con atributo fastcall?
 
-sin _fastcall_:
-```
-$ objdump -d my_write | sed '/<main>:/,/^$/!d'
-080483f5 <main>:
- 80483f5:       55                      push   %ebp
- 80483f6:       89 e5                   mov    %esp,%ebp
- 80483f8:       6a 0e                   push   $0xe
- 80483fa:       68 90 84 04 08          push   $0x8048490
- 80483ff:       e8 d7 ff ff ff          call   80483db <my_write>
- 8048404:       83 c4 08                add    $0x8,%esp
- 8048407:       b8 00 00 00 00          mov    $0x0,%eax
- 804840c:       c9                      leave
- 804840d:       c3                      ret
- 804840e:       66 90                   xchg   %ax,%ax
-
-$ objdump -d my_write | sed '/<main>:/,/^$/!d'
-080483f5 <main>:
- 80483f5:       55                      push   %ebp
- 80483f6:       89 e5                   mov    %esp,%ebp
- 80483f8:       6a 0e                   push   $0xe
- 80483fa:       68 90 84 04 08          push   $0x8048490
- 80483ff:       e8 d7 ff ff ff          call   80483db <my_write>
- 8048404:       83 c4 08                add    $0x8,%esp
- 8048407:       b8 00 00 00 00          mov    $0x0,%eax
- 804840c:       c9                      leave
- 804840d:       c3                      ret
- 804840e:       66 90                   xchg   %ax,%ax
-```
 con _fastcall_:
 ```
-$ objdump -d my_write | sed '/<main>:/,/^$/!d'
-08048401 <main>:
- 8048401:       55                      push   %ebp
- 8048402:       89 e5                   mov    %esp,%ebp
- 8048404:       ba 0e 00 00 00          mov    $0xe,%edx
- 8048409:       b9 a0 84 04 08          mov    $0x80484a0,%ecx
- 804840e:       e8 c8 ff ff ff          call   80483db <my_write>
- 8048413:       b8 00 00 00 00          mov    $0x0,%eax
- 8048418:       5d                      pop    %ebp
- 8048419:       c3                      ret
- 804841a:       66 90                   xchg   %ax,%ax
- 804841c:       66 90                   xchg   %ax,%ax
- 804841e:       66 90                   xchg   %ax,%ax
+$ gcc -o my_write -O2 -fno-inline -m32 my_write.c && ./my_write
+Hello, world!
 
-$ objdump -d my_write | sed '/<my_write>:/,/^$/!d'
-080483db <my_write>:
- 80483db:       55                      push   %ebp
- 80483dc:       89 e5                   mov    %esp,%ebp
- 80483de:       53                      push   %ebx
- 80483df:       83 ec 08                sub    $0x8,%esp
- 80483e2:       89 4d f8                mov    %ecx,-0x8(%ebp)
- 80483e5:       89 55 f4                mov    %edx,-0xc(%ebp)
- 80483e8:       b8 04 00 00 00          mov    $0x4,%eax
- 80483ed:       bb 01 00 00 00          mov    $0x1,%ebx
- 80483f2:       8b 4d f8                mov    -0x8(%ebp),%ecx
- 80483f5:       8b 55 f4                mov    -0xc(%ebp),%edx
- 80483f8:       cd 80                   int    $0x80
- 80483fa:       90                      nop
- 80483fb:       83 c4 08                add    $0x8,%esp
- 80483fe:       5b                      pop    %ebx
- 80483ff:       5d                      pop    %ebp
- 8048400:       c3                      ret
+080482e0 <main>:
+ 80482e0:       ba 0e 00 00 00          mov    $0xe,%edx
+ 80482e5:       b9 80 84 04 08          mov    $0x8048480,%ecx
+ 80482ea:       e8 01 01 00 00          call   80483f0 <my_write>
+ 80482ef:       31 c0                   xor    %eax,%eax
+ 80482f1:       c3                      ret
+
+080483f0 <my_write>:
+ 80483f0:       53                      push   %ebx
+ 80483f1:       b8 04 00 00 00          mov    $0x4,%eax
+ 80483f6:       bb 01 00 00 00          mov    $0x1,%ebx
+ 80483fb:       cd 80                   int    $0x80
+ 80483fd:       5b                      pop    %ebx
+ 80483fe:       c3                      ret
+ 80483ff:       90                      nop
+
 ```
-Al declarar my_write como _fastcall_, la función saca del stack sus argumentos mediante `add    $0x8,%esp`, responsabilidad que normalmente tiene la función que llama. Sin declarar my_write como _fastcall_, la limpieza del stack la hace _main_
+sin _fastcall_:
+```
+$ gcc -o my_write -O2 -fno-inline -m32 my_write.c && ./my_write
+Hello, world!
 
+080483f0 <my_write>:
+ 80483f0:       53                      push   %ebx
+ 80483f1:       b8 04 00 00 00          mov    $0x4,%eax
+ 80483f6:       bb 01 00 00 00          mov    $0x1,%ebx
+ 80483fb:       8b 54 24 0c             mov    0xc(%esp),%edx
+ 80483ff:       8b 4c 24 08             mov    0x8(%esp),%ecx
+ 8048403:       cd 80                   int    $0x80
+ 8048405:       5b                      pop    %ebx
+ 8048406:       c3                      ret
+ 8048407:       66 90                   xchg   %ax,%ax
+ 8048409:       66 90                   xchg   %ax,%ax
+ 804840b:       66 90                   xchg   %ax,%ax
+ 804840d:       66 90                   xchg   %ax,%ax
+ 804840f:       90                      nop
+
+080482e0 <main>:
+ 80482e0:       6a 0e                   push   $0xe
+ 80482e2:       68 90 84 04 08          push   $0x8048490
+ 80482e7:       e8 04 01 00 00          call   80483f0 <my_write>
+ 80482ec:       58                      pop    %eax
+ 80482ed:       31 c0                   xor    %eax,%eax
+ 80482ef:       5a                      pop    %edx
+ 80482f0:       c3                      ret
+```
+
+Con niveles mayores de optimización y _fastcall_, el pasaje de parámetros se hace con registros cuando es posible.
+
+## asm-volatile
+
+#### Indicar qué ocurre al ejecutar el programa con las siguientes modificaciones, explicando por qué funciona, o no:
+
+##### Eliminando el modificador volatile de la instrucción assembler.
+El programa imprime `Hello, write2!` como se espera.
+##### Con volatile de vuelta en su lugar, eliminando el if (!result) ... de la función main.
+El programa imprime `Hello, write2! \n write2 falló`, como se espera, ya que _volatile_ le indica al compilador que las instrucciones dentro del _asm_ tienen _side effects_, por lo que deben ser ejecutadas independientemente de si sus parámetros de salida son usados o no.
+##### Eliminando tanto volatile como la comprobación del booleano. ¿Qué código genera gcc para main en este caso? ¿Cambió el código generado para my_write2?
+El programa solo imprime `write2 falló`, porque el compilador no ejecuta el contenido de _asm_ si considera que sus parámetros de salida no son relevantes (es decir, no son usados).
+
+#### ¿Por qué no se hizo necesario _volatile_ en el ejercicio asm-regs, ni tampoco en asm-inc?
+En `asm-inc,` no es necesario _volatile_ ya que los parámetros de salida de asm son usados (se retornan de la función y luego se imprimen por pantalla más adelante en el código, es decir, son parámetro de entrada de otra operación).
+En `asm-regs,` no es necesario _volatile_ ya que si un statement asm no tiene operandos de salida es implícitamente _volatile_.
 

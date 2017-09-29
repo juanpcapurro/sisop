@@ -1,3 +1,7 @@
+% Lab x86
+% Juan Pablo Capurro - 98194
+% 29/9/2017
+
 # Llamadas a biblioteca y llamadas al sistema
 
 ## x86-write
