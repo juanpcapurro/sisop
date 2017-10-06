@@ -5,6 +5,5 @@ void kmain(const multiboot_info_t *mbi) {
 
     // A remplazar por una llamada a two_stacks(),
     // definida en stacks.S.
-    vga_write("vga_write() from stack1", 12, 0x17);
-    vga_write("vga_write() from stack2", 13, 0x90);
+    two_stacks();
 }
