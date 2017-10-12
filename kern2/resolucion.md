@@ -2,6 +2,8 @@
 % Juan Pablo Capurro - 98194
 % 29/9/2017
 
+# Conocimientos previos
+
 ## asm-inc 
 
 #### Explicar los parámetros de la instrucción `asm` mostrada.
@@ -245,4 +247,111 @@ two_stacks:
 En el código propuesto, se proponía restaurar el stack entre las funciones, lo cual no era necesario, ya que se volvía a cargar `stack2` como antes de usar el stack original.
 Al restaurar el stack original, no resultó suficiente restaurar `%ebp`, ya que sin restaurar `%esp` se pierde la referencia al tope del stack, y, por ejemplo, hacer `pop %ebx` no funcionaría.
 
+## kern2-exec
+
+kern2.c
+```C
+#include "decls.h"
+#include "multiboot.h"
+#define USTACK_SIZE 4096
+
+static uint8_t stack1[USTACK_SIZE] __attribute__((aligned(4096)));
+static uint8_t stack2[USTACK_SIZE] __attribute__((aligned(4096)));
+
+void kmain(const multiboot_info_t *mbi) {
+    vga_write("kern2 loading.............", 8, 0x70);
+
+    // A remplazar por una llamada a two_stacks(),
+    // definida en stacks.S.
+    two_stacks_c();
+}
+
+void two_stacks_c() {
+    // Inicializar al *tope* de cada pila.
+    uintptr_t *s1 = (uintptr_t*)stack1+USTACK_SIZE-1;
+    uintptr_t *s2 = (uintptr_t*)stack2+USTACK_SIZE-1;
+
+    *--s1 = 0x57;
+    *--s1 = 15;
+    *--s1 = (uintptr_t)"vga_write() from stack1";
+
+    // AYUDA 3: para esta segunda llamada, usar esta forma de
+    // asignación alternativa:
+    s2 -= 3;
+    s2[0] = (uintptr_t)"vga_write() from stack2";
+    s2[1] = 16;
+    s2[2] = 0xD0;
+
+    // Primera llamada usando task_exec().
+    task_exec((uintptr_t) vga_write, (uintptr_t) s1);
+
+    // Segunda llamada con ASM directo.
+    __asm__("movl %%esp, %%esi\n\t"
+            "movl %%ebp, %%ebx\n\t"
+            "movl %0, %%esp\n\t"
+            "movl $0,%%ebp\n\t"
+            "call *%1\n\t"
+            "movl %%esi, %%esp\n\t"
+            "movl %%ebx, %%ebp"
+        : /* no outputs */
+        : "r"(s2), "r"(vga_write)
+        : "%esi", "%ebx");
+}
+```
+tasks.S
+```asm
+.data
+former_ebp:
+    .long 0
+former_esp:
+    .long 0
+
+.text
+.globl task_exec
+task_exec:
+    push %ebp
+    movl %esp, %ebp
+    movl %ebp, (former_ebp)
+    movl %esp, (former_esp)
+
+    mov 8(%ebp),%eax
+    mov 12(%ebp),%esp
+    mov $0,%ebp
+    call *%eax
+
+    movl (former_ebp), %ebp
+    movl (former_esp), %esp
+    leave
+    ret
+```
+
+## kern2-regcall
+
+funcs.S
+```asm
+.globl vga_write2
+vga_write2:
+        push %ebp
+        movl %esp, %ebp
+        
+        push %ecx
+        push %edx
+        push %eax
+        call vga_write
+
+        leave
+        ret
+```
+llamada a `vga_write2`
+```
+001003c0 <kmain>:
+  ...
+  100400:       8d 05 47 0a 10 00       lea    0x100a47,%eax
+  100406:       ba 12 00 00 00          mov    $0x12,%edx
+  10040b:       b9 e0 00 00 00          mov    $0xe0,%ecx
+  100410:       e8 b3 fc ff ff          call   1000c8 <vga_write2>
+  ...
+```
+
+## kern2-swap
 

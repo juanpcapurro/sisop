@@ -1,11 +1,11 @@
-CFLAGS        := -m32 -nostartfiles -ffreestanding -g -std=c99 -Wall -Wextra -Wpedantic -std=c99 -O0 -fno-omit-frame-pointer -fno-pic -nopie
+CFLAGS        := -m32 -nostartfiles -ffreestanding -g -std=c99 -Wall -Wextra -Wpedantic -std=c99 -O0 -fno-omit-frame-pointer -fno-pic -nopie -fno-stack-protector 
 CPPFLAGS      := -nostdlibinc -idirafter lib
 ASFLAGS       := $(CFLAGS)
 CC            := clang
 LIBGCC := $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
 
-KERN_C_SRCS    := write.c kern2.c ./lib/*.c
-KERN_ASM_SRCS  := boot.S stacks.S
+KERN_C_SRCS    := write.c kern2.c ./lib/*.c contador.c
+KERN_ASM_SRCS  := boot.S stacks.S tasks.S funcs.S
 KERN_OBJS      := $(patsubst %S,%o,$(KERN_ASM_SRCS))
 KERN_OBJS      += $(patsubst %c,%o,$(KERN_C_SRCS))
 KERN           := kern2
