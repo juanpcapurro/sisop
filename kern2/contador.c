@@ -15,6 +15,13 @@ static void yield() {
     if (esp)
         task_swap(&esp);
 }
+static void exit(){
+    if(esp){
+        uintptr_t* tmp = esp;
+        esp = NULL;
+        task_swap(&tmp);
+    }
+}
 
 static void contador_yield(unsigned lim, uint8_t linea, char color) {
     char counter[COUNTLEN] = {'0'};  // ASCII digit counter (RTL).
@@ -26,7 +33,7 @@ static void contador_yield(unsigned lim, uint8_t linea, char color) {
         unsigned p = 0;
         unsigned long long i = 0;
 
-        while (i++ < DELAY(6))  // Usar un entero menor si va demasiado lento.
+        while (i++ < DELAY(7))  // Usar un entero menor si va demasiado lento.
             ;
 
         while (counter[p] == '9') {
@@ -48,19 +55,22 @@ static void contador_yield(unsigned lim, uint8_t linea, char color) {
 
 void contador_run() {
     uintptr_t* top_stack_verde= (uintptr_t*) stack_verde + USTACK_SIZE -1;
-    uintptr_t params_stack_verde[]= {100, 0, 0x2F};
+    uintptr_t params_stack_verde[]= {50, 0, 0x2F}; // unicamente necesito poner los argumentos
+                                                    // de contador_yield con el stack verde
 
     uintptr_t* top_stack_rojo= (uintptr_t*) stack_rojo+ USTACK_SIZE -1;
     uintptr_t params_stack_rojo[]= {
-        0,
-        0,
-        0,
-        0,
-        (uintptr_t)contador_yield,
-        0,
-        100,
-        1,
-        0x1F
+        0,                        // los primeros cuatro lugares
+        0,                        // los relleno con valores para los registros que
+        0,                        // popea task_swap
+        0,                        //
+        (uintptr_t)contador_yield,// direccion a la que retornara task_swap
+                                  // en la primer llamada
+        (uintptr_t)exit,                        // direccion a la que retornara contador_yield con el stack rojo
+                                  //nomas relleno para que encuentre bien los argumentos
+        100,                      //
+        1,                        // argumentos de contador_yield
+        0x1F                      //
     };
     top_stack_rojo = (uintptr_t*)make_stack(top_stack_rojo, params_stack_rojo, 9);
     esp = (uintptr_t*)top_stack_rojo;
