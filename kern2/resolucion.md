@@ -413,3 +413,33 @@ task_swap:
 Al reducir el número de iteraciones del primer contador, el kernel no crashea pero ambos contadores llegan al primer tope.
 Al reducir el segundo tope, el kernel crashea porque intenta retornar de contador_yield con el stack rojo, que no tiene una dirección de retorno válida.
 
+```C
+static void exit(){
+    uintptr_t* tmp = esp;
+    esp = NULL;
+    task_swap(&tmp);
+}
+void contador_run() {
+    uintptr_t* top_stack_verde= (uintptr_t*) stack_verde + USTACK_SIZE -1;
+    uintptr_t params_stack_verde[]= {150, 0, 0x2F}; // unicamente necesito poner los argumentos
+                                                    // de contador_yield con el stack verde
+
+    uintptr_t* top_stack_rojo= (uintptr_t*) stack_rojo+ USTACK_SIZE -1;
+    uintptr_t params_stack_rojo[]= {
+        0,                        // los primeros cuatro lugares
+        0,                        // los relleno con valores para los registros que
+        0,                        // popea task_swap
+        0,                        //
+        (uintptr_t)contador_yield,// direccion a la que retornara task_swap
+                                  // en la primer llamada
+        (uintptr_t)exit,          // direccion a la que retornara contador_yield con el stack rojo
+        100,                      //
+        1,                        // argumentos de contador_yield
+        0x1F                      //
+    };
+    top_stack_rojo = (uintptr_t*)make_stack(top_stack_rojo, params_stack_rojo, 9);
+    esp = (uintptr_t*)top_stack_rojo;
+    task_exec((uintptr_t)contador_yield, make_stack(top_stack_verde, params_stack_verde, 3));
+}
+```
+estas modificaciones solucionan el problema de que el kernel crashea si el segundo contador termina primero, pero no evita que la cuenta del segundo contador siga una vez que finaliza la del primero.

@@ -16,11 +16,9 @@ static void yield() {
         task_swap(&esp);
 }
 static void exit(){
-    if(esp){
-        uintptr_t* tmp = esp;
-        esp = NULL;
-        task_swap(&tmp);
-    }
+    uintptr_t* tmp = esp;
+    esp = NULL;
+    task_swap(&tmp);
 }
 
 static void contador_yield(unsigned lim, uint8_t linea, char color) {
@@ -55,7 +53,7 @@ static void contador_yield(unsigned lim, uint8_t linea, char color) {
 
 void contador_run() {
     uintptr_t* top_stack_verde= (uintptr_t*) stack_verde + USTACK_SIZE -1;
-    uintptr_t params_stack_verde[]= {50, 0, 0x2F}; // unicamente necesito poner los argumentos
+    uintptr_t params_stack_verde[]= {150, 0, 0x2F}; // unicamente necesito poner los argumentos
                                                     // de contador_yield con el stack verde
 
     uintptr_t* top_stack_rojo= (uintptr_t*) stack_rojo+ USTACK_SIZE -1;
