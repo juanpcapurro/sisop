@@ -21,3 +21,18 @@ task_exec:
     movl (former_esp), %esp
     leave
     ret
+
+.globl task_swap
+task_swap:
+    movl 4(%esp), %eax
+    push %ebx
+    push %ebp
+    push %esi
+    push %edi
+
+    xchg %esp, (%eax)
+    pop %edi
+    pop %esi
+    pop %ebp
+    pop %ebx
+    ret

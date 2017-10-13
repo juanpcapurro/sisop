@@ -21,20 +21,11 @@ void two_stacks_c() {
     uintptr_t *s1 = (uintptr_t*)stack1+USTACK_SIZE-1;
     uintptr_t *s2 = (uintptr_t*)stack2+USTACK_SIZE-1;
 
-    *--s1 = 0x57;
-    *--s1 = 15;
-    *--s1 = (uintptr_t)"vga_write() from stack1";
+    uintptr_t params_s1[] = {(uintptr_t)"vga_write() from stack1", 15, 0x57};
+    task_exec((uintptr_t)vga_write, make_stack(s1,params_s1,3));
 
-    // AYUDA 3: para esta segunda llamada, usar esta forma de
-    // asignación alternativa:
-    s2 -= 3;
-    s2[0] = (uintptr_t)"vga_write() from stack2";
-    s2[1] = 16;
-    s2[2] = 0xD0;
-
-    // Primera llamada usando task_exec().
-    task_exec((uintptr_t) vga_write, (uintptr_t) s1);
-
+    uintptr_t params_s2[] = {(uintptr_t)"vga_write() from stack2", 16, 0xD0};
+    s2= (uintptr_t*)make_stack(s2, params_s2,3);
     // Segunda llamada con ASM directo. Importante: no
     // olvidar restaurar el valor de %esp al terminar, y
     // compilar con -fno-omit-frame-pointer.
@@ -48,4 +39,12 @@ void two_stacks_c() {
         : /* no outputs */
         : "r"(s2), "r"(vga_write)
         : "%esi", "%ebx");
+}
+
+uintptr_t make_stack(uintptr_t* stack_top, uintptr_t params[], uint8_t param_count){
+    stack_top -= param_count;
+    for (size_t i = 0; i< param_count; i++){
+        stack_top[i]= params[i];
+    }
+    return (uintptr_t)stack_top;
 }

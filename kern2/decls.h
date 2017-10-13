@@ -20,6 +20,7 @@ void __attribute__((regparm(3))) vga_write2(const char *s, int8_t linea, uint8_t
 void console_out(const char *string);
 void two_stacks();
 void two_stacks_c();
+uintptr_t make_stack(uintptr_t* stack_top, uintptr_t params[], uint8_t param_count);
 void task_exec(uintptr_t entry, uintptr_t stack);
 void contador_run();
 void task_swap(uintptr_t **esp);
