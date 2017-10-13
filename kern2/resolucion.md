@@ -355,3 +355,61 @@ llamada a `vga_write2`
 
 ## kern2-swap
 
+`contador_run` y una función auxiliar:
+```C
+void contador_run() {
+    uintptr_t* top_stack_verde= (uintptr_t*) stack_verde + USTACK_SIZE -1;
+    uintptr_t params_stack_verde[]= {100, 0, 0x2F}; // unicamente necesito poner los argumentos
+                                                    // de contador_yield con el stack verde
+
+    uintptr_t* top_stack_rojo= (uintptr_t*) stack_rojo+ USTACK_SIZE -1;
+    uintptr_t params_stack_rojo[]= {
+        0,                        // los primeros cuatro lugares
+        0,                        // los relleno con valores para los registros que
+        0,                        // popea task_swap
+        0,                        //
+        (uintptr_t)contador_yield,// direccion a la que retornara task_swap
+                                  // en la primer llamada
+        0,                        // direccion a la que retornara contador_yield con el stack rojo
+                                  //nomas relleno para que encuentre bien los argumentos
+        100,                      //
+        1,                        // argumentos de contador_yield
+        0x1F                      //
+    };
+    top_stack_rojo = (uintptr_t*)make_stack(top_stack_rojo, params_stack_rojo, 9);
+    esp = (uintptr_t*)top_stack_rojo;
+    task_exec((uintptr_t)contador_yield, make_stack(top_stack_verde, params_stack_verde, 3));
+}
+
+uintptr_t make_stack(uintptr_t* stack_top, uintptr_t params[], uint8_t param_count){
+    stack_top -= param_count;
+    for (size_t i = 0; i< param_count; i++){
+        stack_top[i]= params[i];
+    }
+    return (uintptr_t)stack_top;
+}
+```
+task_swap:
+```asm
+.globl task_swap
+task_swap:
+    movl 4(%esp), %eax
+    push %ebx
+    push %ebp
+    push %esi
+    push %edi
+
+    xchg %esp, (%eax)
+    pop %edi
+    pop %esi
+    pop %ebp
+    pop %ebx
+    ret
+```
+
+## kern2-exit
+
+#### Describir qué error ocurre al reducir el número de iteraciones del segundo contador
+Al reducir el número de iteraciones del primer contador, el kernel no crashea pero ambos contadores llegan al primer tope.
+Al reducir el segundo tope, el kernel crashea porque intenta retornar de contador_yield con el stack rojo, que no tiene una dirección de retorno válida.
+
