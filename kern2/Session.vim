@@ -7,12 +7,15 @@ if expand('%') == '' && !&modified && line('$') <= 1 && getline(1) == ''
   let s:wipebuf = bufnr('%')
 endif
 set shortmess=aoO
-badd +1 term://.//13375:/usr/bin/zsh
-badd +1 contador.c
-badd +0 tasks.S
+badd +1055 term://.//13375:/usr/bin/zsh
+badd +54 contador.c
+badd +22 tasks.S
+badd +24 makefile
+badd +417 resolucion.md
+badd +44 kern2.c
 argglobal
 silent! argdel *
-edit contador.c
+edit resolucion.md
 set splitbelow splitright
 wincmd _ | wincmd |
 split
@@ -26,11 +29,11 @@ set nosplitbelow
 set nosplitright
 wincmd t
 set winminheight=1 winminwidth=1 winheight=1 winwidth=1
-exe '1resize ' . ((&lines * 27 + 29) / 58)
+exe '1resize ' . ((&lines * 36 + 29) / 58)
 exe 'vert 1resize ' . ((&columns * 99 + 82) / 164)
-exe '2resize ' . ((&lines * 27 + 29) / 58)
+exe '2resize ' . ((&lines * 36 + 29) / 58)
 exe 'vert 2resize ' . ((&columns * 64 + 82) / 164)
-exe '3resize ' . ((&lines * 27 + 29) / 58)
+exe '3resize ' . ((&lines * 18 + 29) / 58)
 argglobal
 setlocal fdm=syntax
 setlocal fde=0
@@ -40,26 +43,12 @@ setlocal fdl=0
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-19
-normal! zo
-22
-normal! zo
-32
-normal! zo
-36
-normal! zo
-40
-normal! zo
-49
-normal! zo
-54
-normal! zo
-let s:l = 65 - ((24 * winheight(0) + 13) / 27)
+let s:l = 3 - ((2 * winheight(0) + 18) / 36)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-65
-normal! 021|
+3
+normal! 04|
 wincmd w
 argglobal
 edit tasks.S
@@ -71,12 +60,12 @@ setlocal fdl=0
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-let s:l = 22 - ((6 * winheight(0) + 13) / 27)
+let s:l = 25 - ((22 * winheight(0) + 18) / 36)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-22
-normal! 08|
+25
+normal! 0
 wincmd w
 argglobal
 edit term://.//13375:/usr/bin/zsh
@@ -88,19 +77,19 @@ setlocal fdl=0
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-let s:l = 616 - ((26 * winheight(0) + 13) / 27)
+let s:l = 1018 - ((17 * winheight(0) + 9) / 18)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-616
+1018
 normal! 0
 wincmd w
 3wincmd w
-exe '1resize ' . ((&lines * 27 + 29) / 58)
+exe '1resize ' . ((&lines * 36 + 29) / 58)
 exe 'vert 1resize ' . ((&columns * 99 + 82) / 164)
-exe '2resize ' . ((&lines * 27 + 29) / 58)
+exe '2resize ' . ((&lines * 36 + 29) / 58)
 exe 'vert 2resize ' . ((&columns * 64 + 82) / 164)
-exe '3resize ' . ((&lines * 27 + 29) / 58)
+exe '3resize ' . ((&lines * 18 + 29) / 58)
 tabnext 1
 if exists('s:wipebuf') && getbufvar(s:wipebuf, '&buftype') isnot# 'terminal'
   silent exe 'bwipe ' . s:wipebuf

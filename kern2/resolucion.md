@@ -1,6 +1,6 @@
 % Lab kern2
 % Juan Pablo Capurro - 98194
-% 29/9/2017
+% 13/9/2017
 
 # Conocimientos previos
 
