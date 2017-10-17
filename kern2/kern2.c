@@ -1,5 +1,6 @@
 #include "decls.h"
 #include "multiboot.h"
+#include "interrupts.h"
 #define USTACK_SIZE 4096
 
 static uint8_t stack1[USTACK_SIZE] __attribute__((aligned(4096)));
@@ -12,6 +13,8 @@ void kmain(const multiboot_info_t *mbi) {
     // definida en stacks.S.
     two_stacks();
     two_stacks_c();
+    idt_install(T_BRKPT, breakpoint);
+    __asm__("int3"); 
     contador_run();
     vga_write2("Funciona vga_write2?", 18, 0xE0);
 }

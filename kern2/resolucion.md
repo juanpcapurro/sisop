@@ -443,3 +443,37 @@ void contador_run() {
 }
 ```
 estas modificaciones solucionan el problema de que el kernel crashea si el segundo contador termina primero, pero no evita que la cuenta del segundo contador siga una vez que finaliza la del primero.
+
+
+# Interrupciones: reloj y teclado
+
+## kern2-idt
+Tras leer las secciones 6.1–6.5 6.10–6.11 de IA32-3A y las definiciones del archivo interrupts.h, responder:
+
+#### ¿Cuántos bytes ocupa una entrada en la IDT?
+Cada entrada ocupa 8 bytes.
+
+#### ¿Cuántas entradas como máximo puede albergar la IDT?
+Como máximo, puede albergar 256 entradas.
+
+#### ¿Cuál es el valor máximo aceptable para el campo limit del registro IDTR?
+El valor máximo admisible es 2047.
+
+#### Indicar qué valor exacto tomará el campo limit para una IDT de 64 descriptores solamente.
+511.
+
+#### Consultar la sección 6.1 y explicar la diferencia entre interrupciones (§6.3) y excepciones (§6.4).
+La diferencia entre excepciones e interrupciones radica en que las interrupciones pueden ser generadas en cualquier momento por software o hardware, mientras que las excepciones se generan por el propio procesador cuando alguna de las múltiples condiciones que chequea no se cumplen (ejemplo: acceso inválido a memoria o división por cero).
+
+## kern2-isr
+
+
+## kern2-irq
+
+
+## kern2-div
+
+
+## kern2-kbd ★
+
+
