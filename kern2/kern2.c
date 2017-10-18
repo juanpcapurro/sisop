@@ -13,6 +13,7 @@ void kmain(const multiboot_info_t *mbi) {
     // definida en stacks.S.
     two_stacks();
     two_stacks_c();
+    idt_init();
     idt_install(T_BRKPT, breakpoint);
     __asm__("int3"); 
     contador_run();

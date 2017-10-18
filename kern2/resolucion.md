@@ -465,7 +465,164 @@ El valor máximo admisible es 2047.
 #### Consultar la sección 6.1 y explicar la diferencia entre interrupciones (§6.3) y excepciones (§6.4).
 La diferencia entre excepciones e interrupciones radica en que las interrupciones pueden ser generadas en cualquier momento por software o hardware, mientras que las excepciones se generan por el propio procesador cuando alguna de las múltiples condiciones que chequea no se cumplen (ejemplo: acceso inválido a memoria o división por cero).
 
+interrupts.c
+```
+void idt_init(void){
+    idtr.base  = (uintptr_t) idt;
+    idtr.limit = 256*8-1;
+    __asm__("lidt %0" : : "m"(idtr));
+}
+
+void idt_install(uint8_t n, void (*handler)(void)) {
+    uintptr_t addr = (uintptr_t) handler;
+
+    idt[n].rpl = 0;
+    idt[n].type = STS_IG32;
+    idt[n].segment = KSEG_CODE;
+
+    idt[n].off_15_0 = addr & 0x0000FFFF;
+    idt[n].off_31_16 = addr >> 16;
+
+    idt[n].present = 1;
+}
+```
 ## kern2-isr
+
+Nota: `idt_install` es la función que se llama inmediatamente antes de la interrupción _int3_, así que el breakpoint lo pongo ahí, y no en _idt_init_
+
+Versión A:
+```
+(gdb) b idt_install
+Breakpoint 1 at 0x100dfe: file interrupts.c, line 17.
+(gdb) c
+Continuing.
+
+Breakpoint 1, idt_install (n=3 '\003', handler=0x1000e8 <breakpoint>) at interrupts.c:17
+17          uintptr_t addr = (uintptr_t) handler;
+(gdb) display/i $pc
+1: x/i $pc
+=> 0x100dfe <idt_install+14>:   mov    0xc(%ebp),%edx
+(gdb) finish
+Run till exit from #0  idt_install (n=3 '\003', handler=0x1000e8 <breakpoint>) at interrupts.c:17
+kmain (mbi=0x9500) at kern2.c:18
+18          __asm__("int3");
+1: x/i $pc
+=> 0x100438 <kmain+104>:        int3
+(gdb) disas
+Dump of assembler code for function kmain:
+ ---
+   0x00100406 <+54>:    call   0x1000f0 <vga_write>
+   0x0010040b <+59>:    call   0x10002c <two_stacks>
+   0x00100410 <+64>:    call   0x100460 <two_stacks_c>
+   0x00100415 <+69>:    call   0x100dd0 <idt_init>
+   0x0010041a <+74>:    mov    $0x3,%eax
+   0x0010041f <+79>:    lea    0x1000e8,%ecx
+   0x00100425 <+85>:    movl   $0x3,(%esp)
+   0x0010042c <+92>:    mov    %ecx,0x4(%esp)
+   0x00100430 <+96>:    mov    %eax,-0x14(%ebp)
+   0x00100433 <+99>:    call   0x100df0 <idt_install>
+=> 0x00100438 <+104>:   int3
+   0x00100439 <+105>:   call   0x100b00 <contador_run>
+   0x0010043e <+110>:   lea    0x100eaf,%eax
+   0x00100444 <+116>:   mov    $0x12,%edx
+   0x00100449 <+121>:   mov    $0xe0,%ecx
+   0x0010044e <+126>:   call   0x1000d8 <vga_write2>
+   0x00100453 <+131>:   add    $0x24,%esp
+   0x00100456 <+134>:   pop    %esi
+   0x00100457 <+135>:   pop    %ebp
+   0x00100458 <+136>:   ret
+End of assembler dump.
+(gdb) p $esp
+$1 = (void *) 0x104fcc
+(gdb) x/xw $esp
+0x104fcc:       0x00000003
+(gdb) p $cs
+$2 = 8
+(gdb) p $eflags
+$3 = [ ]
+(gdb) p/x $eflags
+$4 = 0x2
+(gdb) stepi
+breakpoint () at idt_entry.S:4
+4               test %eax, %eax
+1: x/i $pc
+=> 0x1000e9 <breakpoint+1>:     test   %eax,%eax
+(gdb) p $esp
+$5 = (void *) 0x104fc0
+(gdb) x/4wx $esp
+0x104fc0:       0x00100439      0x00000008      0x00000002      0x00000003
+(gdb) stepi
+5               iret
+1: x/i $pc
+=> 0x1000eb <breakpoint+3>:     iret
+(gdb) p $eflags
+$6 = [ PF ]
+(gdb) p/x $eflags
+$7 = 0x6
+(gdb) si
+kmain (mbi=0x9500) at kern2.c:19
+19          contador_run();
+1: x/i $pc
+=> 0x100439 <kmain+105>:        call   0x100b00 <contador_run>
+(gdb) p $esp
+$8 = (void *) 0x104fcc
+(gdb) x/xw $esp
+0x104fcc:       0x00000003
+(gdb) p $cs
+$9 = 8
+(gdb) p $eflags
+$10 = [ ]
+(gdb) p/x $eflags
+$11 = 0x2
+(gdb)
+```
+#### Cuántas posiciones avanza `esp` al entrar a _breakpoint_? Qué representa cada valor?
+`esp` avanza tres palabras, se ve bien claro al usar `x/4wx`, el primer valor pusheado es el registro `EFLAGS`, el segundo el registro `cs`, y el tercero, la dirección a la cual retornar del interrupt.
+
+Versión B:
+```
+-- No hay diferencia hasta acá
+breakpoint () at idt_entry.S:4
+4               test %eax, %eax
+(gdb) x/4wx $esp
+0x104fc0:       0x00100439      0x00000008      0x00000002      0x00000003
+(gdb) si
+5               ret
+(gdb) x/4wx $esp
+0x104fc0:       0x00100439      0x00000008      0x00000002      0x00000003
+(gdb) si
+kmain (mbi=0x9500) at kern2.c:19
+19          contador_run();
+(gdb) x/4wx $esp
+0x104fc4:       0x00000008      0x00000002      0x00000003      0x001000e8
+(gdb)
+```
+#### Explicar qué diferencia hay entre la versión A y B al retornar de _breakpoint_
+La diferencia radica en que `ret` saca menos cosas del stack que `iret`, por lo que al retornar del interrupt handler en la versión B quedan en el stack los valores de `cs` y `EFLAGS`. Esto puede ser problemático ya que corrompe el stack de _kmain_.
+
+#### Version definitiva de breakpoint
+```
+
+```
+#### Responder:
+1. Para cada una de las maneras planteadas de guardar/restaurar registros en breakpoint, indicar si es correcto (en el sentido de hacer su ejecución “invisible”), y justificar por qué:
+
+    Para responder esta pregunta primero conviene analizar qué responsabilidades tiene _breakpoint_: Esta debe guardar los caller-saved registers (ya que la llamada a _vga_write_ o _vga_write2_ puede sobreescribirlos), y también guardar los registros que use (para ser _invisible_). De guardar los calle-saved registers se encarga la llamada a _vga_write_ o _vga_write_2. Entonces:
+    * **Opcion A**: Es válida, ya que preserva todos los registros de uso general.
+    * **Opcion B**: Restaura los caller-saved registers, y la llamada a función no modificará los calle-saved registers, así que es válida.
+    * **Opcion C**: No restaura `ecx`, `edx` ni `eax`, que son usados para pasar los parámetros a _vga_write2_
+
+2. Responder de nuevo la pregunta anterior, sustituyendo en el código vga_write2 por vga_write. 
+    * **Opcion A**: Es válida, ya que preserva todos los registros de uso general.
+    * **Opcion B**: Es 
+    * **Opcion C**: No restaura `ecx`, `edx` ni `eax`, que son caller-saved, y _vga_write_ puede modificar, ademas de presentar el mismo problema que la opción anterior.
+
+3. Si la ejecución del manejador debe ser enteramente invisible ¿no sería necesario guardar y restaurar el registro EFLAGS a mano? ¿Por qué?
+
+4. ¿En qué stack se ejecuta la función _vga_write()_ ?
+
+    _vga_write_ se ejecutará en el mismo stack que _kmain_, y verá a kmain como la función que la llamó, ya que _breakpoint_ no genera un stack frame.
+
 
 
 ## kern2-irq

@@ -1,4 +1,5 @@
 .globl breakpoint
 breakpoint:
-        // Manejador mínimo.
+        nop
+        test %eax, %eax
         iret
