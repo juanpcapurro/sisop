@@ -490,6 +490,8 @@ void idt_install(uint8_t n, void (*handler)(void)) {
 
 Nota: `idt_install` es la función que se llama inmediatamente antes de la interrupción _int3_, así que el breakpoint lo pongo ahí, y no en _idt_init_
 
+#### Guiones de GDB
+
 Versión A:
 ```
 (gdb) b idt_install
@@ -597,10 +599,10 @@ kmain (mbi=0x9500) at kern2.c:19
 0x104fc4:       0x00000008      0x00000002      0x00000003      0x001000e8
 (gdb)
 ```
-#### Explicar qué diferencia hay entre la versión A y B al retornar de _breakpoint_
+##### Explicar qué diferencia hay entre la versión A y B al retornar de _breakpoint_
 La diferencia radica en que `ret` saca menos cosas del stack que `iret`, por lo que al retornar del interrupt handler en la versión B quedan en el stack los valores de `cs` y `EFLAGS`. Esto puede ser problemático ya que corrompe el stack de _kmain_.
 
-#### Version definitiva de breakpoint
+##### Version definitiva de breakpoint
 ```
 
 ```
@@ -614,10 +616,12 @@ La diferencia radica en que `ret` saca menos cosas del stack que `iret`, por lo 
 
 2. Responder de nuevo la pregunta anterior, sustituyendo en el código vga_write2 por vga_write. 
     * **Opcion A**: Es válida, ya que preserva todos los registros de uso general.
-    * **Opcion B**: Es 
+    * **Opcion B**: Es válida si se asume que 'el código representado con `...` correspondería a la convención de llamadas' incluye también sacar del stack los parámetros que se pushearon para pasársele a _vga_write_
     * **Opcion C**: No restaura `ecx`, `edx` ni `eax`, que son caller-saved, y _vga_write_ puede modificar, ademas de presentar el mismo problema que la opción anterior.
 
 3. Si la ejecución del manejador debe ser enteramente invisible ¿no sería necesario guardar y restaurar el registro EFLAGS a mano? ¿Por qué?
+    
+    No es necesario restaurar manualmente EFLAGS ya que la instrucción `iret` se encarga de ello.
 
 4. ¿En qué stack se ejecuta la función _vga_write()_ ?
 
