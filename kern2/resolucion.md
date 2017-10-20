@@ -444,7 +444,6 @@ void contador_run() {
 ```
 estas modificaciones solucionan el problema de que el kernel crashea si el segundo contador termina primero, pero no evita que la cuenta del segundo contador siga una vez que finaliza la del primero.
 
-
 # Interrupciones: reloj y teclado
 
 ## kern2-idt
@@ -465,27 +464,7 @@ El valor máximo admisible es 2047.
 #### Consultar la sección 6.1 y explicar la diferencia entre interrupciones (§6.3) y excepciones (§6.4).
 La diferencia entre excepciones e interrupciones radica en que las interrupciones pueden ser generadas en cualquier momento por software o hardware, mientras que las excepciones se generan por el propio procesador cuando alguna de las múltiples condiciones que chequea no se cumplen (ejemplo: acceso inválido a memoria o división por cero).
 
-interrupts.c
-```
-void idt_init(void){
-    idtr.base  = (uintptr_t) idt;
-    idtr.limit = 256*8-1;
-    __asm__("lidt %0" : : "m"(idtr));
-}
 
-void idt_install(uint8_t n, void (*handler)(void)) {
-    uintptr_t addr = (uintptr_t) handler;
-
-    idt[n].rpl = 0;
-    idt[n].type = STS_IG32;
-    idt[n].segment = KSEG_CODE;
-
-    idt[n].off_15_0 = addr & 0x0000FFFF;
-    idt[n].off_31_16 = addr >> 16;
-
-    idt[n].present = 1;
-}
-```
 ## kern2-isr
 
 Nota: `idt_install` es la función que se llama inmediatamente antes de la interrupción _int3_, así que el breakpoint lo pongo ahí, y no en _idt_init_
@@ -602,11 +581,8 @@ kmain (mbi=0x9500) at kern2.c:19
 ##### Explicar qué diferencia hay entre la versión A y B al retornar de _breakpoint_
 La diferencia radica en que `ret` saca menos cosas del stack que `iret`, por lo que al retornar del interrupt handler en la versión B quedan en el stack los valores de `cs` y `EFLAGS`. Esto puede ser problemático ya que corrompe el stack de _kmain_.
 
-##### Version definitiva de breakpoint
-```
-
-```
 #### Responder:
+
 1. Para cada una de las maneras planteadas de guardar/restaurar registros en breakpoint, indicar si es correcto (en el sentido de hacer su ejecución “invisible”), y justificar por qué:
 
     Para responder esta pregunta primero conviene analizar qué responsabilidades tiene _breakpoint_: Esta debe guardar los caller-saved registers (ya que la llamada a _vga_write_ o _vga_write2_ puede sobreescribirlos), y también guardar los registros que use (para ser _invisible_). De guardar los calle-saved registers se encarga la llamada a _vga_write_ o _vga_write_2. Entonces:
@@ -616,7 +592,7 @@ La diferencia radica en que `ret` saca menos cosas del stack que `iret`, por lo 
 
 2. Responder de nuevo la pregunta anterior, sustituyendo en el código vga_write2 por vga_write. 
     * **Opcion A**: Es válida, ya que preserva todos los registros de uso general.
-    * **Opcion B**: Es válida si se asume que 'el código representado con `...` correspondería a la convención de llamadas' incluye también sacar del stack los parámetros que se pushearon para pasársele a _vga_write_
+    * **Opcion B**: Es válida si se asume que 'el código representado con `...` correspondería a la convención de llamadas' incluye también sacar del stack los parámetros que se pushearon para pasársele a _vga_write_.
     * **Opcion C**: No restaura `ecx`, `edx` ni `eax`, que son caller-saved, y _vga_write_ puede modificar, ademas de presentar el mismo problema que la opción anterior.
 
 3. Si la ejecución del manejador debe ser enteramente invisible ¿no sería necesario guardar y restaurar el registro EFLAGS a mano? ¿Por qué?
@@ -631,10 +607,201 @@ La diferencia radica en que `ret` saca menos cosas del stack que `iret`, por lo 
 
 ## kern2-irq
 
+Archivos al final de la entrega
 
 ## kern2-div
 
+#### Explicar el funcionamiento exacto de la línea asm(...) del punto anterior:
 
-## kern2-kbd ★
+* ¿qué cómputo se está realizando?
+
+    Se está realizando `18/1`
+* ¿de dónde sale el valor de la variable color?
+    
+    El valor de la variable color es inicializado por gcc cuando se le indica que %ecx es registro de salida (`"=c"(color)`) y de entrada (`"1"(0xE0)`). 
+* ¿por qué se da valor 0 a %edx?
+    
+    Porque con un operando de 32 bits, `div` usa como dividendo el contenido de los registros edx:eax como si fueran un solo registro de 64 bits, y si hay algun valor distinto de 0 en `edx`, el divisor ya no seria 18 sino un número mucho más grande.
 
 
+
+## kern2-kbd
+
+
+# Código fuente
+Incluyo las modificaciones que hice a los archivos que entiendo como relevantes a la resolución de los enunciados, no los archivos enteros.
+
+## interrupts.c
+```C
+#include "decls.h"
+#include "interrupts.h"
+
+static struct IDTR idtr;
+static struct Gate idt[256];
+
+static const uint8_t STS_IG32 = 0xE;
+static const uint8_t KSEG_CODE = 8;
+
+void idt_init(void){
+    idtr.base  = (uintptr_t) idt;
+    idtr.limit = 256*8-1;
+    __asm__("lidt %0" : : "m"(idtr));
+}
+
+void idt_install(uint8_t n, void (*handler)(void)) {
+    uintptr_t addr = (uintptr_t) handler;
+
+    idt[n].rpl = 0;
+    idt[n].type = STS_IG32;
+    idt[n].segment = KSEG_CODE;
+
+    idt[n].off_15_0 = addr & 0x0000FFFF;
+    idt[n].off_31_16 = addr >> 16;
+
+    idt[n].present = 1;
+}
+
+void irq_init() {
+    irq_remap();
+    idt_install(T_TIMER, timer_asm);
+    idt_install(T_KEYBOARD, ack_irq);
+
+    __asm__("sti");
+}
+```
+
+## idt_entry.S
+```asm
+#define PIC1 0x20
+#define ACK_IRQ 0x20
+
+.data
+breakpoint_msg:
+    .asciz "Hello, breakpoint!"
+divzero_msg:
+    .asciz "Se divide por ++ebx"
+
+.text
+.globl breakpoint
+breakpoint:
+    pusha
+
+    movl $breakpoint_msg, %eax
+    movl $3, %edx
+    movl $0x1f, %ecx
+    call vga_write2
+
+    popa
+    iret
+
+.globl ack_irq
+ack_irq:
+    movl $ACK_IRQ, %eax
+    outb %al, $PIC1
+    iret
+    
+.globl timer_asm
+timer_asm:
+    pusha
+    call timer
+    popa
+    jmp ack_irq
+
+.globl divzero
+divzero:
+    push %eax
+    push %edx
+    push %ecx
+    movl $divzero_msg, %eax
+    movl $17,%edx
+    call vga_write_cyan
+
+    pop %ecx
+    pop %edx
+    pop %eax
+    movl $1, %ebx
+    iret
+```
+
+
+## handlers.c
+```C
+#include "decls.h"
+
+static unsigned ticks=0;
+
+void timer() {
+    if (++ticks == 15) {
+        vga_write("Transcurrieron 15 ticks", 20, 0x07);
+    }
+    if (ticks == 30) {
+        vga_write("Transcurrieron 15 ticks", 20, 0x70);
+        ticks=0;
+    }
+}
+```
+## kern2.c
+```C
+#include "decls.h"
+#include "multiboot.h"
+#include "interrupts.h"
+#define USTACK_SIZE 4096
+
+static uint8_t stack1[USTACK_SIZE] __attribute__((aligned(4096)));
+static uint8_t stack2[USTACK_SIZE] __attribute__((aligned(4096)));
+
+void kmain(const multiboot_info_t *mbi) {
+    int8_t linea;
+    uint8_t color;
+    vga_write("kern2 loading.............", 8, 0x70);
+    idt_init();
+    irq_init();
+    idt_install(T_BRKPT, breakpoint);
+    idt_install(T_DIVIDE, divzero);
+    __asm__("int3"); 
+
+    __asm__("div %4"
+        : "=a"(linea), "=c"(color)
+        : "0"(18), "1"(0xE0), "b"(0), "d"(0));
+
+    vga_write2("Funciona vga_write2?", linea, color);
+
+    two_stacks();
+    two_stacks_c();
+    contador_run();
+    vga_write2("Funciona vga_write2?", 18, 0xE0);
+}
+
+void two_stacks_c() {
+    // Inicializar al *tope* de cada pila.
+    uintptr_t *s1 = (uintptr_t*)stack1+USTACK_SIZE-1;
+    uintptr_t *s2 = (uintptr_t*)stack2+USTACK_SIZE-1;
+
+    uintptr_t params_s1[] = {(uintptr_t)"vga_write() from stack1", 15, 0x57};
+    task_exec((uintptr_t)vga_write, make_stack(s1,params_s1,3));
+
+    uintptr_t params_s2[] = {(uintptr_t)"vga_write() from stack2", 16, 0xD0};
+    s2= (uintptr_t*)make_stack(s2, params_s2,3);
+    // Segunda llamada con ASM directo. Importante: no
+    // olvidar restaurar el valor de %esp al terminar, y
+    // compilar con -fno-omit-frame-pointer.
+    __asm__("movl %%esp, %%esi\n\t"
+            "movl %%ebp, %%ebx\n\t"
+            "movl %0, %%esp\n\t"
+            "movl $0,%%ebp\n\t"
+            "call *%1\n\t"
+            "movl %%esi, %%esp\n\t"
+            "movl %%ebx, %%ebp"
+        : /* no outputs */
+        : "r"(s2), "r"(vga_write)
+        : "%esi", "%ebx");
+}
+
+uintptr_t make_stack(uintptr_t* stack_top, uintptr_t params[], uint8_t param_count){
+    stack_top -= param_count;
+    for (size_t i = 0; i< param_count; i++){
+        stack_top[i]= params[i];
+    }
+    return (uintptr_t)stack_top;
+}
+```

@@ -55,7 +55,11 @@ enum Interrupt {
 
 void idt_init(void);
 void idt_install(uint8_t n, void (*handler)(void));
+void irq_init(void);
 
 void breakpoint(void);
+void timer_asm();
+void ack_irq();
+void divzero();
 
 #endif

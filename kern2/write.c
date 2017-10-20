@@ -23,6 +23,9 @@ void vga_write(const char *string, int8_t linea, uint8_t color){
         buf[character_index] = reached_EOS ? 0 : string[i];
     }
 }
+void __attribute__((regparm(2))) vga_write_cyan(const char *s, int8_t linea) {
+    vga_write(s, linea, 0xB0);
+}
 void console_out(const char* string){
     static int current_line = 0;
     vga_write(string, current_line, GREEN_ON_BLACK);
@@ -56,3 +59,4 @@ uint64_t power(uint32_t base, uint32_t exponent){
         result *= base;
     return result;
 }
+

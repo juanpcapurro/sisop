@@ -4,7 +4,7 @@ ASFLAGS       := $(CFLAGS)
 CC            := clang
 LIBGCC := $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
 
-KERN_C_SRCS    := write.c kern2.c ./lib/*.c contador.c interrupts.c
+KERN_C_SRCS    := write.c kern2.c ./lib/*.c contador.c interrupts.c handlers.c
 KERN_ASM_SRCS  := boot.S stacks.S tasks.S funcs.S idt_entry.S
 KERN_OBJS      := $(patsubst %S,%o,$(KERN_ASM_SRCS))
 KERN_OBJS      += $(patsubst %c,%o,$(KERN_C_SRCS))

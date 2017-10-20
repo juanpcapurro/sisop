@@ -16,6 +16,7 @@
 
 // write.c (función de kern0-vga copiada no-static).
 void vga_write(const char *s, int8_t linea, uint8_t color);
+void __attribute__((regparm(2))) vga_write_cyan(const char *s, int8_t linea);
 void __attribute__((regparm(3))) vga_write2(const char *s, int8_t linea, uint8_t color);
 void console_out(const char *string);
 void two_stacks();

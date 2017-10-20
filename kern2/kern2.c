@@ -7,15 +7,23 @@ static uint8_t stack1[USTACK_SIZE] __attribute__((aligned(4096)));
 static uint8_t stack2[USTACK_SIZE] __attribute__((aligned(4096)));
 
 void kmain(const multiboot_info_t *mbi) {
+    int8_t linea;
+    uint8_t color;
     vga_write("kern2 loading.............", 8, 0x70);
+    idt_init();
+    irq_init();
+    idt_install(T_BRKPT, breakpoint);
+    idt_install(T_DIVIDE, divzero);
+    __asm__("int3"); 
 
-    // A remplazar por una llamada a two_stacks(),
-    // definida en stacks.S.
+    __asm__("div %4"
+        : "=a"(linea), "=c"(color)
+        : "0"(18), "1"(0xE0), "b"(0), "d"(0));
+
+    vga_write2("Funciona vga_write2?", linea, color);
+
     two_stacks();
     two_stacks_c();
-    idt_init();
-    idt_install(T_BRKPT, breakpoint);
-    __asm__("int3"); 
     contador_run();
     vga_write2("Funciona vga_write2?", 18, 0xE0);
 }
