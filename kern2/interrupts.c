@@ -13,6 +13,22 @@ void idt_init(void){
     __asm__("lidt %0" : : "m"(idtr));
 }
 
+#define outb(port, data) \
+    __asm__("outb %b0,%w1" : : "a"(data), "d"(port));
+
+static void irq_remap() {
+    outb(0x20, 0x11);
+    outb(0xA0, 0x11);
+    outb(0x21, 0x20);
+    outb(0xA1, 0x28);
+    outb(0x21, 0x04);
+    outb(0xA1, 0x02);
+    outb(0x21, 0x01);
+    outb(0xA1, 0x01);
+    outb(0x21, 0x0);
+    outb(0xA1, 0x0);
+}
+
 void idt_install(uint8_t n, void (*handler)(void)) {
     uintptr_t addr = (uintptr_t) handler;
 
@@ -26,3 +42,10 @@ void idt_install(uint8_t n, void (*handler)(void)) {
     idt[n].present = 1;
 }
 
+void irq_init() {
+    irq_remap();
+    idt_install(T_TIMER, timer_asm);
+    idt_install(T_KEYBOARD, ack_irq);
+
+    __asm__("sti");
+}
