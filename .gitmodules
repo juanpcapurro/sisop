@@ -1,0 +1,3 @@
+[submodule "jos"]
+	path = jos
+	url = https://github.com/juanpcapurro/jos_clone.git
