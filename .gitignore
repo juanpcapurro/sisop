@@ -1,1 +1,5 @@
 tags
+*.o
+*.asm
+*.pdf
+kern2/kern2
