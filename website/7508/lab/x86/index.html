@@ -1,0 +1,1693 @@
+<!DOCTYPE html>
+<html lang="es">
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>x86: assembler y call conventions</title>
+  <meta name="description" content="Sistemas Operativos. Facultad de Ingeniería, Universidad de Buenos Aires.">
+
+  <link rel="stylesheet" href="../../assets/main.css">
+  <link rel="canonical" href="index.html">
+</head>
+
+
+  <body>
+
+    <header class="site-header">
+
+  <div class="wrapper">
+
+    <a class="site-title" href="../../index.html">
+      
+      <span>
+        <svg height="22px" version="1.1" viewBox="0 0 20 19" width="22px" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><title/><desc/><defs/><g fill="none" fill-rule="evenodd" id="Page-1" stroke="none" stroke-width="1"><g fill="#000000" id="Core" transform="translate(-506.000000, -255.000000)"><g id="home" transform="translate(506.000000, 255.500000)"><path d="M8,17 L8,11 L12,11 L12,17 L17,17 L17,9 L20,9 L10,0 L0,9 L3,9 L3,17 L8,17 Z" id="Shape"/></g></g></g></svg>
+      </span>
+      
+    </a>
+
+    <nav class="site-nav">
+      <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+      <label for="nav-trigger">
+      <span class="menu-icon">
+        <svg viewBox="0 0 18 15" width="18px" height="15px">
+          <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+          <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+          <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+        </svg>
+      </span>
+      </label>
+
+      <ul class="trigger">
+        
+        <li class="dropdown">
+          
+          
+            <a href="index.html">Teoría</a>
+          
+        
+        <li class="dropdown">
+          
+          
+            <a href="javascript:void(0)">Labs</a>
+            <div class="dropdown-content">
+            
+              <a href="../kern0/index.html">kern0</a>
+            
+              <a href="index.html">x86</a>
+            
+              <a href="../kern2/index.html">kern2</a>
+            
+              <a href="../../ejercicios/index.html">Guía POSIX</a>
+            
+            </div>
+          
+        
+        <li class="dropdown">
+          
+          
+            <a href="javascript:void(0)">TPs</a>
+            <div class="dropdown-content">
+            
+              <a href="../../tps/index.html">JOS</a>
+            
+              <a href="../../tp0/index.html">TP0</a>
+            
+              <a href="../../tp1/index.html">TP1</a>
+            
+              <a href="../../tp2/index.html">TP2</a>
+            
+            </div>
+          
+        
+        <li class="dropdown">
+          
+          
+            <a href="javascript:void(0)">Enlaces</a>
+            <div class="dropdown-content">
+            
+              <a href="../../bibliografia/index.html">Bibliografía</a>
+            
+              <a href="../../regimen/index.html">Evaluaciones</a>
+            
+              <a href="../../kit/index.html">Software</a>
+            
+            </div>
+          
+        
+      </ul>
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <main class="wrapper" aria-label="Content">
+      <article class="post post-content">
+  <h1 id="x86-assembler-y-call-conventions">x86: assembler y call conventions</h1>
+
+<p>La entrega se realiza en horario de clase del día indicado siguiendo las <a href="../../entregas/index.html#papel">instrucciones de entrega en papel</a>. Se recomienda usar la siguiente estructura de <em>Makefile</em> (ver sección <a href="../kern0/index.html#make">make</a> del <a href="../kern0/index.html">lab kern0</a>):</p>
+
+<div class="language-make highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">CFLAGS</span> <span class="o">:=</span> <span class="nt">-m32</span> <span class="nt">-g</span> <span class="nt">-std</span><span class="o">=</span>c99 <span class="nt">-Wall</span> <span class="nt">-Wextra</span> <span class="nt">-Wpedantic</span>
+<span class="nv">CFLAGS</span> <span class="o">+=</span> <span class="nt">-O1</span> <span class="nt">-fno-pic</span> <span class="nt">-fno-omit-frame-pointer</span> <span class="nt">-no-pie</span>
+<span class="nv">ASFLAGS</span> <span class="o">=</span> <span class="nv">$(CFLAGS)</span>
+
+<span class="nv">ASMS</span> <span class="o">:=</span> ...  <span class="c"># wildcard *.S</span>
+<span class="nv">SRCS</span> <span class="o">:=</span> ...  <span class="c"># wildcard *.c</span>
+
+<span class="c"># Como en este lab el código de cada programa reside en un
+# único archivo, los wildcard transformarán prog.c o prog.S
+# directamente a "prog", sin usar compilación intermedia; esto
+# es, sin que make llegue a recibir prog.o como objetivo.
+</span><span class="nv">PROG</span> <span class="o">:=</span> ...  <span class="c"># patsubst %.S → %</span>
+<span class="nv">PROG</span> <span class="o">+=</span> ...  <span class="c"># patsubst %.c → %</span>
+
+<span class="nl">all</span><span class="o">:</span> <span class="nf">$(PROG)</span>
+
+<span class="nl">clean</span><span class="o">:</span>
+	rm <span class="nt">-f</span> <span class="nv">$(PROG)</span> <span class="k">*</span>.o core
+
+<span class="nl">.PHONY</span><span class="o">:</span> <span class="nf">clean all</span>
+</code></pre></div></div>
+
+<h2 class="no_toc" id="índice">Índice</h2>
+
+<ul id="markdown-toc">
+  <li><a href="index.html#syscalls" id="markdown-toc-syscalls">Llamadas a biblioteca y llamadas al sistema</a>    <ul>
+      <li><a href="index.html#ej-write" id="markdown-toc-ej-write">Ej: x86-write</a></li>
+      <li><a href="index.html#ej-call" id="markdown-toc-ej-call">Ej: x86-call</a></li>
+      <li><a href="index.html#ej-libc" id="markdown-toc-ej-libc">Ej: x86-libc</a></li>
+      <li><a href="index.html#ej-ret" id="markdown-toc-ej-ret">Ej: x86-ret</a></li>
+      <li><a href="index.html#ej-watch" id="markdown-toc-ej-watch">Ej: x86-watch ★</a></li>
+    </ul>
+  </li>
+  <li><a href="index.html#stackframes" id="markdown-toc-stackframes">Stack frames y calling conventions</a>    <ul>
+      <li><a href="index.html#ej-ebp" id="markdown-toc-ej-ebp">Ej: x86-ebp</a></li>
+      <li><a href="index.html#ej-errno" id="markdown-toc-ej-errno">Ej: x86-errno</a></li>
+      <li><a href="index.html#ej-argv" id="markdown-toc-ej-argv">Ej: x86-argv</a></li>
+      <li><a href="index.html#ej-frames" id="markdown-toc-ej-frames">Ej: x86-frames</a></li>
+      <li><a href="index.html#ej-dwarf" id="markdown-toc-ej-dwarf">Ej: x86-dwarf ★</a></li>
+    </ul>
+  </li>
+  <li><a href="index.html#kernstack" id="markdown-toc-kernstack">Creación de stacks en el kernel</a>    <ul>
+      <li><a href="index.html#kern1-stack" id="markdown-toc-kern1-stack">Ej: kern1-stack</a></li>
+      <li><a href="index.html#ej-cmdline" id="markdown-toc-ej-cmdline">Ej: kern1-cmdline</a></li>
+      <li><a href="index.html#ej-meminfo" id="markdown-toc-ej-meminfo">Ej: kern1-meminfo ★</a></li>
+    </ul>
+  </li>
+</ul>
+
+<p>Los ejercicios marcados con ★ no son obligatorios, pero suman cada uno 1pt adicional. Asimismo, se pueden entregar —sin penalización de nota— hasta 7 días después de la fecha de entrega original.</p>
+
+<h2 id="syscalls">Llamadas a biblioteca y llamadas al sistema</h2>
+
+<ul class="biblio">
+  <li>
+    <p>Lecturas obligatorias<sup id="fnref:bibliotip"><a href="index.html#fn:bibliotip" class="footnote">1</a></sup></p>
+
+    <ul>
+      <li>KERR
+        <ul>
+          <li>cap. <strong title="System Programming Concepts">3</strong>: <strong>§1-3</strong></li>
+          <li>cap. <strong title="File I/O: The Universal I/O Model">4</strong>: <strong>§1-2</strong></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>
+    <p>Lecturas recomendadas</p>
+
+    <ul>
+      <li>KERR
+        <ul>
+          <li>cap. <strong title="History and Standards">1</strong>: <strong>§1-3</strong></li>
+          <li>cap. <strong title="Fundamental Concepts">2</strong>: <strong>§1-5</strong></li>
+          <li>cap. 3: <strong title="Portability Issues">§6(1, 3)</strong></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<p>El siguiente programa, <a href="hello.c">hello.c</a>, escribe un mensaje por pantalla en un sistema POSIX, y termina con estado numérico 7:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include &lt;unistd.h&gt;
+</span>
+<span class="k">const</span> <span class="kt">char</span> <span class="n">msg</span><span class="p">[]</span> <span class="o">=</span> <span class="s">"Hello, world!</span><span class="se">\n</span><span class="s">"</span><span class="p">;</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">write</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">msg</span><span class="p">,</span> <span class="k">sizeof</span> <span class="n">msg</span> <span class="o">-</span> <span class="mi">1</span><span class="p">);</span>
+    <span class="n">_exit</span><span class="p">(</span><span class="mi">7</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Nótese que se usan directamente las llamadas al sistema <code class="highlighter-rouge">write(2)</code> y <code class="highlighter-rouge">exit(2)</code> en lugar de las funciones <code class="highlighter-rouge">fputs(3)</code> y <code class="highlighter-rouge">exit(3)</code> de la biblioteca estándar.</p>
+
+<p>En el archivo <a href="libc_hello.S">libc_hello.S</a> se encuentra una versión en assembler del mismo programa; según la convención estándar de GCC, los parámetros se pasan en orden inverso en la pila:</p>
+
+<div class="language-nasm highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">.</span><span class="n">globl</span> <span class="n">main</span>
+<span class="n">main</span><span class="o">:</span>
+        <span class="k">push</span> <span class="err">$</span><span class="n">len</span>
+        <span class="k">push</span> <span class="err">$</span><span class="n">msg</span>
+        <span class="k">push</span> <span class="err">$</span><span class="mi">1</span>
+
+        <span class="k">call</span> <span class="n">write</span>
+
+        <span class="k">push</span> <span class="err">$</span><span class="mi">7</span>
+        <span class="k">call</span> <span class="n">_exit</span>
+
+<span class="p">.</span><span class="n">data</span>
+<span class="n">msg</span><span class="o">:</span>
+        <span class="p">.</span><span class="n">ascii</span> <span class="s">"Hello, world!</span><span class="se">\n</span><span class="s">"</span>
+
+<span class="p">.</span><span class="n">set</span> <span class="n">len</span><span class="p">,</span> <span class="p">.</span> <span class="o">-</span> <span class="n">msg</span>
+</code></pre></div></div>
+
+<h3 id="ej-write">Ej: x86-write</h3>
+
+<ul class="biblio">
+  <li>
+    <p>Lecturas obligatorias</p>
+
+    <ul>
+      <li>KERR
+        <ul>
+          <li>cap. 4: <strong title="4.5 Writing to a File: write()">§5</strong></li>
+        </ul>
+      </li>
+      <li>REES
+        <ul>
+          <li>cap. <strong title="Pointers and Arrays">4</strong>
+            <ul>
+              <li><em>Quick Review of Arrays</em></li>
+              <li><em>Pointer Notation and Arrays</em></li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>
+    <p>Lecturas recomendadas</p>
+
+    <ul>
+      <li>BRY2
+        <ul>
+          <li>cap <strong title="Machine-Level Representation of Programs">3</strong>:
+<strong title="3.8 Array allocation and Access">§8</strong>,
+<strong title="3.10 Understanding Pointers">10</strong></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<p>Sobre el código anterior, responder:</p>
+
+<ul>
+  <li>¿Por qué se le resta 1 al resultado de <em>sizeof?</em></li>
+  <li>¿Funcionaría el programa si se declarase <em>msg</em> como <code class="wrap highlighter-rouge">const char *msg = "...";</code>? ¿Por qué?</li>
+  <li>¿Qué tipo de entidad es <code class="highlighter-rouge">sizeof</code>: una función, un operador, una palabra reservada?<sup id="fnref:sizeof"><a href="index.html#fn:sizeof" class="footnote">2</a></sup></li>
+  <li>Explicar el efecto del operador <code class="highlighter-rouge">.</code> en la línea <code class="highlighter-rouge">.set len, . - msg</code>.</li>
+</ul>
+
+<p>Compilar ahora <em>libc_hello.S</em> y verificar que funciona correctamente. Explicar el propósito de cada instrucción, y cómo se corresponde con el código C original. Después:</p>
+
+<ul>
+  <li>
+    <p>Mostrar un <a href="https://en.wikipedia.org/wiki/Hex_dump">hex dump</a> de la salida del programa en assembler. Se puede obtener con el comando <code class="highlighter-rouge">od</code>:</p>
+
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ ./libc_hello | od -t x1 -c
+0000000 ...
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>Cambiar la directiva <a href="https://sourceware.org/binutils/docs/as/Ascii.html"><code class="highlighter-rouge">.ascii</code></a> por <a href="https://sourceware.org/binutils/docs/as/Asciz.html"><code class="highlighter-rouge">.asciz</code></a> y mostrar el hex dump resultante con el nuevo código. ¿Qué está ocurriendo?</p>
+  </li>
+  <li>
+    <p>Mostrar cómo habría que reescribir la línea <code class="highlighter-rouge">push $len</code> para que el código siga escribiendo el número correcto de bytes. (Nota: no cambiar la definición de <em>len</em>.)</p>
+  </li>
+</ul>
+
+<p>Finalmente, como alternativa a <code class="highlighter-rouge">.set len</code>, también se podría usar la función <code class="highlighter-rouge">strlen(3)</code> para calcular la cantidad de bytes a imprimir. En C:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include &lt;string.h&gt;
+#include &lt;unistd.h&gt;
+</span>
+<span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">msg</span> <span class="o">=</span> <span class="s">"Hello, world!</span><span class="se">\n</span><span class="s">"</span><span class="p">;</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">write</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">msg</span><span class="p">,</span> <span class="n">strlen</span><span class="p">(</span><span class="n">msg</span><span class="p">));</span>
+    <span class="n">_exit</span><span class="p">(</span><span class="mi">7</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Actualizar el archivo <em>libc_hello.S</em> eliminando la definición de <em>len</em> en favor de una llamada a  <em>strlen</em> para calcular el tercer parámetro de la llamada a <em>write</em>. (Incluir esta modificación directamente como parte del ejercicio <em>x86-call</em>.)</p>
+
+<h3 id="ej-call">Ej: x86-call</h3>
+
+<ul class="biblio">
+  <li>
+    <p>Lecturas obligatorias</p>
+
+    <ul>
+      <li>BRY2
+        <ul>
+          <li>cap. 3: <strong title="3.7 Procedures">§7</strong></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<p>El comando <a href="https://sourceware.org/gdb/onlinedocs/gdb/Machine-Code.html">disassemble</a> de GDB permite examinar directamente las instrucciones del programa que se está depurando. Por ejemplo, con <code class="highlighter-rouge">disas main</code> se muestra:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ gdb -q ./libc_hello
+(gdb) disas main
+Dump of assembler code for function main:
+   0x0804843b &lt;+0&gt;:     push   $0xe
+   0x08048440 &lt;+5&gt;:     push   $0x804a020
+   0x08048445 &lt;+10&gt;:    push   $0x1
+   0x08048447 &lt;+12&gt;:    call   0x8048320 &lt;write@plt&gt;
+   0x0804844c &lt;+17&gt;:    push   $0x7
+   0x0804844e &lt;+19&gt;:    call   0x8048300 &lt;_exit@plt&gt;
+</code></pre></div></div>
+
+<p>Sin argumentos, <code class="highlighter-rouge">disas</code> muestra las instrucciones que se ejecutarían a continuación, esto es, las instrucciones a partir del <em>program counter</em> actual:<sup id="fnref:gdbrun"><a href="index.html#fn:gdbrun" class="footnote">3</a></sup></p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(gdb) b main
+Breakpoint 1 at 0x804843b: file libc_hello.S, line 9.
+
+(gdb) r
+Starting program: ./libc_hello
+Breakpoint 1, main () at libc_hello.S:9
+9               push $len
+
+(gdb) disas
+Dump of assembler code for function main:
+=&gt; 0x0804843b &lt;+0&gt;:     push   $0xe
+   0x08048440 &lt;+5&gt;:     push   $0x804a020
+   0x08048445 &lt;+10&gt;:    push   $0x1
+   0x08048447 &lt;+12&gt;:    call   0x8048320 &lt;write@plt&gt;
+   0x0804844c &lt;+17&gt;:    push   $0x7
+   0x0804844e &lt;+19&gt;:    call   0x8048300 &lt;_exit@plt&gt;
+
+(gdb) p $pc
+$1 = (void (*)()) 0x804843b &lt;main&gt;
+
+(gdb) p/x $pc
+$2 = 0x804843b
+
+... →
+</code></pre></div></div>
+
+<p>Mostrar en una sesión de GDB cómo imprimir las mismas instrucciones usando la directiva <code class="highlighter-rouge">x $pc</code> y el <a href="https://sourceware.org/gdb/onlinedocs/gdb/Memory.html">modificador adecuado</a>. Después, usar el comando <a href="https://sourceware.org/gdb/onlinedocs/gdb/Continuing-and-Stepping.html"><code class="highlighter-rouge">stepi</code></a> <em>(step instruction)</em> para avanzar la ejecución hasta la llamada a <em>write</em>. En ese momento, mostrar los primeros cuatro valores de la pila justo antes e inmediatamente después de ejecutar la instrucción <code class="highlighter-rouge">call</code>, y explicar cada uno de ellos.<sup id="fnref:gdbrepeat"><a href="index.html#fn:gdbrepeat" class="footnote">4</a></sup></p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>... →
+
+(gdb) x/6.. $pc
+=&gt; 0x804843b &lt;main&gt;:    push   $0xe
+   0x8048440 &lt;main+5&gt;:  push   $0x804a020
+   0x8048445 &lt;main+10&gt;: push   $0x1
+   0x8048447 &lt;main+12&gt;: call   0x8048320 &lt;write@plt&gt;
+   0x804844c &lt;main+17&gt;: push   $0x7
+   0x804844e &lt;main+19&gt;: call   0x8048300 &lt;_exit@plt&gt;
+
+(gdb) display...  # Opcional
+=&gt; 0x804843b &lt;main&gt;:    push   $0xe
+
+(gdb) stepi↩︎
+10              push $msg
+=&gt; 0x8048440 &lt;main+5&gt;:  push   $0x804a020
+
+(gdb) si↩︎
+11              push $1
+=&gt; 0x8048445 &lt;main+10&gt;: push   $0x1
+
+(gdb) ↩︎
+14              call write
+=&gt; 0x8048447 &lt;main+12&gt;: call   0x8048320 &lt;write@plt&gt;
+
+(gdb) x/... $sp
+0x...:  ...
+
+(gdb) si
+...
+
+(gdb) x/... $sp
+0x...:  ...
+</code></pre></div></div>
+
+<p>Finalmente, sustituir la instrucción <code class="highlighter-rouge">call write</code> por <code class="highlighter-rouge">jmp write</code>, y añadir el código y preparaciones necesarias para que el programa siga funcionando (ayuda: usar una etiqueta <code class="highlighter-rouge">posicion_retorno:</code> dentro de <em>main</em> para computar la dirección de retorno). Las llamadas a <em>strlen</em> y <em>_exit</em> pueden quedar. Incluir esta última versión en la entrega.</p>
+
+<p><strong>Ayuda adicional GDB:</strong> <code class="highlighter-rouge">stepi</code> ejecuta <em>solamente</em> la siguiente instrucción máquina; así, al realizar <code class="highlighter-rouge">stepi</code> sobre <code class="highlighter-rouge">call write</code> la ejecución salta <em>adentro</em> del código de la función. Para ejecutar en un solo paso el resto de la función, y volver a <em>main</em> rápidamente, se puede usar el comando <a href="https://sourceware.org/gdb/onlinedocs/gdb/Continuing-and-Stepping.html#index-fin-_0028finish_0029"><code class="highlighter-rouge">finish</code></a> de GDB. Alternativamente, si no se necesitase “entrar” en la función, se puede usar <a href="https://sourceware.org/gdb/onlinedocs/gdb/Continuing-and-Stepping.html#index-next"><code class="highlighter-rouge">next</code></a> para ejecutar no una instrucción, sino una <em>línea de código</em>.</p>
+
+<h3 id="ej-libc">Ej: x86-libc</h3>
+
+<ul class="biblio">
+  <li>
+    <p>Lecturas obligatorias</p>
+
+    <ul>
+      <li>BRY2
+        <ul>
+          <li>cap. <strong title="Linking">7</strong>:
+<strong title="7.6 Symbol Resolution">§6</strong>,
+<strong title="7.10 Dynamic Linking with Shared Libraries">10</strong></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>
+    <p>Material de ampliación</p>
+
+    <ul>
+      <li>packagecloud.io
+        <ul>
+          <li><a href="https://blog.packagecloud.io/eng/2016/04/05/the-definitive-guide-to-linux-system-calls/"><strong>The Definitive Guide to Linux System Calls</strong></a></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<p>Las llamadas a <em>write</em> y <em>_exit</em> en los programas anteriores no son <em>directamente</em> llamadas al sistema, sino que pasan por la biblioteca estándar de C (libc). Para cada syscall, libc proporciona un <em>wrapper</em> que es quien realiza la verdadera invocación al sistema.</p>
+
+<p>Con el comando <code class="highlighter-rouge">nm</code> se puede ver cómo el linker incluyó referencias a dichos wrappers tanto en la versión en C, como en la versión en assembler:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ nm --undefined hello
+         U __libc_start_main@@GLIBC_2.0
+         U _exit@@GLIBC_2.0
+         U write@@GLIBC_2.0
+
+$ nm -u libc_hello
+         U __libc_start_main@@GLIBC_2.0
+         U _exit@@GLIBC_2.0
+         U write@@GLIBC_2.0
+</code></pre></div></div>
+
+<p>Como se explica en la bibliografía, las llamadas al sistema no se realizan con la instrucción <code class="highlighter-rouge">call</code> sino mediante una “excepción controlada” o <em>trap</em> (instrucción <code class="highlighter-rouge">int</code> o, en x86_64, <code class="highlighter-rouge">syscall</code>). Cada sistema operativo define su propia convención de llamada, que puede variar según la arquitectura; en el caso de Linux, los argumentos no se pasan por la pila, sino mediante registros. (Ver páginas de manual <a href="http://man7.org/linux/man-pages/man2/syscalls.2.html">syscalls(2)</a> y <a href="http://man7.org/linux/man-pages/man2/syscall.2.html">syscall(2)</a>.)</p>
+
+<p>Así, para llamar directamente al <em>syscall write</em> (no al wrapper de libc) se pasan los argumentos mediante los registros <em>%ebx</em>, <em>%ecx</em> y <em>%edx</em>. En <em>%eax</em> se escribe una constante numérica que le indica al kernel qué syscall debe realizar. Finalmente, se cede el control de la CPU al kernel mediante una instrucción <code class="highlighter-rouge">int</code>:</p>
+
+<div class="language-nasm highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">#</span><span class="n">include</span> <span class="o">&lt;</span><span class="n">sys</span><span class="o">/</span><span class="k">syscall</span><span class="p">.</span><span class="n">h</span><span class="o">&gt;</span>  <span class="c1">// SYS_write, SYS_exit
+</span>
+<span class="p">.</span><span class="n">globl</span> <span class="n">main</span>
+<span class="n">main</span><span class="o">:</span>
+        <span class="k">mov</span> <span class="err">$</span><span class="n">SYS_write</span><span class="p">,</span> <span class="err">%</span><span class="n">eax</span>   <span class="c1">// %eax == syscall number
+</span>        <span class="k">mov</span> <span class="err">$</span><span class="mi">1</span><span class="p">,</span> <span class="err">%</span><span class="n">ebx</span>           <span class="c1">// %ebx == 1st argument (fd)
+</span>        <span class="k">mov</span> <span class="err">$</span><span class="n">msg</span><span class="p">,</span> <span class="err">%</span><span class="n">ecx</span>         <span class="c1">// %ecx == 2nd argument (buf)
+</span>        <span class="k">mov</span> <span class="err">$</span><span class="n">len</span><span class="p">,</span> <span class="err">%</span><span class="n">edx</span>         <span class="c1">// %edx == 3rd argument (count)
+</span>        <span class="k">int</span> <span class="err">$</span><span class="mh">0x80</span>
+
+        <span class="k">mov</span> <span class="err">$</span><span class="n">SYS_exit</span><span class="p">,</span> <span class="err">%</span><span class="n">eax</span>
+        <span class="k">mov</span> <span class="err">$</span><span class="mi">7</span><span class="p">,</span> <span class="err">%</span><span class="n">ebx</span>
+        <span class="k">int</span> <span class="err">$</span><span class="mh">0x80</span>
+</code></pre></div></div>
+
+<p>Se pide:</p>
+
+<ol>
+  <li>
+    <p>Compilar y ejecutar el archivo completo <a href="int80_hi.S">int80_hi.S</a>. Mostrar la salida de <code class="highlighter-rouge">nm --undefined</code> para este nuevo binario.</p>
+
+    <p><strong>¿Errores de compilación?</strong></p>
+
+    <p id="incpath">La compilación no debería fallar si están <a href="../../kit/index.html#tools">instalados</a> los paquetes <code class="highlighter-rouge">gcc-multilib</code> y <code class="highlighter-rouge">linux-libc-dev</code>. No obstante, si GCC no encuentra algún archivo <em>include</em>, quizá sea necesario indicar un directorio adicional de búsqueda, que en Debian y Ubuntu es:</p>
+
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>CPPFLAGS := -I/usr/include/x86_64-linux-gnu
+</code></pre></div>    </div>
+
+    <p>En otros sistemas, se puede usar el siguiente comando para determinar desde qué ruta se están incluyendo los archivos:</p>
+
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ echo "#include &lt;asm/unistd.h&gt;\n SYS_write = __NR_write" |
+    gcc -E -P -H -xc -
+
+. /usr/include/x86_64-linux-gnu/asm/unistd.h
+.. /usr/include/x86_64-linux-gnu/asm/unistd_64.h
+
+SYS_write = 1
+</code></pre></div>    </div>
+
+    <p>Y verificar que es posible encontrar los mismos archivos combinando <code class="highlighter-rouge">-m32</code> con la opción <code class="highlighter-rouge">-I</code> adecuada (nota: el valor de <code class="highlighter-rouge">SYS_write</code> es distinto entre x86 y x86_64):</p>
+
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ echo "#include &lt;asm/unistd.h&gt;\n SYS_write = __NR_write" |
+    gcc -m32 -I... -E -P -H -xc -
+
+. /usr/include/x86_64-linux-gnu/asm/unistd.h
+.. /usr/include/x86_64-linux-gnu/asm/unistd_32.h
+
+SYS_write = 4
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>Escribir una versión modificada <em>sys_strlen.S</em> en la que, eliminando la <a href="https://sourceware.org/binutils/docs/as/Pseudo-Ops.html">directiva</a> <code class="highlighter-rouge">.set len</code>, se calcule la longitud del mensaje (tercer parámetro para <em>write</em>) usando directamente <em>strlen</em> (el código será muy parecido al de ejercicios anteriores).</p>
+  </li>
+  <li>
+    <p>En la convención de llamadas de GCC, ciertos registros son <em>caller-saved</em> (por ejemplo <em>%ecx</em>) y ciertos otros <em>callee-saved</em> (por ejemplo <em>%ebx</em>). Responder:</p>
+
+    <ul>
+      <li>
+        <p>¿qué significa que un registro sea <em>callee-saved</em> en lugar de <em>caller-saved</em>?</p>
+      </li>
+      <li>
+        <p>en x86 ¿de qué tipo es cada registro según la convención de llamadas de GCC?</p>
+      </li>
+      <li>
+        <p>al realizar un <em>syscall</em> de manera directa con <code class="highlighter-rouge">int $0x80</code> ¿qué registros son <em>caller-saved</em>?</p>
+      </li>
+    </ul>
+  </li>
+  <li>
+    <p>Leer en <a href="https://cs107e.github.io/guides/gcc/">Guide to Bare Metal Programming with GCC</a> la sección: <em>Linker options for default libraries and start files</em>. En el archivo <em>sys_strlen.S</em> del punto anterior, renombrar la función <code class="highlighter-rouge">main</code> a <code class="highlighter-rouge">_start</code>, y realizar las siguientes cuatro pruebas de compilación:</p>
+
+    <ul>
+      <li><em>int80_hi.S</em> con <em>-nodefaultlibs</em>, luego con <em>-nostartfiles</em></li>
+      <li><em>sys_strlen.S</em> con <em>-nodefaultlibs</em>, luego con <em>-nostartfiles</em></li>
+    </ul>
+
+    <p>Mostrar el resultado (compila o no) en una tabla 2 × 2, así como los errores de compilación. Responder: ¿alguno de los dos archivos compila con <em>-nostdlib</em>?</p>
+
+    <!--
+En vista de los resultados, explicar las diferencias entre estas tres opciones.
+-->
+  </li>
+  <li>
+    <p>Añadir al archivo <em>Makefile</em> una regla que permita compilar <em>sys_strlen.S</em> sin errores, así como cualquier otro archivo cuyo nombre empiece por <em>sys</em>:</p>
+
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sys_%: sys_%.S
+        $(CC) $(ASFLAGS) $(CPPFLAGS) -no... $&lt; -o $@
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>Mostrar la salida de <code class="highlighter-rouge">nm --undefined</code> para el binario <em>sys_strlen</em>, y explicar las diferencias respecto a <em>int80_hi</em>.</p>
+  </li>
+</ol>
+
+<h3 id="ej-ret">Ej: x86-ret</h3>
+
+<ul class="biblio">
+  <li>
+    <p>Lecturas recomendadas</p>
+
+    <ul>
+      <li>BRY2
+        <ul>
+          <li>cap. 3: <strong title="3.11 Using the GDB Debugger">§11</strong></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<p>Un <em>main</em> estándar devuelve <code class="highlighter-rouge">int</code>, y comúnmente se usa <code class="highlighter-rouge">return</code>, no <em>exit</em>, para devolver un código de error. Los “start files” de libc y su definición de <code class="highlighter-rouge">_start</code> se encargan de propagar ese valor de retorno al <em>syscall exit</em>.</p>
+
+<p>Se pide ahora modificar <em>int80_hi.S</em> para que, en lugar de invocar a a <em>_exit()</em>, la ejecución finalize sencillamente con una instrucción <code class="highlighter-rouge">ret</code>. ¿Cómo se pasa en este caso el valor de retorno?</p>
+
+<p>Para que <code class="highlighter-rouge">ret</code> funcione, <em>%esp</em> debe volver a su valor original (el que tenía al entrar en la función). En los casos más sencillos, basta con asegurar que se realizan tantos <code class="highlighter-rouge">pop</code> como <code class="highlighter-rouge">push</code>.</p>
+
+<p>Se pide también escribir un nuevo programa, <em>libc_puts.S</em>, que use una instrucción <code class="highlighter-rouge">ret</code> en lugar de una llamada a <em>_exit</em>. Al contrario que <em>int80_hi.S</em>, este programa sí modifica la pila. Para simplificar la tarea, <em>libc_puts.S</em> puede usar <code class="highlighter-rouge">puts(3)</code> en lugar de <code class="highlighter-rouge">write(2)</code>:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// Versión C de libc_puts.S
+</span>
+<span class="cp">#include &lt;stdio.h&gt;
+</span>
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">puts</span><span class="p">(</span><span class="s">"Hello, world!"</span><span class="p">);</span>
+    <span class="k">return</span> <span class="mi">7</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h4 id="libc-y-exit">libc y exit</h4>
+
+<p>Se puede depurar <em>libc_puts</em> con GDB para mostrar que, efectivamente, libc propaga el valor de retorno de <em>main</em> a la llamada a <em>exit</em> que termina el programa.</p>
+
+<p>Se pide mostrar, usando un <em>catchpoint</em>, una sesión de GDB el momento en que el binario <em>libc_puts</em> realiza la llamada a <em>exit</em> con <code class="highlighter-rouge">int $0x80</code> o <code class="highlighter-rouge">sysenter</code>, y dónde reside dicha instrucción. Se incluye un guión de ejemplo más abajo.</p>
+
+<p>Un <a href="https://sourceware.org/gdb/onlinedocs/gdb/Set-Catchpoints.html">catchpoint</a> en GDB es un tipo especial de breakpoint que, en lugar de detener la ejecución en una línea o función, lo hace cuando se invoca una <em>categoría</em> particular de función o instrucción. Se puede usar, por ejemplo, para capturar excepciones de C++ o aserciones fallidas en otros lenguajes.</p>
+
+<p>En este caso, el interés residirá en detener la ejecución en el momento de la llamada al syscall <em>exit</em>. Como se explica en la documentación de <a href="https://sourceware.org/gdb/onlinedocs/gdb/Set-Catchpoints.html#index-catch-syscall"><code class="highlighter-rouge">catch syscall</code></a>, este comando recibe simplemente el nombre de la llamada al sistema, pudiéndose usar auto-completado.</p>
+
+<p>En el momento en que se llegue a la condición de corte y se detenga la ejecución, se debe mostrar el código colindante con <code class="highlighter-rouge">disas</code> y los <a href="https://sourceware.org/gdb/onlinedocs/gdb/Frames.html">marcos de ejecución</a> mediante el comando <a href="https://sourceware.org/gdb/onlinedocs/gdb/Backtrace.html"><code class="highlighter-rouge">backtrace</code></a> de GDB.</p>
+
+<p>Finalmente se indicará, para cada función en el <em>backtrace</em>, en qué archivo o
+biblioteca se aloja, esto es, la correspondencia entre las funciones del backtrace, las posiciones de memoria donde reside el código de cada función y los archivos donde se aloja el código.</p>
+
+<p>Muchas de estas funciones residen en bibliotecas cargadas de dinámicamente en tiempo de ejecución. GDB puede informar de qué bibliotecas usó el mediante el  comando <code class="highlighter-rouge">info shared</code>.</p>
+
+<p>Ayuda:</p>
+
+<ul>
+  <li>
+    <p>es posible que libc no llame a <code class="highlighter-rouge">exit(2)</code>, sino a <code class="highlighter-rouge">exit_group(2)</code>, por lo que se recomienda establecer un catchpoint para ambas syscalls.</p>
+  </li>
+  <li>
+    <p>las direcciones de memoria del comando <code class="highlighter-rouge">bt</code> corresponden a la dirección de retorno de la llamada en curso; para obtener la dirección donde reside el comienzo de la función, se puede usar <code class="highlighter-rouge">print nombre_fun</code>.</p>
+  </li>
+  <li>
+    <p>se puede abreviar <code class="highlighter-rouge">catch syscall</code> con <code class="highlighter-rouge">cat sys</code>.</p>
+  </li>
+</ul>
+
+<p>Guión de ejemplo:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ gdb -q ./libc_puts
+(gdb) catch syscall ...
+Catchpoint 1 ...
+
+(gdb) r
+Starting program: ...
+...
+Catchpoint 1 (call to syscall ...) ... in ...
+
+(gdb) disas
+Dump of assembler code for function ...
+   0xf7...
+   0xf7...
+=&gt; 0xf7...
+   0xf7...
+   0xf7...
+   0xf7...
+End of assembler dump.
+
+(gdb) bt
+#0  0xf7... in ... () from ...
+...
+
+(gdb) info shared
+From | To | Syms Read | Shared Object Library
+...
+</code></pre></div></div>
+
+<h3 id="ej-watch">Ej: x86-watch ★</h3>
+
+<p>Un método más rudimentario para detectar la llegada a un syscall sin <code class="highlighter-rouge">catch syscall</code> sería el comando <a href="https://sourceware.org/gdb/onlinedocs/gdb/Set-Watchpoints.html"><code class="highlighter-rouge">watch</code></a> de GDB, que vigila un registro o posición de memoria hasta que toma un cierto valor. Así, se podría detener la ejecución cuando <em>%eax</em> u otros registros indiquen que se está por llamar a <em>exit</em>.</p>
+
+<p>Se pide un guión de GDB similar al del ejercicio anterior, usando la funcionalidad <em>watch</em> en lugar de <em>catch</em>.</p>
+
+<p>Guía:</p>
+
+<ul>
+  <li>
+    <p>usar <em>watch</em> contra el registro que aloje el <em>argumento</em> de la llamada al sistema <em>exit</em>.</p>
+  </li>
+  <li>
+    <p>cambiar en el código el valor de retorno a algo con menos chances de provocar falsos positivos (por ejemplo, <code class="highlighter-rouge">return 66</code> o <code class="highlighter-rouge">return 0x42</code> en lugar de <code class="highlighter-rouge">return 7</code>).</p>
+  </li>
+  <li>
+    <p>para afinar la búsqueda, se puede vigilar también el valor de <em>%eax</em>, que tomará el valor de la constante <code class="highlighter-rouge">SYS_exit</code> justo antes de la instrucción <code class="highlighter-rouge">int</code>. Así, en lugar de:</p>
+
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(gdb) watch $e.. == 0x42
+</code></pre></div>    </div>
+
+    <p>usar:</p>
+
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(gdb) watch $e.. == 0x42 &amp;&amp; $eax == ...
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>como ya se explicó, es posible que libc no llame a <code class="highlighter-rouge">exit(2)</code>, sino a <code class="highlighter-rouge">exit_group(2)</code>. Encontrar también el valor de <code class="highlighter-rouge">SYS_exit_group</code>, y combinar las condiciones usando <code class="highlighter-rouge">||</code>.</p>
+
+    <p>Verificar además que los prototipos de ambas funciones son compatibles y responder: ¿cómo cambiaría la expresión booleana si —hipotéticamente— <em>exit_group()</em> tomara el valor de salida como segundo parámetro?</p>
+  </li>
+  <li>
+    <p>el comando <em>watch</em> funciona una vez arrancado el programa (<code class="highlighter-rouge">b main; r</code> o, lo que es lo mismo, <a href="https://sourceware.org/gdb/onlinedocs/gdb/Starting.html"><code class="highlighter-rouge">start</code></a>), de lo contrario quizá GDB diga “No registers”.</p>
+  </li>
+</ul>
+
+<p>Finalmente, incluir de nuevo la salida del comando <code class="highlighter-rouge">info shared</code> y compararla con la información de regiones de memoria que Linux proporciona vía <a href="https://en.wikipedia.org/wiki/Procfs">procfs</a>. Así, sin cerrar aún GDB, incluir la salida de:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ cat /proc/`pidof libc_puts`/maps
+</code></pre></div></div>
+
+<p>y revisar si las bibliotecas indicadas por GDB corresponden a las ubicaciones indicadas por el kernel.</p>
+
+<p>Guión de ejemplo:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ gdb -q ./libc_puts
+(gdb) start
+Temporary breakpoint 1 at 0x80...: file libc_puts.S, line 3.
+
+(gdb) watch ...
+Watchpoint 2: ...
+
+(gdb) c
+Continuing.
+Hello, world!
+
+Watchpoint 2: ...
+
+Old value = 0
+New value = 1
+0xf7... in ... () from ...
+
+(gdb) p $eax
+$1 = ...
+
+(gdb) p $e..
+$2 = 66
+
+(gdb) disas
+Dump of assembler code for function ...
+   0xf7...
+   0xf7...
+=&gt; 0xf7...
+   0xf7...
+   0xf7...
+   0xf7...
+End of assembler dump.
+
+(gdb) bt
+#0  0xf7... in ... () from ...
+...
+
+(gdb) info shared
+From | To | Syms Read | Shared Object Library
+...
+</code></pre></div></div>
+
+<h2 id="stackframes">Stack frames y calling conventions</h2>
+
+<p>En el código visto hasta ahora, se han invocado varias funciones pasando sus argumentos por la pila, pero no se ha implementado ninguna función con parámetros. Obviamente, es en la pila donde una función buscará los valores de sus parámetros.</p>
+
+<p>La búsqueda de parámetros en la pila se puede ver afectada por el uso de la misma, esto es: un argumento que esté alojado en <code class="highlighter-rouge">4(%esp)</code> al entrar en la función, estará en <code class="highlighter-rouge">8(%esp)</code> si el propio código invoca a una instrucción <code class="highlighter-rouge">push</code>.</p>
+
+<p>Para ello, se suele usar el registro <em>%ebp</em> como “frame pointer”, guardando el valor original del registro <em>%esp</em> de manera que las referencias a los argumentos vía <em>%ebp</em> no varíen a lo largo de la función:</p>
+
+<div class="language-nasm highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">func</span><span class="o">:</span>
+    <span class="c1">// Al entrar, el primer argumento está en 4(%esp)
+</span>
+    <span class="k">push</span> <span class="err">%</span><span class="n">ebp</span>
+    <span class="n">movl</span> <span class="err">%</span><span class="n">esp</span><span class="p">,</span> <span class="err">%</span><span class="n">ebp</span>
+
+    <span class="c1">// Ahora el primer argumento está en 8(%ebp), 8(%esp)
+</span>
+    <span class="k">push</span> <span class="err">$</span><span class="n">len</span>
+    <span class="k">push</span> <span class="err">$</span><span class="n">msg</span>
+
+    <span class="c1">// El primer argumento sigue en 8(%ebp), pero 16(%esp)
+</span>    <span class="p">...</span>
+
+    <span class="c1">// Se debe restaurar %esp y %ebp antes de "ret"
+</span>    <span class="n">movl</span> <span class="err">%</span><span class="n">ebp</span><span class="p">,</span> <span class="err">%</span><span class="n">esp</span>
+    <span class="n">popl</span> <span class="err">%</span><span class="n">ebp</span>
+
+    <span class="k">ret</span>
+</code></pre></div></div>
+
+<p>A menudo, el código generado por GCC no usa <em>%ebp</em>, pues desde el compilador resulta más fácil llevar la cuenta de la ubicación de los argumentos aun si cambia el valor de <em>%esp</em> (pues el propio compilador controla cuándo lo cambia). Se puede forzar el uso de frame pointers con la opción <code class="highlighter-rouge">-fno-omit-frame-pointer</code>.</p>
+
+<h3 id="ej-ebp">Ej: x86-ebp</h3>
+
+<p>Podemos comparar el assembler escrito a mano de <em>libc_hello.S</em> con el assembler generado por GCC a partir de C (usando la opción <code class="highlighter-rouge">-fno-omit-frame-pointer</code>). El comando <code class="highlighter-rouge">objdump -S hello</code> mostraría el código de programa completo, pero se puede invocar a GDB en modo no interactivo para obtener el código de una sola función:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ gdb -batch -ex 'disas/s main' ./hello
+5       int main(void) {
+   ...
+   0x08048445 &lt;+10&gt;:    push   %ebp
+   0x08048446 &lt;+11&gt;:    mov    %esp,%ebp
+   ...
+
+6           write(1, msg, sizeof msg - 1);
+   0x0804844c &lt;+17&gt;:    push   $0xe
+   0x0804844e &lt;+19&gt;:    push   $0x80484f0
+   0x08048453 &lt;+24&gt;:    push   $0x1
+   0x08048455 &lt;+26&gt;:    call   0x8048320 &lt;write@plt&gt;
+
+7           _exit(3);
+   0x0804845a &lt;+31&gt;:    movl   $0x7,(%esp)
+   0x08048461 &lt;+38&gt;:    call   0x8048300 &lt;_exit@plt&gt;
+End of assembler dump.
+</code></pre></div></div>
+
+<p>Mientras que el código resultante de compilar <a href="libc_hello.S">libc_hello.S</a> es, simplemente:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ gdb -batch -ex 'disas main' libc_hello
+Dump of assembler code for function main:
+   0x0804843b &lt;+0&gt;:     push   $0xe
+   0x08048440 &lt;+5&gt;:     push   $0x804a020
+   0x08048445 &lt;+10&gt;:    push   $0x1
+   0x08048447 &lt;+12&gt;:    call   0x8048320 &lt;write@plt&gt;
+   0x0804844c &lt;+17&gt;:    push   $0x7
+   0x0804844e &lt;+19&gt;:    call   0x8048300 &lt;_exit@plt&gt;
+</code></pre></div></div>
+
+<p>Ambos son bien similares, pero tiene algunas diferencias:</p>
+
+<ol>
+  <li>
+    <p>¿Qué valor sobreescribió GCC cuando usó <code class="highlighter-rouge">mov $7, (%esp)</code> en lugar de <code class="highlighter-rouge">push $7</code> para la llamada a <em>_exit</em>? ¿Tiene esto alguna consecuencia?</p>
+  </li>
+  <li>
+    <p>La versión C no restaura el valor original de los registros <em>%esp</em> y <em>%ebp</em>. Cambiar la llamada a <code class="highlighter-rouge">_exit(7)</code> por <code class="highlighter-rouge">return 7</code>, y mostrar en qué cambia el código generado. ¿Se restaura ahora el valor original de <em>%ebp</em>?</p>
+  </li>
+  <li>
+    <p>Crear un archivo llamado <em>exit.c</em> con la siguiente función:</p>
+
+    <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include &lt;unistd.h&gt;
+</span>
+<span class="kt">void</span> <span class="nf">my_exit</span><span class="p">(</span><span class="kt">int</span> <span class="n">status</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">_exit</span><span class="p">(</span><span class="n">status</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div>    </div>
+
+    <p>y usar en <em>hello.c</em> <code class="highlighter-rouge">my_exit(7)</code>:</p>
+
+    <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">extern</span> <span class="kt">void</span> <span class="n">my_exit</span><span class="p">(</span><span class="kt">int</span> <span class="n">status</span><span class="p">);</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// ...
+</span>    <span class="n">my_exit</span><span class="p">(</span><span class="mi">7</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div>    </div>
+
+    <p>¿Qué ocurre con <em>%ebp</em>?</p>
+  </li>
+  <li>
+    <p>Cambiar la declaración de <em>my_hello</em> a:</p>
+
+    <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">extern</span> <span class="kt">void</span> <span class="n">__attribute__</span><span class="p">((</span><span class="n">noreturn</span><span class="p">))</span> <span class="n">my_exit</span><span class="p">(</span><span class="kt">int</span> <span class="n">status</span><span class="p">);</span>
+</code></pre></div>    </div>
+
+    <p>y verificar qué ocurre con <em>%ebp</em>, relacionándolo con el significado del atributo <a href="https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html">noreturn</a>.</p>
+  </li>
+</ol>
+
+<h3 id="ej-errno">Ej: x86-errno</h3>
+
+<ul class="biblio">
+  <li>
+    <p>Lectura obligatoria:</p>
+
+    <ul>
+      <li>BRY2
+        <ul>
+          <li>cap. 8: <strong title="8.3 Syscam Call Error Handling">§3</strong></li>
+        </ul>
+      </li>
+      <li>KERR
+        <ul>
+          <li>cap. 3: <strong title="3.4 Handling Errors from System Calls and Library Functions">§4</strong></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<p>Compilar y ejecutar el siguiente programa; mostrar qué se imprime por pantalla, así como el valor de retorno en el intérprete de comandos (<code class="highlighter-rouge">echo $?</code>).<sup id="fnref:incflag"><a href="index.html#fn:incflag" class="footnote">5</a></sup> Explicar también qué es la variable <a href="http://man7.org/linux/man-pages/man3/errno.3.html"><code class="highlighter-rouge">errno</code></a>, y el funcionamiento de la función <a href="http://man7.org/linux/man-pages/man3/perror.3.html"><code class="highlighter-rouge">perror(3)</code></a>.</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include &lt;errno.h&gt;
+#include &lt;stdio.h&gt;   // perror(3)
+#include &lt;unistd.h&gt;  // write(2)
+</span>
+<span class="k">const</span> <span class="kt">char</span> <span class="n">msg</span><span class="p">[]</span> <span class="o">=</span> <span class="s">"Escribiendo a nadie</span><span class="se">\n</span><span class="s">"</span><span class="p">;</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kt">ssize_t</span> <span class="n">ret</span> <span class="o">=</span> <span class="n">write</span><span class="p">(</span><span class="mi">17</span><span class="p">,</span> <span class="n">msg</span><span class="p">,</span> <span class="k">sizeof</span> <span class="n">msg</span> <span class="o">-</span> <span class="mi">1</span><span class="p">);</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">ret</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">perror</span><span class="p">(</span><span class="s">"Falló write"</span><span class="p">);</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">ret</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">?</span> <span class="mi">0</span> <span class="o">:</span> <span class="n">errno</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Se pedirá ahora escribir en un archivo <em>write2.S</em> una función <code class="highlighter-rouge">write2</code> que actúe de “wrapper” sobre la verdadera llamada al sistema, esto es, que haga lo mismo que el propio wrapper de libc. Antes, descargar los archivos <a href="perror.c">perror.c</a> y <a href="write2.S">write2.S</a> y compilarlos con este fragmento en el archivo <em>Makefile:</em></p>
+
+<div class="language-make highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># ...
+</span><span class="nv">PROG</span> <span class="o">+=</span> perror2
+
+<span class="nl">all</span><span class="o">:</span> <span class="nf">$(PROG)</span>
+
+<span class="c"># ...
+</span>
+<span class="nl">perror2</span><span class="o">:</span> <span class="nf">perror.c write2.S</span>
+	<span class="nv">$(CC)</span> <span class="nv">$(CFLAGS)</span> <span class="nv">$(CPPFLAGS)</span> <span class="nt">-DUSE_WRITE2</span> <span class="nv">$^</span> <span class="nt">-o</span> <span class="nv">$@</span>
+</code></pre></div></div>
+
+<p>Esta versión de <em>perror.c</em> permite compilar bien contra el wrapper de libc, bien contra el wrapper que se definirá en <em>write2.S</em>. Correr los siguientes comandos y mostrar toda su salida:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ make clean perror perror2 write2
+...
+$ ./perror; echo $?
+...
+$ ./perror2; echo $?
+...
+$ ./write2; echo $?
+...
+</code></pre></div></div>
+
+<p>Estudiar el código de <a href="perror.c">perror.c</a> y <a href="write2.S">write2.S</a> y explicar cómo funciona la compilación condicional; explicar, en particular:</p>
+
+<ul>
+  <li>qué hace <code class="highlighter-rouge">-DUSE_WRITE2</code></li>
+  <li>qué efecto tiene la instrucción <code class="highlighter-rouge">xor</code> en <em>write2.S</em></li>
+  <li>qué imprime el programa <code class="highlighter-rouge">perror2</code>, y por qué</li>
+  <li>qué significa el atributo <em>cdecl</em> asignado a <code class="highlighter-rouge">write2</code>.<sup id="fnref:wpcc"><a href="index.html#fn:wpcc" class="footnote">6</a></sup></li>
+  <li>por qué ocurre un error al recompilar (<code class="highlighter-rouge">make clean all</code>) si se elimina la definición de <code class="highlighter-rouge">main</code> en <em>write2.S</em></li>
+</ul>
+
+<p>Finalmente, implementar en <em>write2.S</em> el wrapper <code class="highlighter-rouge">write2</code> para la verdadera llamada al sistema. Este wrapper, al igual que el de libc:</p>
+
+<ul>
+  <li>recibe sus tres parámetros por la pila</li>
+  <li>invoca al syscall apropiado usando <code class="highlighter-rouge">SYS_write</code> e <code class="highlighter-rouge">int $0x80</code></li>
+  <li>si la syscall indica éxito, devuelve el número de bytes escritos</li>
+  <li>en caso contrario, devuelve -1, guardando antes el código de error en la variable global <code class="highlighter-rouge">errno</code>.<sup id="fnref:syserrno"><a href="index.html#fn:syserrno" class="footnote">7</a></sup></li>
+</ul>
+
+<p>Verificar que con esta implementación, <code class="highlighter-rouge">perror2</code> se comporta igual que <code class="highlighter-rouge">perror</code> (incluyendo el caso de escribir a salida estándar).</p>
+
+<p>Responder:</p>
+
+<ul>
+  <li>¿qué registros debe preservar <em>write2</em>, según la call convention <em>cdecl?</em></li>
+  <li>¿cómo debería cambiar el código de <em>write2</em> si se declarase con atributo <em>stdcall?</em></li>
+</ul>
+
+<p>Ayuda:</p>
+
+<ul>
+  <li>
+    <p>Realizar el preludio (<code class="wrap highlighter-rouge">push %ebp; mov %esp, %ebp</code>) <em>antes</em> de guardar los “callee-saved registers”.</p>
+  </li>
+  <li>
+    <p>en sistemas POSIX modernos como GNU, <code class="highlighter-rouge">errno</code> ya no suele ser una variable global sino una macro que invoca a una función para obtener la dirección de memoria de <em>errno</em>; el nombre de la función se puede determinar expandiendo la macro expandiendo, por ejemplo, <code class="highlighter-rouge">errno = -1</code>:<sup id="fnref:errnotl"><a href="index.html#fn:errnotl" class="footnote">8</a></sup></p>
+
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ gcc -imacros errno.h -E -P -xc - &lt;&lt;&lt; "errno = -1;"
+(*__errno_location ()) = -1;
+</code></pre></div>    </div>
+
+    <p>Por tanto, para escribir en <code class="highlighter-rouge">errno</code> de manera que el valor se propague a C, se deberá obtener la posición de memoria que corresponde con <code class="highlighter-rouge">call __errno_location</code>. El prototipo de la función se puede observar usando <code class="highlighter-rouge">-include</code> en lugar de <code class="highlighter-rouge">-imacros</code> en el comando anterior:</p>
+
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ gcc -include errno.h -E -P -xc - &lt;&lt;&lt; ""
+extern int *__errno_location (void);
+</code></pre></div>    </div>
+  </li>
+</ul>
+
+<h3 id="ej-argv">Ej: x86-argv</h3>
+
+<ul class="biblio">
+  <li>
+    <p>Lecturas obligatorias</p>
+
+    <ul>
+      <li>REES
+        <ul>
+          <li>cap. 4
+            <ul>
+              <li><em>Using a One-Dimensional Array of Pointers</em></li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+      <li>BRY2
+        <ul>
+          <li>cap. 8: <strong title="8.4.5 Loading and Running Programs">§4(5)</strong> (figura 8.21)</li>
+          <li>cap. 3:
+<strong title="Control">§6</strong>(<strong>1-2</strong>)</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>
+    <p>Lecturas recomendadas</p>
+
+    <ul>
+      <li>REES
+        <ul>
+          <li>cap. 5
+            <ul>
+              <li><em>Passing Arguments to an Application</em></li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+      <li>BRY2
+        <ul>
+          <li>cap. 3:
+§6(<strong title="3.6.3 Jump Instructions and Their Encodings">3</strong>)</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<p>En este ejercicio se pide implementar un programa en assembler que imprima sus argumentos por pantalla, uno por línea. Se implementarán tres versiones sucesivas:</p>
+
+<ol>
+  <li>
+    <p><em>sys_argv.S:</em> imprime el primer argumento solamente, usando una llamada directa al sistema.</p>
+  </li>
+  <li>
+    <p><em>libc_argv.S:</em> imprime el primer argumento solamente, usando el wrapper <code class="highlighter-rouge">write(2)</code>.</p>
+  </li>
+  <li>
+    <p><em>libc_argv2.S:</em> imprime todos los argumentos recibidos, realizando una llamda a <code class="highlighter-rouge">puts(3)</code> para cada uno de ellos.</p>
+  </li>
+</ol>
+
+<p>El estado de salida del programa debe ser:</p>
+
+<ul>
+  <li>para <em>sys_argv</em> y <em>libc_argv</em>, la longitud en bytes del primer argumento.</li>
+  <li>para <em>sys_argv2</em>, el número total de argumentos.</li>
+</ul>
+
+<p>Guía para cada versión:</p>
+
+<ul>
+  <li>
+    <p><em>sys_argv</em> es la versión más sencilla, ya que el <em>layout</em> de los argumentos en memoria es más simple: <em>argc</em> está en <code class="highlighter-rouge">(%esp)</code>, y el primer argumento directamente en <code class="highlighter-rouge">8(%esp)</code>.</p>
+
+    <p>Responder: ¿qué hay en <code class="highlighter-rouge">4(%esp)</code>?</p>
+  </li>
+  <li>
+    <p>libc introduce un nivel de indirección, pues <em>argc</em> está en <code class="highlighter-rouge">4(%esp)</code> pero en <code class="highlighter-rouge">8(%esp)</code> está la <em>dirección</em> del arreglo de argumentos <em>argv</em>.</p>
+
+    <p>Responder: ¿qué hay en <code class="highlighter-rouge">(%esp)</code>?</p>
+  </li>
+  <li>
+    <p>para el bucle de <em>libc_argv2</em>, se recomienda acceder a cada argumento con <code class="highlighter-rouge">push (%edi,%ebx,X)</code>, habiendo guardado en <em>%edi</em> la dirección de <em>argv</em>, y estando en <em>%ebx</em> el índice de <em>argv</em> a acceder.</p>
+
+    <p>Responder: ¿cuántas llamadas al sistema se producen realmente? (Se puede comprobar con <code class="highlighter-rouge">breakpoint write</code> e <a href="https://sourceware.org/gdb/onlinedocs/gdb/Conditions.html"><code class="highlighter-rouge">ignore</code></a>, o usando una herramienta como <a href="http://www.thegeekstuff.com/2011/11/strace-examples"><code class="highlighter-rouge">strace(1)</code></a>.)<sup id="fnref:julia"><a href="index.html#fn:julia" class="footnote">9</a></sup></p>
+  </li>
+</ul>
+
+<p>Consideraciones:</p>
+
+<ul>
+  <li>
+    <p>en <em>sys_argv</em> y <em>libc_argv</em> se puede asumir que siempre se pasa al menos un argumento; no es necesario, por tanto, comprobar el valor de <em>argc</em> en estos dos programas.</p>
+  </li>
+  <li>
+    <p>se puede asumir que ningún argumento termina en salto de línea; así, se puede añadir incondicionalmente uno.</p>
+  </li>
+  <li>
+    <p>en <em>libc_argv</em>, imprimir el salto de línea con una segunda llamada a <code class="highlighter-rouge">write(2)</code>. Se recomienda definir una constante <code class="highlighter-rouge">.ascii "\n"</code> llamada <em>newline</em>.</p>
+  </li>
+  <li>
+    <p>realizar, en <em>sys_argv</em>, una sola llamada a <code class="highlighter-rouge">write</code>; así, será necesario remplazar el <code class="highlighter-rouge">'\0'</code> final del argumento por <code class="highlighter-rouge">'\n'</code>. Se recomienda usar la notación <code class="highlighter-rouge">mov $('\n'), (%reg,P,X)</code>.</p>
+  </li>
+</ul>
+
+<p>Ejemplos de invocación:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ ./sys_argv palabra; echo $?
+palabra
+7
+
+$ ./libc_argv ""; echo $?
+
+0
+
+$ ./libc_argv2 una palabra y otra; echo $?
+una
+palabra
+y
+otra
+4
+
+$ ./libc_argv2; echo $?
+0
+</code></pre></div></div>
+
+<p>Estimación de código:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ wc --lines *argv*.S
+  19 sys_argv.S
+  24 libc_argv.S
+  26 libc_argv2.S
+</code></pre></div></div>
+
+<h3 id="ej-frames">Ej: x86-frames</h3>
+
+<ul class="biblio">
+  <li>
+    <p>Lecturas obligatorias</p>
+
+    <ul>
+      <li>BRY2
+        <ul>
+          <li>cap. 7: <strong title="7.4 Relocatable Object Files">§4</strong></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<p>Dada la convención de llamadas en x86, es posible saber la secuencia de llamadas anidadas que condujo al estado actual de ejecución. En particular, si la primera instrucción de cada función es:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>push %ebp
+</code></pre></div></div>
+
+<p>se está almacenando entonces en el stack de cada función una referencia al marco de ejecución inmediatamente anterior. De ahí, se puede obtener el punto de retorno y el <em>frame pointer</em> anterior “saltando” hacia atrás  a modo de lista enlazada.</p>
+
+<p>Responder, en términos del frame pointer <em>%ebp</em> de una función <em>f:</em></p>
+
+<ul>
+  <li>¿dónde se encuentra (de haberlo) el primer argumento de <em>f?</em></li>
+  <li>¿dónde se encuentra la dirección a la que retorna <em>f</em> cuando ejecute <code class="highlighter-rouge">ret</code>?</li>
+  <li>¿dónde se encuentra el valor de <em>%ebp</em> de la función anterior, que invocó a <em>f?</em></li>
+  <li>¿dónde se encuentra la dirección a la que retornará la función que invocó a <em>f?</em></li>
+</ul>
+
+<p>Se pide ahora escribir una función:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">void</span> <span class="n">backtrace</span><span class="p">();</span>
+</code></pre></div></div>
+
+<p>que obtenga, usando <a href="https://gcc.gnu.org/onlinedocs/gcc/Return-Address.html"><code class="highlighter-rouge">__builtin_frame_address(0)</code></a>, el <em>frame pointer</em> actual, e imprima la secuencia de marcos anidados en el formato que se indica a continuación:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>#numfrm [FP] ADDR ( ARG1 ARG2 ARG3 )
+</code></pre></div></div>
+
+<p>donde para cada frame <em>FP</em> es el <em>frame pointer</em> (registro <em>%ebp</em>), <em>ADDR</em> es el punto de retorno a la función, y <em>ARGS</em> sus tres primeros argumentos.</p>
+
+<p>Por ejemplo, para un programa de ejemplo <em><a href="backtrace.c">backtrace.c</a></em> (no olvidar compilar con <code class="highlighter-rouge">-fno-omit-frame-pointer</code>):</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>#1 [0xffffd3a8] 0x8048515 ( 0x2 0x8048667 0xf )
+#2 [0xffffd3c8] 0x8048570 ( 0x0 0x0 0xf7ffdad8 )
+#3 [0xffffd3e8] 0x804855a ( 0x1 0x1 0xf7fd3b48 )
+#4 [0xffffd408] 0x804855a ( 0x2 0x0 0xf7fe3100 )
+#5 [0xffffd428] 0x804855a ( 0x3 0xf7ffd920 0xffffd450 )
+#6 [0xffffd448] 0x804855a ( 0x4 0xf7fae000 0xf7e07e18 )
+#7 [0xffffd468] 0x804855a ( 0x5 0x2 0xf7e29880 )
+#8 [0xffffd488] 0x8048582 ( 0xf7fae3dc 0xffffd4b0 0x0 )
+#9 [0xffffd498] 0x804859d ( 0x1 0xf7fae000 0x0 )
+</code></pre></div></div>
+
+<p>En este ejemplo, el primer frame muestra la dirección de <code class="highlighter-rouge">my_write()</code> a que se retornará, y los argumentos con que fue llamada. Nótese que la propia función <code class="highlighter-rouge">backtrace()</code> <em>no</em> aparece en la salida.</p>
+
+<p><strong>Nota</strong>: no usar la funcion <code class="highlighter-rouge">__builtin_return_address(...)</code>; solamente <code class="highlighter-rouge">__builtin_frame_address(0)</code>.</p>
+
+<p>Incluir en la entrega:</p>
+
+<ol>
+  <li>
+    <p>el código de la función <em>backtrace</em>.</p>
+  </li>
+  <li>
+    <p>una sesión de GDB en la que se muestre la equivalencia entre el comando <code class="highlighter-rouge">bt</code> de GDB y el código implementado; en particular, se debe incluir:</p>
+
+    <ul>
+      <li>
+        <p>la salida del comando <code class="highlighter-rouge">bt</code> al entrar en la función <em>backtrace</em></p>
+      </li>
+      <li>
+        <p>la salida del programa al ejecutarse la función <em>backtrace</em> (el número de frames y sus direcciones de retorno deberían coincidir con la salida de <code class="highlighter-rouge">bt</code>)</p>
+      </li>
+      <li>
+        <p>usando los comandos de <a href="https://sourceware.org/gdb/onlinedocs/gdb/Selection.html">selección de frames</a>, y antes de salir de la función <em>backtrace</em>, el valor de <em>%ebp</em> en cada marco de ejecución detectado por GDB (valores que también deberían coincidir).</p>
+      </li>
+    </ul>
+  </li>
+</ol>
+
+<p>Se puede usar el comando <a href="https://sourceware.org/gdb/onlinedocs/gdb/Continuing-and-Stepping.html#index-run-until-specified-location"><code class="highlighter-rouge">until</code></a> de GDB para saltar a la última línea de la función sin finalizar su ejecución. Guión de ejemplo:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>...
+Breakpoint 1, backtrace () at backtrace.c:4
+
+(gdb) bt
+#0  backtrace () at backtrace.c:4
+#1  0x08048515 in my_write (fd=...
+#2  0x08048570 in recurse (level=...
+...
+
+(gdb) list
+...
+10    for (...) {
+...
+13    }
+
+(gdb) until 13
+#1 [0xffffd3a8] 0x8048515 ( ...
+#2 [0xffffd3c8] 0x8048570 ( ...
+...
+
+(gdb) up
+...
+(gdb) p/x $ebp
+$1 = 0xffffd3a8
+
+(gdb) up
+...
+
+(gdb) p/x $ebp
+$2 = 0xffffd3c8
+
+...
+
+(gdb) up
+Initial frame selected; you cannot go up.
+
+(gdb) frame 0
+(gdb) c
+...
+</code></pre></div></div>
+
+<h3 id="ej-dwarf">Ej: x86-dwarf ★</h3>
+
+<p>Dado un <em>backtrace</em> como el anterior, es deseable (como hace GDB) mostrar el nombre de la funciones asociadas a cada frame y, de ser posible, el archivo donde fue definida.</p>
+
+<p>Con la opción <code class="highlighter-rouge">-g</code>, se le indica al compilador que debe incluir en el binario ELF una tabla con la correspondencia dirección → función.</p>
+
+<p>Esta información se puede empotrar en distintos formatos, por ejemplo <a href="https://en.wikipedia.org/wiki/Stabs">STABS</a> (el formato tradicional de Unix) o el estándar más reciente <a href="https://en.wikipedia.org/wiki/DWARF">DWARF</a>, que permite almacenar información más allá del nombre de las funciones (por ejemplo, el número, nombre y tipo de los argumentos).</p>
+
+<p>GDB lee en tiempo de depurado la información DWARF empotrada en el binario, pero también es posible hacerlo tras la ejecución. El script de ejemplo <a href="dwarftrace.py">dwarftrace.py</a> lee la salida de la función <code class="highlighter-rouge">backtrace()</code> del ejercicio anterior y sustituye las direcciones por nombre de función:<sup id="fnref:pyelf"><a href="index.html#fn:pyelf" class="footnote">10</a></sup></p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ make backtrace
+...
+
+$ chmod +x dwarftrace.py
+$ ./backtrace | ./dwarftrace.py backtrace
+
+#1 [0xffffd3a8] 0x8048515 in my_write (fd=2, msg=...)
+#2 [0xffffd3c8] 0x8048570 in recurse (level=...)
+...
+#9 [0xffffd498] 0x804859d in main ()
+</code></pre></div></div>
+
+<p>Para este ejercicio opcional se pide:</p>
+
+<ol>
+  <li>
+    <p>Leer el script, y mostrar la salida completa al ejecutarlo con el archivo <em>backtrace.c</em> implementado en el ejercicio anterior.</p>
+  </li>
+  <li>
+    <p>Implementar en el archivo <a href="dwarfalu.py">dwarfalu.py</a> las función <code class="highlighter-rouge">get_location()</code>, que busca en las estructuras DWARF el archivo y línea donde se definió cada función. Como ayuda, se pueden consultar los <a href="https://github.com/eliben/pyelftools/tree/master/examples">ejemplos</a> de la propia biblioteca <em>pyelf</em>.</p>
+  </li>
+</ol>
+
+<h2 id="kernstack">Creación de stacks en el kernel</h2>
+
+<p>Cuando un programa se ejecuta, normalmente es el sistema operativo quien le configura el stack de manera adecuada, esto es: reserva un espacio en memoria (a menudo 4 u 8 KiB) y apunta <em>%esp</em> a dicha región (bien al límite inferior, bien al superior, según la dirección en que crece la pila en la arquitectura).</p>
+
+<p>Un kernel, en cambio, es responsable de asignarse su propio <em>boot stack</em> durante el proceso de arranque.</p>
+
+<p>Por su parte, los programas de ususario también pueden crearse pilas adicionales, por ejemplo para ejecutar varias tareas de manera concurrente.</p>
+
+<h3 id="kern1-stack">Ej: kern1-stack</h3>
+
+<ul class="biblio">
+  <li>
+    <p>Lecturas obligatorias</p>
+
+    <ul>
+      <li>BRY2
+        <ul>
+          <li>cap. 3: §6(<strong title="Conditional Move Instructions">6</strong>)</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<p>La manera estándar de configurar la pila de arranque del sistema operativo es reservar espacio en el propio binario, esto es: un arreglo en memoria del tamaño deseado. Puede declararse en un archivo C:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">unsigned</span> <span class="kt">char</span> <span class="n">kstack</span><span class="p">[</span><span class="mi">8192</span><span class="p">];</span>
+</code></pre></div></div>
+
+<p>o assembler:</p>
+
+<div class="language-nasm highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">.</span><span class="n">data</span>
+<span class="n">kstack</span><span class="o">:</span>
+    <span class="p">.</span><span class="n">space</span> <span class="mi">8192</span>
+</code></pre></div></div>
+
+<p>Normalmente, en x86 se alinea el stack de los procesos de ususario a 16 o 32 bits. Sin embargo, por razones relacionadas —como se verá— con memoria virtual, el stack del kernel se suele alinear 4 KiB:</p>
+
+<ul>
+  <li>
+    <p>Explicar: ¿qué significa “estar alineado”?</p>
+  </li>
+  <li>
+    <p>Mostrar la sintaxis de C/GCC para alinear a 32 bits el arreglo <em>kstack</em> anterior.</p>
+  </li>
+  <li>
+    <p>¿A qué valor se está inicializando <em>kstack</em>? ¿Varía entre la versión C y la versión ASM? (Leer la documentación de <em>as</em> sobre la directiva <a href="https://sourceware.org/binutils/docs/as/Space.html"><code class="highlighter-rouge">.space</code></a>.)</p>
+  </li>
+  <li>
+    <p>Explicar la diferencia entre las directivas <a href="https://sourceware.org/binutils/docs/as/Align.html"><code class="highlighter-rouge">.align</code></a> y <a href="https://sourceware.org/binutils/docs/as/P2align.html"><code class="highlighter-rouge">.p2align</code></a> de <em>as</em>, y mostrar cómo alinear el stack del kernel a 4 KiB usando cada una de ellas.</p>
+  </li>
+</ul>
+
+<p>Otra posibilidad para definir el stack del kernel es hacerlo en alguna otra región de memoria, separada de la imagen del kernel. Así, si se sobrepasara el espacio reservado, se evitaría sobreescribir lo que hubiera al continuación (al menos hasta que se puedan introducir otras medidas de protección, como <em>guard pages</em>).</p>
+
+<p>Para ello, convendrá saber la cantidad de memoria de que dispone la máquina. A partir de ahora definiremos que la función <em>main</em> del kernel, <code class="highlighter-rouge">kmain</code>, reciba un <em>struct</em> con la información Multiboot proporcionada por el gestor de arranque (ver ejercicio <a href="../kern0/index.html#ej-gdb">kern0-gdb</a>; las definiciones están disponibles en el archivo <a href="multiboot.h">multiboot.h</a>):</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include "decls.h"
+#include "multiboot.h"
+</span>
+<span class="kt">void</span> <span class="nf">kmain</span><span class="p">(</span><span class="k">const</span> <span class="n">multiboot_info_t</span> <span class="o">*</span><span class="n">mbi</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">vga_write</span><span class="p">(</span><span class="s">"kern1 loading............."</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mh">0x70</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>El archivo <em>decls.h</em>, por el momento, tendría:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#ifndef KERN1_DECL_H
+#define KERN1_DECL_H
+</span>
+<span class="cp">#include &lt;stdint.h&gt;
+</span>
+<span class="c1">// write.c (función de kern0-vga copiada no-static).
+</span><span class="kt">void</span> <span class="n">vga_write</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">s</span><span class="p">,</span> <span class="kt">int8_t</span> <span class="n">linea</span><span class="p">,</span> <span class="kt">uint8_t</span> <span class="n">color</span><span class="p">);</span>
+
+<span class="cp">#endif
+</span></code></pre></div></div>
+
+<p>Se pide ahora escribir una nueva versión del archivo <em>boot.S</em> en que se defina el stack de arranque, así como el “entry point” <code class="highlighter-rouge">_start</code> del kernel. Así, al saltar a código C, el stack ya estará debidamente configurado:</p>
+
+<div class="language-nasm highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// boot.S
+</span>
+<span class="err">#</span><span class="n">include</span> <span class="s">"multiboot.h"</span>
+
+<span class="err">#</span><span class="n">define</span> <span class="n">KSTACK_SIZE</span> <span class="mi">8192</span>
+
+<span class="p">.</span><span class="n">align</span> <span class="mi">4</span>
+<span class="n">multiboot</span><span class="o">:</span>
+    <span class="p">.</span><span class="n">long</span> <span class="n">MULTIBOOT_HEADER_MAGIC</span>
+    <span class="p">.</span><span class="n">long</span> <span class="mi">0</span>
+    <span class="p">.</span><span class="n">long</span> <span class="o">-</span><span class="p">(</span><span class="n">MULTIBOOT_HEADER_MAGIC</span><span class="p">)</span>
+
+<span class="p">.</span><span class="n">globl</span> <span class="n">_start</span>
+<span class="n">_start</span><span class="o">:</span>
+    <span class="c1">// Paso 1: Configurar el stack antes de llamar a kmain.
+</span>    <span class="n">movl</span> <span class="err">$</span><span class="mi">0</span><span class="p">,</span> <span class="err">%</span><span class="n">ebp</span>
+    <span class="n">movl</span> <span class="p">...,</span> <span class="err">%</span><span class="n">esp</span>
+    <span class="k">push</span> <span class="err">%</span><span class="n">ebp</span>
+
+    <span class="c1">// Paso 2: pasar la información multiboot a kmain. Si el
+</span>    <span class="c1">// kernel no arrancó vía Multiboot, se debe pasar NULL.
+</span>    <span class="c1">//
+</span>    <span class="c1">// Usar una instrucción de comparación (TEST o CMP) para
+</span>    <span class="c1">// comparar con MULTIBOOT_BOOTLOADER_MAGIC, pero no usar
+</span>    <span class="c1">// un salto a continuación, sino una instrucción CMOVcc
+</span>    <span class="c1">// (copia condicional).
+</span>    <span class="c1">// ...
+</span>
+    <span class="k">call</span> <span class="n">kmain</span>
+<span class="n">halt</span><span class="o">:</span>
+    <span class="k">hlt</span>
+    <span class="k">jmp</span> <span class="n">halt</span>
+
+<span class="p">.</span><span class="n">data</span>
+<span class="p">.</span><span class="n">p2align</span> <span class="p">...</span>
+<span class="n">kstack</span><span class="o">:</span>
+    <span class="p">.</span><span class="n">space</span> <span class="n">KSTACK_SIZE</span>
+</code></pre></div></div>
+
+<p>Finalmente: mostrar en una sesión de GDB los valores de <em>%esp</em> y <em>%eip</em> al entrar en <code class="highlighter-rouge">kmain</code>, así como los valores almacenados en el stack en ese momento.</p>
+
+<h3 id="ej-cmdline">Ej: kern1-cmdline</h3>
+
+<ul class="biblio">
+  <li>
+    <p>Lecturas obligatorias</p>
+
+    <ul>
+      <li>REES
+        <ul>
+          <li>cap. <strong title="Pointers and Strings">5</strong></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>
+    <p>Lecturas recomendadas</p>
+
+    <ul>
+      <li>BRY2
+        <ul>
+          <li>cap. 3: <strong title="3.12 Out-of-Bounds Memory References and Buffer Overflow">§12</strong></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<p>En el arranque, el sistema operativo puede recibir parámetros, al igual que cualquier programa, “por la línea de comandos”. En el caso de un kernel, la línea de comandos es el gestor de arranque, por ejemplo <em>grub</em>. Linux permite consultar los parámetros del arranque en el archivo <code class="highlighter-rouge">/proc/cmdline</code>:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ cat /proc/cmdline
+BOOT_IMAGE=/vmlinuz-4.9.0-3-amd64 root=/dev/sda2 ro
+</code></pre></div></div>
+
+<p>En QEMU, se pueden agregar parámetros al kernel mediante la opción <code class="highlighter-rouge">-append</code>. Si se añade una variable adicional a las <a href="../kern0/index.html#make-qemu">reglas de QEMU</a> propuestas en el lab anterior:</p>
+
+<div class="language-make highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">KERN</span> <span class="o">?=</span> kern1
+<span class="nv">BOOT</span> <span class="o">:=</span> <span class="nt">-kernel</span> <span class="nv">$(KERN)</span> <span class="nv">$(QEMU_EXTRA)</span>
+</code></pre></div></div>
+
+<p>se puede especificar la opción directamente al invocar <em>make:</em></p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ make qemu QEMU_EXTRA="-append 'param1=hola param2=adios'"
+</code></pre></div></div>
+
+<p>Ahora que <code class="highlighter-rouge">kmain</code> recibe un <code class="highlighter-rouge">struct multiboot_info</code>, se pide expandir <em>kern1.c</em> para imprimir al arrancar los parámetros recibidos:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include &lt;string.h&gt;
+</span>
+<span class="kt">void</span> <span class="nf">kmain</span><span class="p">(</span><span class="k">const</span> <span class="n">multiboot_info_t</span> <span class="o">*</span><span class="n">mbi</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">vga_write</span><span class="p">(</span><span class="s">"kern1 loading............."</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mh">0x70</span><span class="p">);</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="cm">/* mbi-&gt;flags indica que hay cmdline */</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kt">char</span> <span class="n">buf</span><span class="p">[</span><span class="mi">256</span><span class="p">]</span> <span class="o">=</span> <span class="s">"cmdline: "</span><span class="p">;</span>
+        <span class="kt">char</span> <span class="o">*</span><span class="n">cmdline</span> <span class="o">=</span> <span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="p">)</span> <span class="n">mbi</span><span class="o">-&gt;</span><span class="n">cmdline</span><span class="p">;</span>
+        <span class="c1">// Aquí usar strlcat() para concatenar cmdline a buf.
+</span>        <span class="c1">// ...
+</span>        <span class="n">vga_write</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mh">0x07</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Para manejo de cadenas con <em>string.h</em>, se reusa la biblioteca estándar de <a href="http://pintos-os.org/">Pintos</a>, un kernel educativo de Stanford; en particular:</p>
+
+<ul>
+  <li><a href="string.h">lib/string.h</a></li>
+  <li><a href="string.c">lib/string.c</a></li>
+</ul>
+
+<p>Estos archivos deben ir en un subdirectorio <em>lib</em>, ajustando la variable <code class="highlighter-rouge">SRCS</code> como corresponda.</p>
+
+<p>Finalmente:</p>
+
+<ul>
+  <li>
+    <p>Mostrar cómo implementar la misma concatenación, de manera correcta, usando <a href="http://man7.org/linux/man-pages/man3/strcat.3.html"><code class="highlighter-rouge">strncat(3)</code></a>.<sup id="fnref:nostrncat"><a href="index.html#fn:nostrncat" class="footnote">11</a></sup></p>
+  </li>
+  <li>
+    <p>Explicar cómo se comporta <a href="https://www.freebsd.org/cgi/man.cgi?query=strlcat&amp;sektion=3"><code class="highlighter-rouge">strlcat(3)</code></a> si, erróneamente, se declarase <em>buf</em> con tamaño 12. ¿Introduce algún error el código?</p>
+  </li>
+  <li>
+    <p>Compilar el siguiente programa, y explicar por qué se imprimen dos líneas distintas, en lugar de la misma dos veces:</p>
+
+    <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include &lt;stdio.h&gt;
+</span>
+<span class="k">static</span> <span class="kt">void</span> <span class="nf">printf_sizeof_buf</span><span class="p">(</span><span class="kt">char</span> <span class="n">buf</span><span class="p">[</span><span class="mi">256</span><span class="p">])</span> <span class="p">{</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"sizeof buf = %zu</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="k">sizeof</span> <span class="n">buf</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kt">char</span> <span class="n">buf</span><span class="p">[</span><span class="mi">256</span><span class="p">];</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"sizeof buf = %zu</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="k">sizeof</span> <span class="n">buf</span><span class="p">);</span>
+    <span class="n">printf_sizeof_buf</span><span class="p">(</span><span class="n">buf</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div>    </div>
+
+    <p>Revisar, de ser necesario, K&amp;R §5.3.<sup id="fnref:linus"><a href="index.html#fn:linus" class="footnote">12</a></sup></p>
+  </li>
+</ul>
+
+<h4 id="no-host-includes">Compiler includes</h4>
+
+<p>En código del kernel no hay acceso a la biblioteca estándar de C, por lo que se debe incluir una implementación de todas las funciones que se invocan.</p>
+
+<p>Para código kernel, el compilador debería manejar las directivas <em>include</em> de la siguiente manera:</p>
+
+<ol>
+  <li>
+    <p>nunca usar los archivos de la biblioteca estándar de C (p. ej. <em>string.h</em> o <em>stdlib.h</em>)</p>
+  </li>
+  <li>
+    <p>si se necesita, por ejemplo, <code class="highlighter-rouge">#include &lt;string.h&gt;</code>, se debe buscar en la propia biblioteca del kernel, en este caso el subdirectorio <em>lib</em></p>
+  </li>
+  <li>
+    <p>los includes estándar de C99 como <em>stdint.h</em> o <em>stdbool.h</em> sí deberían estar disponibles (en este caso, los proporciona el mismo compilador y no libc).</p>
+  </li>
+</ol>
+
+<p>La opción <code class="highlighter-rouge">-ffreestanding</code> no es suficiente para conseguir este comportamiento, por lo que se necesitan ajustes adicionales en <code class="highlighter-rouge">CPPFLAGS</code>. A continuación se muestra cómo hacerlo en GCC y, más fácilmente, usando Clang:</p>
+
+<ul>
+  <li>
+    <p>Clang</p>
+
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>CPPFLAGS := -nostdlibinc -idirafter lib
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>GCC<sup id="fnref:stdlibinc"><a href="index.html#fn:stdlibinc" class="footnote">13</a></sup></p>
+
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>CPPFLAGS := -nostdinc -idirafter lib
+
+GCC_PATH := /usr/lib/gcc/x86_64-linux-gnu/6 ⁽¹⁾
+CPPFLAGS += -I$(GCC_PATH)/include -I$(GCC_PATH)/include-fixed
+
+⁽¹⁾ Consultar la salida de gcc --print-search-dirs.
+</code></pre></div>    </div>
+  </li>
+</ul>
+
+<p>Incluir el la entrega final los archivos <em>kern1.c</em> y <em>boot.S</em>, y el <em>Makefile</em> que se fue componiendo para su compilación (distinto del usado para las partes 1 y 2).</p>
+
+<h3 id="ej-meminfo">Ej: kern1-meminfo ★</h3>
+
+<p>Se desea imprimir durante el arranque la cantidad de memoria física que el sistema reportó a través de Multiboot; por ejemplo:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ make qemu QEMU_EXTRA="-append meminfo"
+kern1 loading.............
+cmdline: kern1 meminfo
+Physical memory: 127MiB total (639KiB base, 129920KiB extended)
+</code></pre></div></div>
+
+<p>Se puede cambiar la cantidad de memoria con el parámetro <code class="highlighter-rouge">-m</code> de QEMU:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ make qemu QEMU_EXTRA="-m 256"
+Physical memory: 255MiB total (639KiB base, 260992KiB extended)
+</code></pre></div></div>
+
+<p>Para imprimir un valor número en el buffer VGA se podría definir en <em>write.c</em> una función con un prototipo similar a:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include &lt;stdbool.h&gt;
+#include &lt;stddef.h&gt;
+#include &lt;stdint.h&gt;
+</span>
+<span class="c1">// Escribe en ‘s’ el valor de ‘val’ en base 10 si su anchura
+// es menor que ‘bufsize’. En ese caso devuelve true, caso de
+// no haber espacio suficiente no hace nada y devuelve false.
+</span><span class="n">bool</span> <span class="n">fmt_int</span><span class="p">(</span><span class="kt">uint64_t</span> <span class="n">val</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">s</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">bufsize</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>Así, en <em>kmain</em> se puede invocar a <em>fmt_int</em> sobre un buffer temporal, y usar <em>strlcat</em> para componer todas las partes:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">char</span> <span class="n">mem</span><span class="p">[</span><span class="mi">256</span><span class="p">]</span> <span class="o">=</span> <span class="s">"Physical memory: "</span><span class="p">;</span>
+<span class="kt">char</span> <span class="n">tmp</span><span class="p">[</span><span class="mi">64</span><span class="p">]</span> <span class="o">=</span> <span class="s">""</span><span class="p">;</span>
+
+<span class="k">if</span> <span class="p">(</span><span class="n">fmt_int</span><span class="p">(</span><span class="n">NNN</span><span class="p">,</span> <span class="n">tmp</span><span class="p">,</span> <span class="k">sizeof</span> <span class="n">tmp</span><span class="p">))</span> <span class="p">{</span>
+    <span class="n">strlcat</span><span class="p">(</span><span class="n">mem</span><span class="p">,</span> <span class="n">tmp</span><span class="p">,</span> <span class="k">sizeof</span> <span class="n">mem</span><span class="p">);</span>
+    <span class="n">strlcat</span><span class="p">(</span><span class="n">mem</span><span class="p">,</span> <span class="s">"MiB total"</span><span class="p">,</span> <span class="k">sizeof</span> <span class="n">mem</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="c1">// ...
+</span>
+<span class="n">vga_write</span><span class="p">(</span><span class="n">mem</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mh">0x07</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>La implementación de <em>fmt_int</em> puede comenzar por calcular la anchura del entero en decimal, y devolver <em>false</em> si no hay espacio suficiente en el buffer recibido:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">static</span> <span class="kt">size_t</span> <span class="nf">int_width</span><span class="p">(</span><span class="kt">uint64_t</span> <span class="n">val</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// ...
+</span><span class="p">}</span>
+
+<span class="n">bool</span> <span class="nf">fmt_int</span><span class="p">(</span><span class="kt">uint64_t</span> <span class="n">val</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">s</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">bufsize</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kt">size_t</span> <span class="n">l</span> <span class="o">=</span> <span class="n">int_width</span><span class="p">(</span><span class="n">val</span><span class="p">);</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">l</span> <span class="o">&gt;=</span> <span class="n">bufsize</span><span class="p">)</span>  <span class="c1">// Pregunta: ¿por qué no "l &gt; bufsize"?
+</span>        <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+
+    <span class="n">s</span> <span class="o">+=</span> <span class="n">l</span><span class="p">;</span>
+    <span class="c1">// ...
+</span>    <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Ayuda adicional:</p>
+
+<ul>
+  <li>
+    <p>se puede pasar trivialmente de KiB a MiB con una operación de desplazamiento de bits, sin necesidad de división.</p>
+  </li>
+  <li>
+    <p>quizá la función <em>fmt_int</em> sí necesite realizar una división y/o operación de módulo, en cuyo caso el proceso de compilación quizá falle con un error similar a:</p>
+
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>write.c:38: undefined reference to `__umoddi3'
+write.c:40: undefined reference to `__udivdi3'
+</code></pre></div>    </div>
+
+    <p>Este error está explicado en el documento <a href="https://cs107e.github.io/guides/gcc/">Guide to Bare Metal Programming with GCC</a> previamente señalado, y la solución se reduce a enlazar con <em>libgcc</em>. Existen dos maneras de hacerlo:</p>
+
+    <ol>
+      <li>
+        <p>Seguir usando directamente <em>ld</em> como enlazador, en cuyo caso hay que solicitar a gcc la ruta completa al archivo <em>libgcc.a</em>:</p>
+
+        <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>LIBGCC := $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
+
+$(KERN): $(OBJS)
+        ld -m elf_i386 -Ttext 0x100000 $^ $(LIBGCC) -o $@
+</code></pre></div>        </div>
+      </li>
+      <li>
+        <p>Usar el compilador de C como front-end al enlazador, que es lo que hace <em>make</em> por omisión. En ese caso, se debe ajustar la sintaxis de las opciones, y añadir <code class="highlighter-rouge">-nostdlib</code>:</p>
+
+        <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>LDLIBS := -lgcc
+LDFLAGS := -m32 -nostdlib -static -Wl,-Ttext=0x100000
+
+$(KERN): $(OBJS)
+        $(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
+</code></pre></div>        </div>
+
+        <p>(Esta es, de hecho, la regla implícita de <em>make</em> para el enlazado.)<sup id="fnref:build-id"><a href="index.html#fn:build-id" class="footnote">14</a></sup></p>
+      </li>
+    </ol>
+  </li>
+</ul>
+
+<script>
+function addAnchors() {
+    anchors.options.visible = "always";
+    anchors.add("h3");
+}
+</script>
+
+<script async="" onload="addAnchors();" src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/3.2.2/anchor.min.js">
+</script>
+
+<script defer="" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+
+<script defer="" onload="$.bigfoot();" src="https://cdnjs.cloudflare.com/ajax/libs/bigfoot/2.1.4/bigfoot.min.js"></script>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bigfoot/2.1.4/bigfoot-default.min.css" />
+
+<div class="footnotes">
+  <ol>
+    <li id="fn:bibliotip">
+      <p>Para ayudar a la y evitar confusión por cambios entre ediciones, cada referencia numérica incluye un “tooltip” con el título del capítulo o sección.&nbsp;<a href="index.html#fnref:bibliotip" class="reversefootnote">&#x21A9;&#xFE0E;</a></p>
+    </li>
+    <li id="fn:sizeof">
+      <p>La respuesta puede encontrarse, por ejemplo, en K&amp;R §2.12.&nbsp;<a href="index.html#fnref:sizeof" class="reversefootnote">&#x21A9;&#xFE0E;</a></p>
+    </li>
+    <li id="fn:gdbrun">
+      <p>Nótese cómo hace falta una llamada a <em>run</em> (<code class="highlighter-rouge">r</code>) para comenzar la ejecución del programa bajo GDB. No ocurría así en el depurado con QEMU, donde una llamada a <em>continue</em> resultó ser suficiente (porque para GDB el programa remoto ya aparece como en ejecución).&nbsp;<a href="index.html#fnref:gdbrun" class="reversefootnote">&#x21A9;&#xFE0E;</a></p>
+    </li>
+    <li id="fn:gdbrepeat">
+      <p>Como se puede observar, <code class="highlighter-rouge">stepi</code> se puede abreviar como <code class="highlighter-rouge">si</code>. Además, si se presiona ENTER en el prompt de GDB sin haber escrito nada, se ejecuta <a href="https://sourceware.org/gdb/onlinedocs/gdb/Command-Syntax.html">de nuevo</a> la acción anterior.&nbsp;<a href="index.html#fnref:gdbrepeat" class="reversefootnote">&#x21A9;&#xFE0E;</a></p>
+    </li>
+    <li id="fn:incflag">
+      <p>Si el programa no compila, revisar la información sobre la opción <code class="highlighter-rouge">-I</code> en el ejercicio <a href="index.html#incpath">x86-libc</a>.&nbsp;<a href="index.html#fnref:incflag" class="reversefootnote">&#x21A9;&#xFE0E;</a></p>
+    </li>
+    <li id="fn:wpcc">
+      <p>Revisar la página de la wikipedia <a href="https://en.wikipedia.org/wiki/X86_calling_conventions">x86 calling conventions</a> y el manual de GCC <a href="https://gcc.gnu.org/onlinedocs/gcc/x86-Function-Attributes.html#x86-Function-Attributes">x86 function attributes</a>.&nbsp;<a href="index.html#fnref:wpcc" class="reversefootnote">&#x21A9;&#xFE0E;</a></p>
+    </li>
+    <li id="fn:syserrno">
+      <p>Linux combina en <em>%eax</em> el valor de retorno (no negativo) con el número de error (negativo). En caso de error, la biblioteca estándar siempre convierte el valor de retorno a -1, y escribe el código de error (positivo) en <code class="highlighter-rouge">errno</code>.&nbsp;<a href="index.html#fnref:syserrno" class="reversefootnote">&#x21A9;&#xFE0E;</a></p>
+    </li>
+    <li id="fn:errnotl">
+      <p>Se define <code class="highlighter-rouge">errno</code> así, no como variable global sino mediante una indirección, para poder devolver distintos valores por thread, si el programa tiene más de un flujo de ejecución.&nbsp;<a href="index.html#fnref:errnotl" class="reversefootnote">&#x21A9;&#xFE0E;</a></p>
+    </li>
+    <li id="fn:julia">
+      <p>Siendo el futuro, hay por supuesto tutoriales de <em>strace</em> en forma de <a href="https://jvns.ca/blog/2015/04/14/strace-zine/">fanzine</a>. Blog de la autora <a href="https://jvns.ca/">aquí</a>.&nbsp;<a href="index.html#fnref:julia" class="reversefootnote">&#x21A9;&#xFE0E;</a></p>
+    </li>
+    <li id="fn:pyelf">
+      <p>El script está escrito en Python, y para ejecutarlo se debe instalar la biblioteca adicional <a href="https://github.com/eliben/pyelftools">pyelftools</a> (<code class="wrap highlighter-rouge">apt-get install python3-pyelftools</code>). Descargar también el archivo <a href="dwarfalu.py">dwarfalu.py</a>.&nbsp;<a href="index.html#fnref:pyelf" class="reversefootnote">&#x21A9;&#xFE0E;</a></p>
+    </li>
+    <li id="fn:nostrncat">
+      <p>El archivo <em>string.c</em> proporcionado no incluye una implementación de <code class="highlighter-rouge">strncat(3)</code>. Esta implementación alternativa se puede realizar leyendo la documentación de la función, y probándolo en un programa aparte, en espacio de usuario.&nbsp;<a href="index.html#fnref:nostrncat" class="reversefootnote">&#x21A9;&#xFE0E;</a></p>
+    </li>
+    <li id="fn:linus">
+      <p>Es por esto que Linus Torvalds, <a href="https://lkml.org/lkml/2015/9/3/428" title="“Christ, people. Learn C, instead of just stringing random characters together until it compiles.”">en su estilo característico</a>, recomienda siempre usar <code class="highlighter-rouge">char *buf</code> y nunca <code class="highlighter-rouge">char buf[]</code> en la declaración de una función.&nbsp;<a href="index.html#fnref:linus" class="reversefootnote">&#x21A9;&#xFE0E;</a></p>
+    </li>
+    <li id="fn:stdlibinc">
+      <p>La opción <a href="https://clang.llvm.org/docs/CommandGuide/clang.html#cmdoption-nostdlibinc"><code class="highlighter-rouge">-nostdlibinc</code></a> de Clang  es precisamente la que se necesita para el kernel; GCC no la tiene, y <a href="https://clang.llvm.org/docs/CommandGuide/clang.html#cmdoption-nostdinc"><code class="highlighter-rouge">-nostdinc</code></a> implementa el punto 1 sin combinarlo con el 3.&nbsp;<a href="index.html#fnref:stdlibinc" class="reversefootnote">&#x21A9;&#xFE0E;</a></p>
+    </li>
+    <li id="fn:build-id">
+      <p>Si esta versión no arranca, probar a añadir el flag <code class="highlighter-rouge">-Wl,--build-id=none</code>, o seguir usando <em>ld</em> directamente.&nbsp;<a href="index.html#fnref:build-id" class="reversefootnote">&#x21A9;&#xFE0E;</a></p>
+    </li>
+  </ol>
+</div>
+
+</article>
+
+    </main>
+
+    
+
+
+
+
+<footer class="site-footer">
+  <div class="wrapper">
+    <a style="float: left;" rel="license" title="© 2016-2017 Adeodato Simó" href="http://creativecommons.org/licenses/by-sa/4.0/"><img src="../../assets/by-sa.svg"></a>
+    <a style="float: right;" rel="source" href="../x86.md"><img height="16" alt="Link to Markdown source" src="../../assets/source-md.svg"></a>
+  </div>
+</footer>
+
+
+  </body>
+
+</html>

@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="es">
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Ejercicios sobre el estándar POSIX</title>
+  <meta name="description" content="Sistemas Operativos. Facultad de Ingeniería, Universidad de Buenos Aires.">
+
+  <link rel="stylesheet" href="../assets/main.css">
+  <link rel="canonical" href="index.html">
+</head>
+
+
+  <body>
+
+    <header class="site-header">
+
+  <div class="wrapper">
+
+    <a class="site-title" href="../index.html">
+      
+      <span>
+        <svg height="22px" version="1.1" viewBox="0 0 20 19" width="22px" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><title/><desc/><defs/><g fill="none" fill-rule="evenodd" id="Page-1" stroke="none" stroke-width="1"><g fill="#000000" id="Core" transform="translate(-506.000000, -255.000000)"><g id="home" transform="translate(506.000000, 255.500000)"><path d="M8,17 L8,11 L12,11 L12,17 L17,17 L17,9 L20,9 L10,0 L0,9 L3,9 L3,17 L8,17 Z" id="Shape"/></g></g></g></svg>
+      </span>
+      
+    </a>
+
+    <nav class="site-nav">
+      <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+      <label for="nav-trigger">
+      <span class="menu-icon">
+        <svg viewBox="0 0 18 15" width="18px" height="15px">
+          <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+          <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+          <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+        </svg>
+      </span>
+      </label>
+
+      <ul class="trigger">
+        
+        <li class="dropdown">
+          
+          
+            <a href="index.html">Teoría</a>
+          
+        
+        <li class="dropdown">
+          
+          
+            <a href="javascript:void(0)">Labs</a>
+            <div class="dropdown-content">
+            
+              <a href="../lab/kern0/index.html">kern0</a>
+            
+              <a href="../lab/x86/index.html">x86</a>
+            
+              <a href="../lab/kern2/index.html">kern2</a>
+            
+              <a href="index.html">Guía POSIX</a>
+            
+            </div>
+          
+        
+        <li class="dropdown">
+          
+          
+            <a href="javascript:void(0)">TPs</a>
+            <div class="dropdown-content">
+            
+              <a href="../tps/index.html">JOS</a>
+            
+              <a href="../tp0/index.html">TP0</a>
+            
+              <a href="../tp1/index.html">TP1</a>
+            
+              <a href="../tp2/index.html">TP2</a>
+            
+            </div>
+          
+        
+        <li class="dropdown">
+          
+          
+            <a href="javascript:void(0)">Enlaces</a>
+            <div class="dropdown-content">
+            
+              <a href="../bibliografia/index.html">Bibliografía</a>
+            
+              <a href="../regimen/index.html">Evaluaciones</a>
+            
+              <a href="../kit/index.html">Software</a>
+            
+            </div>
+          
+        
+      </ul>
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <main class="wrapper" aria-label="Content">
+      <article class="post post-content">
+  <h1 id="ejercicios-sobre-el-estándar-posix">Ejercicios sobre el estándar POSIX</h1>
+
+<p>Cada ejercicio tiene un identificador con el cual se puede referenciar en la lista de correo. Los ejercicios marcados con ★ son de mayor dificultad.</p>
+
+<h2 class="no_toc" id="índice">Índice</h2>
+<ul id="markdown-toc">
+  <li><a href="index.html#files-and-file-descriptors" id="markdown-toc-files-and-file-descriptors">Files and file descriptors</a>    <ul>
+      <li><a href="index.html#safe-cp" id="markdown-toc-safe-cp"><em>safe-cp</em></a></li>
+      <li><a href="index.html#simple-ls" id="markdown-toc-simple-ls"><em>simple-ls</em></a></li>
+    </ul>
+  </li>
+</ul>
+
+<h2 id="files-and-file-descriptors">Files and file descriptors</h2>
+
+<h3 id="safe-cp"><em>safe-cp</em></h3>
+
+<p>Implementar una versión simplificada del comando <code class="highlighter-rouge">cp(1)</code> de Unix. El comportamiento debe ser como sigue:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ echo hola &gt;f1
+$ echo adios &gt;f2
+
+$ ./cp f1 g
+$ echo $?; cat g
+0
+hola
+
+$ ./cp f2 g &gt;/dev/null
+ERROR: ya existe ‘g’
+$ echo $?; cat g
+1
+hola
+
+$ ./cp -f f2 g
+$ echo $?; cat g
+0
+adios
+
+$ mkdir d
+$ ./cp f2 d
+ERROR: ‘d’ es un directorio
+</code></pre></div></div>
+
+<p>El programa no debe exhibir <em>race conditions</em>, en particular:</p>
+
+<ol>
+  <li>
+    <p>Al copiar el archivo destino, no debe quedar resquicio posible entre la comprobación de que no existe, y la apertura para escritura. La solución será crear el archivo para escritura <em>de manera exclusiva;</em> ver al respecto el uso del flag <code class="highlighter-rouge">O_EXCL</code> en <strong>[KERR §5.1]</strong>.</p>
+  </li>
+  <li>
+    <p>Al comprobar que el archivo origen no sea un directorio, no debe quedar resquicio en que se pudiera borrar el archivo y recrear como directorio, pues fallaría la lectura. La solución será realizar la comprobación con <em>fstat</em> y <code class="highlighter-rouge">S_ISDIR</code> después de haber hecho <em>open</em>; en lugar de usar <em>stat</em> primero, y luego <em>open</em>.</p>
+  </li>
+</ol>
+
+<p>Funciones recomendadas: <code class="highlighter-rouge">open</code>, <code class="highlighter-rouge">fstat</code>, <code class="highlighter-rouge">read</code>, <code class="highlighter-rouge">write</code>, <code class="highlighter-rouge">close</code>.</p>
+
+<h3 id="simple-ls"><em>simple-ls</em></h3>
+
+<!--
+## Procesos
+
+### _fork-exec_
+
+Escribir una función que reciba la ruta de un binario como parámetro y lo ejecute en un proceso separado, esperando hasta su finalización. La función debe devolver:
+
+  - el estado de salida del proceso si este terminó con normalidad (por ejemplo 0, 1 o 2).
+
+  - el identificador de señal en negativo si el programa fue abortado por una señal (por ejemplo -9 si el programa fue abortado con SIGKILL, o -11 si murió por _segmentation fault_).
+
+  - el valor 127 si no se pudo lanzar el proceso (esto es, fallaron _fork_ o _exec_).
+
+Prototipo:
+
+    int fork_exec(const char *ruta);
+
+Pre-condiciones:
+
+   - el binario existe y se tienen permisos de ejecución.
+
+Funciones recomendadas: `fork()`, `execl()`, `waitpid()`, `_exit()`.
+
+
+### _exec-redir_
+
+Escribir una función que lance un ejecutable en un proceso separado, con la posibilidad de configurar redirección de los flujos estándar.
+
+La función recibe la ruta del binario, más un _struct redir_ que indica las redirecciones a realizar.
+
+Prototipo:
+
+    struct redir {
+        const char *ruta_in;   // Si es NULL, no se redirige fd 0.
+        const char *ruta_out;  // Ídem, fd 1.
+        bool append;           // No truncar archivo ‘ruta_out’, si existe.
+    };
+
+    int exec_redir(const char *ruta_binario, const struct redir *r);
+
+La función debe devolver el PID del proceso creado, sin esperar a su finalización, o -1 en caso de ocurrir algún error.
+
+El error podría ocurrir en la secuencia _fork/exec_ o en el manejo de archivos (rutas que no existen, no se tienen permisos para escribir, etc.). En todos los casos, la función no debe dejar ningún archivo abierto sin cerrar.
+
+Funciones recomendadas: `open()`, `fork()`, `execl()`, `dup2()`, `_exit()`. Funciones **no** permitidas: `fcntl()` y, en el proceso hijo, `close()`.
+
+
+### _spawn-check_ ★
+
+Escribir una función que reciba la ruta de un binario como parámetro y lo lance en un proceso separado (sin esperar a su finalización). La función debe devolver:
+
+  - el PID del proceso, por ejemplo 23879, si se pudo lanzar el ejecutable.
+
+  - el código de error en negativo, por ejemplo -ENOMEM, si no se pudo llevar a cabo la ejecución. El error podría venir de la llamada a _fork_, o de la llamada a _exec_.
+
+    Como la llamada a _exec_ ocurre después de _fork_, el proceso hijo deberá tener una manera de comunicar al padre el resultado de _exec_. Sugerencia: una tubería o _pipe_.
+
+Prototipo:
+
+    int spawn_check(const char *ruta);
+
+Funciones permitidas: `fork()`, `execv()`, `pipe()`, `fcntl()`. Funciones **no** permitidas: `pipe2()`.
+
+Recomendación: escribir la solución usando primero `pipe2()`, después convertirla a `pipe()` + `fcntl()` (con el comando `F_SETFD`).
+
+
+### _daemon-start_
+
+Escribir una función que permita lanzar un ejecutable como demonio. Un demonio es un proceso que se ejecuta de manera no interactiva y sin tener una terminal asociada.
+
+Luego de iniciar el demonio, se deben cumplir las siguientes condiciones:
+
+  - El identificador del proceso (PID) se encuentra escrito como texto en un archivo pasado como parámetro. Este archivo no debe quedar abierto en ningún proceso.
+
+  - stdout y stderr se encuentran conectados al archivo de log.
+
+  - El proceso no tiene ninguna terminal asociada.
+
+  - El proceso continúa en ejecución luego de finalizado el proceso padre y el shell utilizado para lanzar al padre.
+
+  - El proceso tiene como padre a init (PID 1).
+
+  - En caso de error en la apertura del archivo de pid, el demonio no debe ejecutarse.
+
+  - En caso de error en la ejecución del demonio, el archivo no debe quedar escrito.
+
+Prototipo:
+
+    int daemon_start(const char *ruta, const char *log, const char *pid);
+
+Funciones recomendadas: `open()`, `fork()`, `execl()`, `dup2()`, `write()`, `setsid()`.
+
+Recomendación páginas de manual de los comandos _kill_ y _ps_.
+
+
+### _daemon-stop_
+
+Escribir una función que reciba como parámetro la ruta a un archivo de PID y detenga el proceso asociado.
+
+Para terminar el proceso se debe intentar utilizar SIGTERM. Si al cabo de 30 segundos el proceso continúa en ejecución, se debe enviar SIGKILL. Luego de detener exitosamente el proceso, se debe eliminar el archivo PID.
+
+La función debe devolver 0 en caso que haya podido terminar el proceso o  -1 ante cualquier error.
+
+Prototipo:
+
+    int daemon_stop(const char *ruta_pid);
+
+Funciones recomendadas: `open()`, `read()`,`waitpid()`, `unlink()`, `kill()`.
+
+-->
+
+<script>
+function addAnchors() {
+    anchors.options.visible = "always";
+    anchors.add("h3");
+}
+</script>
+
+<script async="" onload="addAnchors();" src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/3.2.2/anchor.min.js">
+</script>
+
+
+</article>
+
+    </main>
+
+    
+
+
+
+
+<footer class="site-footer">
+  <div class="wrapper">
+    <a style="float: left;" rel="license" title="© 2016-2017 Adeodato Simó" href="http://creativecommons.org/licenses/by-sa/4.0/"><img src="../assets/by-sa.svg"></a>
+    <a style="float: right;" rel="source" href="../ejercicios.md"><img height="16" alt="Link to Markdown source" src="../assets/source-md.svg"></a>
+  </div>
+</footer>
+
+
+  </body>
+
+</html>

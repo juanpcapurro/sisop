@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="es">
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>TP2: Procesos de usuario</title>
+  <meta name="description" content="Sistemas Operativos. Facultad de Ingeniería, Universidad de Buenos Aires.">
+
+  <link rel="stylesheet" href="../assets/main.css">
+  <link rel="canonical" href="index.html">
+</head>
+
+
+  <body>
+
+    <header class="site-header">
+
+  <div class="wrapper">
+
+    <a class="site-title" href="../index.html">
+      
+      <span>
+        <svg height="22px" version="1.1" viewBox="0 0 20 19" width="22px" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><title/><desc/><defs/><g fill="none" fill-rule="evenodd" id="Page-1" stroke="none" stroke-width="1"><g fill="#000000" id="Core" transform="translate(-506.000000, -255.000000)"><g id="home" transform="translate(506.000000, 255.500000)"><path d="M8,17 L8,11 L12,11 L12,17 L17,17 L17,9 L20,9 L10,0 L0,9 L3,9 L3,17 L8,17 Z" id="Shape"/></g></g></g></svg>
+      </span>
+      
+    </a>
+
+    <nav class="site-nav">
+      <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+      <label for="nav-trigger">
+      <span class="menu-icon">
+        <svg viewBox="0 0 18 15" width="18px" height="15px">
+          <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+          <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+          <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+        </svg>
+      </span>
+      </label>
+
+      <ul class="trigger">
+        
+        <li class="dropdown">
+          
+          
+            <a href="index.html">Teoría</a>
+          
+        
+        <li class="dropdown">
+          
+          
+            <a href="javascript:void(0)">Labs</a>
+            <div class="dropdown-content">
+            
+              <a href="../lab/kern0/index.html">kern0</a>
+            
+              <a href="../lab/x86/index.html">x86</a>
+            
+              <a href="../lab/kern2/index.html">kern2</a>
+            
+              <a href="../ejercicios/index.html">Guía POSIX</a>
+            
+            </div>
+          
+        
+        <li class="dropdown">
+          
+          
+            <a href="javascript:void(0)">TPs</a>
+            <div class="dropdown-content">
+            
+              <a href="../tps/index.html">JOS</a>
+            
+              <a href="../tp0/index.html">TP0</a>
+            
+              <a href="../tp1/index.html">TP1</a>
+            
+              <a href="index.html">TP2</a>
+            
+            </div>
+          
+        
+        <li class="dropdown">
+          
+          
+            <a href="javascript:void(0)">Enlaces</a>
+            <div class="dropdown-content">
+            
+              <a href="../bibliografia/index.html">Bibliografía</a>
+            
+              <a href="../regimen/index.html">Evaluaciones</a>
+            
+              <a href="../kit/index.html">Software</a>
+            
+            </div>
+          
+        
+      </ul>
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <main class="wrapper" aria-label="Content">
+      <article class="post post-content">
+  <h1 id="tp2-procesos-de-usuario">TP2: Procesos de usuario<sup id="fnref:src"><a href="index.html#fn:src" class="footnote">1</a></sup></h1>
+
+<p>Este TP guía la implementación de procesos de usuario. En particular, cubre la ejecución de <em>un</em> solo proceso, esto es: una vez inicializado el sistema, el kernel lanzará el programa indicado por línea de comandos y, una vez finalizado este, volverá al monitor de JOS. En futuros TPs se abordará la ejecución de múltiples programas simultáneamente.</p>
+
+<p>Los programas de usuario se encuentran en el directorio <em>user</em>, y la biblioteca estándar en <em>lib</em>. Por ejemplo, el programa <em>user/hello.c:</em></p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include &lt;inc/lib.h&gt;
+</span>
+<span class="kt">void</span> <span class="nf">umain</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">cprintf</span><span class="p">(</span><span class="s">"hello, world</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+    <span class="n">cprintf</span><span class="p">(</span><span class="s">"i am environment %08x</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">thisenv</span><span class="o">-&gt;</span><span class="n">env_id</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>se puede ejecutar mediante <code class="highlighter-rouge">make run-hello-nox</code>:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ make run-hello-nox
+[00000000] new env 00001000
+hello, world
+i am environment 00001000
+[00001000] exiting gracefully
+[00001000] free env 00001000
+Destroyed the only environment - nothing more to do!
+Welcome to the JOS kernel monitor!
+Type 'help' for a list of commands.
+K&gt;
+</code></pre></div></div>
+
+<p><strong>Nota:</strong> JOS usa el término <em>environment</em> para referirse a proceso, porque la semántica de los procesos en JOS diverge de la semántica típica en Unix. En esta consigna, se usa “proceso” directamente para <em>environment</em>.</p>
+
+<h2 class="no_toc" id="índice">Índice</h2>
+
+<ul id="markdown-toc">
+  <li><a href="index.html#código" id="markdown-toc-código">Código</a></li>
+  <li><a href="index.html#parte-1-inicializaciones" id="markdown-toc-parte-1-inicializaciones">Parte 1: Inicializaciones</a>    <ul>
+      <li><a href="index.html#mem_init_envs" id="markdown-toc-mem_init_envs">Tarea: mem_init_envs</a></li>
+      <li><a href="index.html#env_init" id="markdown-toc-env_init">Tarea: env_init</a></li>
+      <li><a href="index.html#env_alloc" id="markdown-toc-env_alloc">Tarea: env_alloc</a></li>
+      <li><a href="index.html#tarea-env_setup_vm" id="markdown-toc-tarea-env_setup_vm">Tarea: env_setup_vm</a></li>
+      <li><a href="index.html#env_init_percpu" id="markdown-toc-env_init_percpu">Tarea: env_init_percpu</a></li>
+    </ul>
+  </li>
+  <li><a href="index.html#pt2-elf" id="markdown-toc-pt2-elf">Parte 2: Carga de ELF</a>    <ul>
+      <li><a href="index.html#region_alloc" id="markdown-toc-region_alloc">Tarea: region_alloc</a></li>
+      <li><a href="index.html#load_icode" id="markdown-toc-load_icode">Tarea: load_icode</a></li>
+    </ul>
+  </li>
+  <li><a href="index.html#parte-3-lanzar-procesos" id="markdown-toc-parte-3-lanzar-procesos">Parte 3: Lanzar procesos</a>    <ul>
+      <li><a href="index.html#env_create" id="markdown-toc-env_create">Tarea: env_create</a></li>
+      <li><a href="index.html#env_pop_tf" id="markdown-toc-env_pop_tf">Tarea: env_pop_tf</a></li>
+      <li><a href="index.html#env_run" id="markdown-toc-env_run">Tarea: env_run</a></li>
+      <li><a href="index.html#gdb_run" id="markdown-toc-gdb_run">Tarea: gdb_hello</a></li>
+    </ul>
+  </li>
+  <li><a href="index.html#parte-4-interrupts-y-syscalls" id="markdown-toc-parte-4-interrupts-y-syscalls">Parte 4: Interrupts y syscalls</a>    <ul>
+      <li><a href="index.html#kern_idt" id="markdown-toc-kern_idt">Tarea: kern_idt</a></li>
+      <li><a href="index.html#kern_interrupts" id="markdown-toc-kern_interrupts">Tarea: kern_interrupts</a></li>
+      <li><a href="index.html#kern_syscalls" id="markdown-toc-kern_syscalls">Tarea: kern_syscalls</a></li>
+    </ul>
+  </li>
+  <li><a href="index.html#parte-5-protección-de-memoria" id="markdown-toc-parte-5-protección-de-memoria">Parte 5: protección de memoria</a>    <ul>
+      <li><a href="index.html#tarea-user_evilhello" id="markdown-toc-tarea-user_evilhello">Tarea: user_evilhello</a></li>
+      <li><a href="index.html#tarea-user_mem_check" id="markdown-toc-tarea-user_mem_check">Tarea: user_mem_check</a></li>
+    </ul>
+  </li>
+</ul>
+
+<h2 id="código">Código</h2>
+
+<p>El código base para el TP se encuentra en la rama <em>tp2</em> del <a href="../tps/index.html#jos-repo">repositorio</a>. Esta nueva base añade un número de archivos:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Dir</th>
+      <th style="text-align: left">File</th>
+      <th style="text-align: left">Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left"><code class="highlighter-rouge">inc/ </code></td>
+      <td style="text-align: left"><code class="highlighter-rouge">env.h</code></td>
+      <td style="text-align: left">Public definitions for user-mode environments</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left"><code class="highlighter-rouge">trap.h</code></td>
+      <td style="text-align: left">Public definitions for trap handling</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left"><code class="highlighter-rouge">syscall.h</code></td>
+      <td style="text-align: left">Public definitions for system calls from user environments to the kernel</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left"><code class="highlighter-rouge">lib.h</code></td>
+      <td style="text-align: left">Public definitions for the user-mode support library</td>
+    </tr>
+  </tbody>
+  <tbody>
+    <tr>
+      <td style="text-align: left"><code class="highlighter-rouge">kern/ </code></td>
+      <td style="text-align: left"><code class="highlighter-rouge">env.h</code></td>
+      <td style="text-align: left">Kernel-private definitions for user-mode environments</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left"><code class="highlighter-rouge">env.c</code></td>
+      <td style="text-align: left">Kernel code implementing user-mode environments</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left"><code class="highlighter-rouge">trap.h</code></td>
+      <td style="text-align: left">Kernel-private trap handling definitions</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left"><code class="highlighter-rouge">trap.c</code></td>
+      <td style="text-align: left">Trap handling code</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left"><code class="highlighter-rouge">trapentry.S</code></td>
+      <td style="text-align: left">Assembly-language trap handler entry-points</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left"><code class="highlighter-rouge">syscall.h</code></td>
+      <td style="text-align: left">Kernel-private definitions for system call handling</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left"><code class="highlighter-rouge">syscall.c</code></td>
+      <td style="text-align: left">System call implementation code</td>
+    </tr>
+  </tbody>
+  <tbody>
+    <tr>
+      <td style="text-align: left"><code class="highlighter-rouge">lib/ </code></td>
+      <td style="text-align: left"><code class="highlighter-rouge">Makefrag</code></td>
+      <td style="text-align: left">Makefile fragment to build std library, <code class="highlighter-rouge">obj/lib/libjos.a</code></td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left"><code class="highlighter-rouge">entry.S</code></td>
+      <td style="text-align: left">Assembly-language entry-point for user environments</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left"><code class="highlighter-rouge">libmain.c</code></td>
+      <td style="text-align: left">User-mode library setup code called from <em>entry.S</em></td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left"><code class="highlighter-rouge">syscall.c</code></td>
+      <td style="text-align: left">User-mode system call stub functions</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left"><code class="highlighter-rouge">console.c</code></td>
+      <td style="text-align: left">User-mode implementations of <code class="highlighter-rouge">putchar()</code> and <code class="highlighter-rouge">getchar()</code></td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left"><code class="highlighter-rouge">exit.c</code></td>
+      <td style="text-align: left">User-mode implementation of <code class="highlighter-rouge">exit()</code></td>
+    </tr>
+    <tr>
+      <td style="text-align: left"> </td>
+      <td style="text-align: left"><code class="highlighter-rouge">panic.c</code></td>
+      <td style="text-align: left">User-mode implementation of <code class="highlighter-rouge">panic()</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="parte-1-inicializaciones">Parte 1: Inicializaciones</h2>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ git show --stat tp2_parte1
+ kern/env.c  | 10 ++++++++++
+ kern/pmap.c |  5 +++++
+ 2 files changed, 15 insertions(+)
+
+$ wc --words &lt; TP2.md
+253
+</code></pre></div></div>
+
+<p>En JOS, toda la información de un proceso de usuario se guarda en un <strong><code class="highlighter-rouge">struct Env</code></strong>, el cual se define en el archivo <a href="https://github.com/fisop/jos/blob/4f94e0629fe/inc/env.h#L46">inc/env.h</a>. <em>Env</em> contiene, notablemente, los siguientes campos:</p>
+
+<ul>
+  <li><code class="highlighter-rouge">env_id:</code> identificador numérico del proceso<sup id="fnref:env_id"><a href="index.html#fn:env_id" class="footnote">2</a></sup></li>
+  <li><code class="highlighter-rouge">env_parent_id:</code> identificador numérico del proceso padre</li>
+  <li><code class="highlighter-rouge">env_status:</code> estado del proceso (en ejecución, listo para ejecución, bloqueado…)</li>
+</ul>
+
+<p>Así como:</p>
+
+<ul>
+  <li><code class="highlighter-rouge">env_pgdir:</code> el <em>page directory</em> del proceso</li>
+  <li><code class="highlighter-rouge">env_tf:</code> un <strong><code class="highlighter-rouge">struct Trapframe</code></strong> (definido en <a href="https://github.com/fisop/jos/blob/4f94e0629fe/inc/trap.h#L58">inc/trap.h</a>) donde guardar el estado de la CPU (registros, etc.) cuando se interrumpe la ejecución del proceso. De esta manera, al reanudar el proceso es posible restaurar con exactitud su estado anterior.</li>
+</ul>
+
+<p>La constante <strong><code class="highlighter-rouge">NENV</code></strong>, por su parte, limita la cantidad máxima de procesos concurrentes en el sistema; el límite actual es 1024. Este límite facilita la creación de procesos de la siguiente manera:</p>
+
+<ul>
+  <li>
+    <p>al arrancar el sistema, se pre-reserva un arreglo de <code class="highlighter-rouge">NENV</code> elementos <code class="highlighter-rouge">struct Env</code> (de manera similar al arreglo <a href="../tp1/index.html#pt1-memoria-fisica">pages</a> del TP1)</p>
+  </li>
+  <li>
+    <p>al crear procesos, no será necesario reservar memoria de manera dinámica, sino que se usan los <code class="highlighter-rouge">struct Env</code> del arreglo</p>
+  </li>
+  <li>
+    <p>el arreglo se configura en una lista enlazada <code class="highlighter-rouge">env_free_list</code> de la que se puede obtener el siguiente <code class="highlighter-rouge">Env</code> libre en <em>O(1)</em>. Cuando se destruye un proceso, se reinserta su <em>struct</em> en la lista.</p>
+  </li>
+</ul>
+
+<p>Tanto el arreglo como la lista de procesos libres se definen en <code class="highlighter-rouge">kern/env.c</code>:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// Arreglo de procesos (variable global, de longitud NENV).
+</span><span class="k">struct</span> <span class="n">Env</span> <span class="o">*</span><span class="n">envs</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+
+<span class="c1">// Lista enlazada de `struct Env` libres.
+</span><span class="k">static</span> <span class="k">struct</span> <span class="n">Env</span> <span class="o">*</span><span class="n">env_free_list</span><span class="p">;</span>
+
+<span class="c1">// Proceso actualmente en ejecución (inicialmente NULL).
+</span><span class="k">struct</span> <span class="n">Env</span> <span class="o">*</span><span class="n">curenv</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+</code></pre></div></div>
+
+<h3 id="mem_init_envs">Tarea: mem_init_envs</h3>
+
+<ol>
+  <li>
+    <p>Añadir a <code class="highlighter-rouge">mem_init()</code> código para crear el arreglo de procesos <code class="highlighter-rouge">envs</code>. Se debe determinar cuánto espacio se necesita, e inicializar a 0 usando <code class="highlighter-rouge">memset()</code>.</p>
+  </li>
+  <li>
+    <p>Mapear <code class="highlighter-rouge">envs</code>, con permiso de sólo lectura para usuarios, en <code class="highlighter-rouge">UENVS</code> del page directory del kernel.<sup id="fnref:uenvsro"><a href="index.html#fn:uenvsro" class="footnote">3</a></sup></p>
+  </li>
+</ol>
+
+<p>Tras esta tarea, la función <code class="highlighter-rouge">check_kern_pgdir()</code> debe reportar éxito:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ make qemu-nox
+Physical memory: 131072K available, base = 640K ...
+check_page_alloc() succeeded!
+check_page() succeeded!
+check_kern_pgdir() succeeded!
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+check_page_installed_pgdir() succeeded!
+</code></pre></div></div>
+
+<h3 id="env_init">Tarea: env_init</h3>
+
+<p>Inicializar, en la función <code class="highlighter-rouge">env_init()</code> de <em>env.c</em>, la lista de <code class="highlighter-rouge">struct Env</code> libres. Para facilitar la corrección automática, se pide que la lista enlazada siga el orden del arreglo (esto es, que <code class="highlighter-rouge">env_free_list</code> apunte a <code class="highlighter-rouge">&amp;envs[0]</code>).</p>
+
+<h3 id="env_alloc">Tarea: env_alloc</h3>
+
+<p>La función <code class="highlighter-rouge">env_alloc()</code>, ya <a href="https://github.com/fisop/jos/blob/4f94e0629fe/kern/env.c#L191">implementada</a>, encuentra un <code class="highlighter-rouge">struct Env</code> libre y lo inicializa para su uso. Entre otras cosas:</p>
+
+<ul>
+  <li>le asigna un identificador numérico único</li>
+  <li>lo marca como listo para ejecutar (<code class="highlighter-rouge">ENV_RUNNABLE</code>)</li>
+  <li>inicializa sus segmentos de datos y código con permisos adecuados</li>
+</ul>
+
+<p>Se pide leer la función <code class="highlighter-rouge">env_alloc()</code> en su totalidad y responder las siguientes preguntas:</p>
+
+<ol>
+  <li>
+    <p>¿Qué identificadores se asignan a los primeros 5 procesos creados? (Usar base hexadecimal.)</p>
+  </li>
+  <li>
+    <p>Supongamos que al arrancar el kernel se lanzan <code class="highlighter-rouge">NENV</code> proceso a ejecución. A continuación se destruye el proceso asociado a <code class="highlighter-rouge">envs[630]</code> y se lanza un proceso que cada segundo muere y se vuelve a lanzar. ¿Qué identificadores tendrá este proceso en sus sus primeras cinco ejecuciones?</p>
+  </li>
+</ol>
+
+<!-- 3. TODO EFLAGS?? -->
+
+<h3 id="tarea-env_setup_vm">Tarea: env_setup_vm</h3>
+
+<p>Desde <code class="highlighter-rouge">env_alloc()</code> se llama a <code class="highlighter-rouge">env_setup_vm()</code> (no implementada) para configurar el <em>page directory</em> correspondiente al nuevo proceso. Implementar esta función siguiendo las instrucciones en el código fuente.</p>
+
+<p><strong>Ayuda:</strong> es una función <em>muy</em> corta, y apenas le faltan 3 líneas de código por añadir. Se permite usar <code class="highlighter-rouge">memcpy()</code>.</p>
+
+<h3 id="env_init_percpu">Tarea: env_init_percpu</h3>
+
+<p>La función <code class="highlighter-rouge">env_init()</code> hace una llamada a <code class="highlighter-rouge">env_init_percpu()</code> para configurar sus segmentos. Antes de ello, se invoca a la instrucción <code class="highlighter-rouge">lgdt</code>. Responder:</p>
+
+<ul>
+  <li>¿Cuántos bytes escribe la función <code class="highlighter-rouge">lgdt</code>, y dónde?</li>
+  <li>¿Qué representan esos bytes?</li>
+</ul>
+
+<p>La función se llamará (en futuros TPs) una vez por CPU:</p>
+
+<ul>
+  <li>Dos hilos distintos ejecutándose en <em>paralelo</em> ¿podrían usar distintas GDT?</li>
+</ul>
+
+<p>Bibliografía relevante:</p>
+
+<ul>
+  <li><strong>[IA32-3A]:</strong> §2.1.1 — §2.4 — §3.2.2 — §3.5.1 — §3.4</li>
+  <li>documentación sobre <a href="../kit/index.html#x86-assembly">inline assembly</a> de GCC</li>
+</ul>
+
+<h2 id="pt2-elf">Parte 2: Carga de ELF</h2>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ git show --stat tp2_parte2
+ kern/env.c | 32 ++++++++++++++++++++++
+ 1 file changed, 32 insertions(+)
+</code></pre></div></div>
+
+<p>El segundo paso para lanzar un proceso, tras inicializar su <code class="highlighter-rouge">struct Env</code>, es copiar el código del programa a memoria para que pueda ser ejecutado. Normalmente, el código se carga del sistema de archivos, pero en JOS no tenemos soporte para discos todavía.</p>
+
+<p>Por el momento, para ejecutar un programa en JOS, el linker empotra el código máquina del programa al final de la imagen del kernel. La posición y tamaño de cada programa disponible se marca con símbolos en el binario. Por ejemplo, el código para ejecutar <em>user/hello.c</em> se puede encontrar así:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ grep user_hello obj/kern/kernel.sym
+00008948 A _binary_obj_user_hello_size
+f01217f4 D _binary_obj_user_hello_start
+f012a13c D _binary_obj_user_hello_end
+</code></pre></div></div>
+
+<p>Es decir, 549 KiB a partir de la dirección de enlazado <code class="highlighter-rouge">0xf01217f4</code>. Ahí en realidad se encuentra un archivo ELF (ver <code class="highlighter-rouge">readelf -a obj/user/hello</code>).</p>
+
+<p>En la parte 3, se lanzará el programa mediante:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>// Este símbolo marca el comienzo del ELF user/hello.c.
+extern uint8_t _binary_obj_user_hello_start[];
+
+// No es necesario indicar el tamaño; env_create()  lo
+// encuentra vía las cabeceras ELF.
+env_create(_binary_obj_user_hello_start, ENV_TYPE_USER);
+</code></pre></div></div>
+
+<p>O, de manera más sencilla usando la macro <code class="highlighter-rouge">ENV_CREATE</code>:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ENV_CREATE(user_hello, ENV_TYPE_USER);
+</code></pre></div></div>
+
+<h3 id="region_alloc">Tarea: region_alloc</h3>
+
+<p>Se puede usar <code class="highlighter-rouge">page_insert()</code> para reservar 4 KiB de memoria en el espacio de memoria de un proceso. Para facilitar la carga del código en memoria, la función auxiliar <code class="highlighter-rouge">region_alloc()</code> reserva una cantidad arbitraria de memoria.</p>
+
+<p>Se pide la función <code class="highlighter-rouge">region_alloc()</code> siguiendo las instrucciones en su documentación. Atención a los alineamientos.</p>
+
+<p><strong>Ayuda:</strong> usar las funciones <code class="highlighter-rouge">page_alloc()</code> y <code class="highlighter-rouge">page_insert()</code>.</p>
+
+<h3 id="load_icode">Tarea: load_icode</h3>
+
+<p>La función <code class="highlighter-rouge">load_icode()</code> recibe un puntero a un binario ELF, y lo carga en el espacio de memoria de un proceso en las direcciones que corresponda. En particular, para cada uno de los <em>e_phnum</em> segmentos o <em>program headers</em> de tipo PT_LOAD:</p>
+
+<ul>
+  <li>reserva <em>memsz</em> bytes de memoria con <code class="highlighter-rouge">region_alloc()</code> en la dirección <em>va</em> del segmento</li>
+  <li>copia <em>filesz</em> bytes desde <em>binary + offset</em> a <em>va</em></li>
+  <li>escribe a 0 el resto de bytes desde <em>va + filesz</em> hasta <em>va + memsz</em></li>
+</ul>
+
+<p>Se debe, además, configurar el <em>entry point</em> del proceso.</p>
+
+<p><strong>Ayuda:</strong> usar las funciones <code class="highlighter-rouge">memcpy()</code> y <code class="highlighter-rouge">memset()</code> en el espacio de direcciones del proceso, y la documentación de la función.</p>
+
+<p>Bibliografía:</p>
+
+<ul>
+  <li>la sección <a href="https://en.wikipedia.org/wiki/Executable_and_Linkable_Format#Program_header">Program headers</a> de la entrada en Wikipedia sobre ELF</li>
+  <li><code class="highlighter-rouge">readelf -l obj/user/hello</code></li>
+</ul>
+
+<h2 id="parte-3-lanzar-procesos">Parte 3: Lanzar procesos</h2>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ git show --stat tp2_parte3
+ kern/env.c | 17 ++++++++++++++++-
+ 1 file changed, 16 insertions(+), 1 deletion(-)
+
+$ wc --words &lt; TP2.md
+687
+</code></pre></div></div>
+
+<p>Una vez llamado a <code class="highlighter-rouge">env_init()</code>, el kernel llama a <code class="highlighter-rouge">env_create()</code> y <code class="highlighter-rouge">env_run()</code>:</p>
+
+<ul>
+  <li>
+    <p><code class="highlighter-rouge">env_create()</code> combina todas las funciones de partes anteriores para dejar el proceso listo para ejecución</p>
+  </li>
+  <li>
+    <p><code class="highlighter-rouge">env_run()</code> se invoca cada vez que se desea pasar a ejecución un proceso que está listo</p>
+  </li>
+</ul>
+
+<h3 id="env_create">Tarea: env_create</h3>
+
+<p>Implementar la función <code class="highlighter-rouge">env_create()</code> siguiendo la documentación en el código.</p>
+
+<p>Si, por ejemplo, <code class="highlighter-rouge">env_alloc()</code> devuelve un código de error, se puede usar el modificador <code class="highlighter-rouge">"%e"</code> de la función <code class="highlighter-rouge">panic()</code> para formatear el error:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>if (err &lt; 0)
+    panic("env_create: %e", err);
+</code></pre></div></div>
+
+<h3 id="env_pop_tf">Tarea: env_pop_tf</h3>
+
+<p>La función <code class="highlighter-rouge">env_pop_tf()</code> ya implementada es en JOS el último paso de un context switch a modo usuario. Antes de implementar <code class="highlighter-rouge">env_run()</code>, responder a las siguientes preguntas:</p>
+
+<ol>
+  <li>¿Qué hay en <code class="highlighter-rouge">(%esp)</code> tras el primer <code class="highlighter-rouge">movl</code> de la función?</li>
+  <li>¿Qué hay en <code class="highlighter-rouge">(%esp)</code> justo antes de la instrucción <code class="highlighter-rouge">iret</code>? ¿Y en <code class="highlighter-rouge">8(%esp)</code>?</li>
+  <li>
+    <p>En la documentación de <code class="highlighter-rouge">iret</code> en <strong>[IA32-2A]</strong> se dice:</p>
+
+    <blockquote>
+      <p>If the return is to another privilege level, the IRET instruction also pops the stack pointer and SS from the stack, before resuming program execution.</p>
+    </blockquote>
+
+    <p>¿Cómo puede determinar la CPU si hay un cambio de ring (nivel de privilegio)?</p>
+  </li>
+</ol>
+
+<h3 id="env_run">Tarea: env_run</h3>
+
+<p>Implementar la función <code class="highlighter-rouge">env_run()</code> siguiendo las instrucciones en el código fuente. Tras arrancar el kernel, esta función lanza en ejecución el proceso configurado en <code class="highlighter-rouge">i386_init()</code>.</p>
+
+<p><strong>Nota:</strong> El programa por omisión, <em>user/hello.c</em>, imprime una cadena en pantalla mediante la llamada al sistema <code class="highlighter-rouge">sys_cputs()</code>. Al no haber implementado aún soporte para llamadas al sistema, se observará una triple falla en QEMU (o un loop de reboots, según la versión de QEMU). En la tarea a continuación se guía el uso de GDB para averiguar cuándo aborta exactamente el programa.</p>
+
+<h3 id="gdb_run">Tarea: gdb_hello</h3>
+
+<p>Arrancar el programa <em>hello.c</em> bajo GDB. Se puede usar, en lugar de <code class="highlighter-rouge">make qemu-gdb-nox</code>:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ make run-hello-nox-gdb
+$ make gdb
+</code></pre></div></div>
+
+<p>Se pide mostrar una sesión de GDB con los siguientes pasos:</p>
+
+<ol>
+  <li>
+    <p>Poner un breakpoint en <code class="highlighter-rouge">env_pop_tf()</code> y continuar la ejecución hasta allí.</p>
+  </li>
+  <li>
+    <p>En QEMU, entrar en modo monitor (<code class="highlighter-rouge">Ctrl-a c</code>), y mostrar las cinco primeras líneas del comando <code class="highlighter-rouge">info registers</code>.</p>
+  </li>
+  <li>
+    <p>De vuelta a GDB, imprimir el valor del argumento <em>tf</em>:</p>
+
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(gdb) p tf
+$1 = ...
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>Imprimir, con <code class="highlighter-rouge">x/Nx tf</code> tantos enteros como haya en el struct <em>Trapframe</em>. <code class="highlighter-rouge">N = sizeof(Trapframe) / sizeof(int)</code>.</p>
+  </li>
+  <li>
+    <p>Avanzar hasta justo después del <code class="highlighter-rouge">movl ...,%esp</code>, usando <code class="highlighter-rouge">si M</code> para ejecutar tantas instrucciones como sea necesario <strong>en un solo paso</strong>:</p>
+
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(gdb) disas
+(gdb) si M
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>Comprobar, con <code class="highlighter-rouge">x/Nx $sp</code> que los contenidos son los mismos que <em>tf</em> (donde <code class="highlighter-rouge">N</code> es el tamaño de <em>tf</em>).</p>
+  </li>
+  <li>
+    <p>Explicar con el mayor detalle posible cada uno de los valores. Para los valores no nulos, se debe indicar dónde se configuró inicialmente el valor, y qué representa.</p>
+  </li>
+  <li>
+    <p>Continuar hasta la instrucción <code class="highlighter-rouge">iret</code>, sin llegar a ejecutarla. Mostrar en este punto, de nuevo, las cinco primeras líneas de <code class="highlighter-rouge">info registers</code> en el monitor de QEMU. Explicar los cambios producidos.</p>
+  </li>
+  <li>
+    <p>Ejecutar la instrucción <code class="highlighter-rouge">iret</code>. En ese momento se ha realizado el cambio de contexto y los símbolos del kernel ya no son válidos.</p>
+
+    <ul>
+      <li>imprimir el valor del contador de programa con <code class="highlighter-rouge">p $pc</code> o <code class="highlighter-rouge">p $eip</code></li>
+      <li>cargar los símbolos de <em>hello</em> con <code class="highlighter-rouge">symbol-file obj/user/hello</code></li>
+      <li>volver a imprimir el valor del contador de programa</li>
+    </ul>
+
+    <p>Mostrar una última vez la salida de <code class="highlighter-rouge">info registers</code> en QEMU, y explicar los cambios producidos.</p>
+  </li>
+  <li>
+    <p>Poner un breakpoint temporal (<code class="highlighter-rouge">tbreak</code>, se aplica una sola vez) en la función <code class="highlighter-rouge">syscall()</code> y explicar qué ocurre justo tras ejecutar la instrucción <code class="highlighter-rouge">int $0x30</code>. Usar, de ser necesario, el monitor de QEMU.</p>
+  </li>
+</ol>
+
+<p><strong>Ayuda:</strong> muy posiblemente GDB no encuentre la variable <em>tf</em> definida. En ese caso, se recomienda aumentar el nivel de debug en el Makefile, usando <code class="highlighter-rouge">-ggdb3</code> en lugar de <code class="highlighter-rouge">-gstabs</code>.</p>
+
+<h2 id="parte-4-interrupts-y-syscalls">Parte 4: Interrupts y syscalls</h2>
+
+<p>Una vez lanzado un proceso, este debe poder interaccionar con el sistema operativo para realizar tareas como imprimir por pantalla o leer archivos. Asimismo, el sistema operativo debe estar preparado para manejar excepciones que deriven de la ejecución proceso (por ejemplo, si realiza una división por cero o dereferencia un puntero nulo).</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ git show --stat tp2_parte4
+ kern/syscall.c   | 18 ++++-
+ kern/trap.c      | 50 ++++++++++---
+ kern/trapentry.S | 59 ++++++++++++++++
+ 3 files changed, 117 insertions(+), 10 deletions(-)
+
+$ wc --words &lt; TP2.md
+960
+</code></pre></div></div>
+
+<p>Bibliografía para esta parte:</p>
+
+<!-- TODO: ¿encontrar mejores explicaciones? -->
+
+<ul>
+  <li>
+    <p>Sección <a href="https://pdos.csail.mit.edu/6.828/2016/labs/lab3/#Handling-Interrupts-and-Exceptions">Handling Interrupts and Exceptions</a> y siguientes de la versión MIT de este TP.</p>
+  </li>
+  <li>
+    <p>Capítulo 6 de <strong>[IA32-3A]</strong>: <em>Interrupts and Exception Handling</em> (secciones 6.1 a 6.6 y 6.10 a 6.12).</p>
+  </li>
+  <li>
+    <p>Recordatorio de excepciones: capítulo 8 de <strong>[BRY2]</strong> (introducción y sección 8.1).</p>
+  </li>
+  <li>
+    <p>Recordatorio de cambio de privilegio, capítulo 5 de <strong>[IA32-3A]</strong>: <em>Protection</em> (en especial secciones 5.2, 5.5 y 5.8).</p>
+  </li>
+</ul>
+
+<h3 id="kern_idt">Tarea: kern_idt</h3>
+
+<p>En JOS, todas las excepciones, interrupciones y traps se derivan a la función <code class="highlighter-rouge">trap()</code>, definida en <em>trap.c</em>. Esta función recibe un  <em>Trapframe*</em> como parámetro, por lo que cada interrupt handler debe, en cooperación con la CPU, dejar uno en el stack antes de llamar a <code class="highlighter-rouge">trap()</code>.</p>
+
+<p>Se debe definir ahora en JOS interrupt handlers para todas las interrupciones de la arquitectura x86 (ver Tabla 6-1 en <strong>[IA32-3A]</strong>: <em>Protected-Mode Exceptions and Interrupts</em>). Esto se realiza en dos partes:</p>
+
+<ol>
+  <li>
+    <p>en <code class="highlighter-rouge">trap_init()</code>, se usará la macro <code class="highlighter-rouge">SETGATE</code> para configurar la tabla de descriptores de interrupciones (IDT), alojada en el arreglo global <code class="highlighter-rouge">idt[]</code>.</p>
+  </li>
+  <li>
+    <p>previamente, se debe definir cada interrupt handler en <em>trapentry.S</em>. Para no repetir demasiado código, se proporcionan las macros <code class="highlighter-rouge">TRAPHANDLER</code> y <code class="highlighter-rouge">TRAPHANDLER_NOEC</code> (leer cuidadosamente su documentación).</p>
+
+    <p>Ambas macros comparten código común en una función <code class="highlighter-rouge">_alltraps</code>, que se debe implementar también en assembler.</p>
+
+    <p><strong>Ayuda</strong>: cargar GD_KT en <code class="highlighter-rouge">%ds</code> y <code class="highlighter-rouge">%es</code> mediante un registro intermedio de 16 bits (por ejemplo, <code class="highlighter-rouge">%ax</code>). Considerar, además, que <code class="highlighter-rouge">GD_KT</code> es una constante numérica, no una dirección de memoria (<code class="highlighter-rouge">‘mov $GD_KT’</code> vs <code class="highlighter-rouge">‘mov GD_KT’</code>).</p>
+  </li>
+</ol>
+
+<p>Tras esta tarea, deben pasar las siguientes pruebas:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ make grade
+divzero: OK (0.7s)
+softint: OK (0.9s)
+badsegment: OK (0.9s)
+Part A score: 3/3
+</code></pre></div></div>
+
+<p>Responder:</p>
+
+<ul>
+  <li>
+    <p>¿Cómo decidir si usar <code class="highlighter-rouge">TRAPHANDLER</code> o <code class="highlighter-rouge">TRAPHANDLER_NOEC</code>? ¿Qué pasaría si se usara solamente la primera?</p>
+  </li>
+  <li>
+    <p>¿Qué cambia, en la invocación de handlers, el segundo parámetro <em>(istrap)</em> de la macro <code class="highlighter-rouge">SETGATE</code>? ¿Por qué se elegiría un comportamiento u otro durante un syscall?</p>
+  </li>
+  <li>
+    <p>Leer <em>user/softint.c</em> y ejecutarlo con <code class="highlighter-rouge">make run-softint-nox</code>. ¿Qué excepción se genera? Si hay diferencias con la que invoca el programa… ¿por qué mecanismo ocurre eso, y por qué razones?</p>
+  </li>
+</ul>
+
+<h3 id="kern_interrupts">Tarea: kern_interrupts</h3>
+
+<p>Para este TP, se manejan las siguientes dos excepciones: breakpoint (n.º 3) y page fault (n.º 14). El manejo de excepciones se centraliza en la función <code class="highlighter-rouge">trap_dispatch()</code>, que decide a qué otra función de C invocar según el valor de <em>tf-&gt;tf_trapno</em>:</p>
+
+<ul>
+  <li>para <code class="highlighter-rouge">T_BRKPT</code> se invoca a <code class="highlighter-rouge">monitor()</code> con el <em>Trapframe</em> adecuado.</li>
+  <li>para <code class="highlighter-rouge">T_PGFLT</code> se invoca a <code class="highlighter-rouge">page_fault_handler()</code> (ya implementado).</li>
+</ul>
+
+<p>Además, la excepción de breakpoint se debe poder lanzar desde programas de usuario. En general, esta excepción se usa para implementar el depurado de código.<sup id="fnref:int3"><a href="index.html#fn:int3" class="footnote">4</a></sup></p>
+
+<p>Tras esta tarea, los siguientes tests pasan también:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ make grade
+...
+faultread: OK (1.0s)
+faultreadkernel: OK (1.0s)
+faultwrite: OK (1.9s)
+faultwritekernel: OK (1.1s)
+breakpoint: OK (1.9s)
+</code></pre></div></div>
+
+<h3 id="kern_syscalls">Tarea: kern_syscalls</h3>
+
+<p>Hoy en día, la mayoría de sistemas operativos sus <em>syscalls</em> en x86 mediante las instrucciones SYSCALL/SYSRET (64-bits) o SYSENTER/SYSEXIT (32-bits). Tradicionalmente, no obstante, siempre se implementaron mediante una interrupción por software de tipo <em>trap</em>.</p>
+
+<p>En JOS, se elige la interrupción n.º 48 (0x30) como slot para <code class="highlighter-rouge">T_SYSCALL</code>. Tras la implementación de syscalls, el programa <em>user/hello</em> podrá imprimir su mensaje en pantalla.</p>
+
+<p>Pasos a seguir:</p>
+
+<ol>
+  <li>
+    <p>Definir un interrupt handler adicional en <em>trapentry.S</em> y configurarlo adecuadamente en <code class="highlighter-rouge">trap_init()</code>.</p>
+  </li>
+  <li>
+    <p>Invocar desde <code class="highlighter-rouge">trap_dispatch()</code> a la función <code class="highlighter-rouge">syscall()</code> definida en <em>kern/syscall.c</em>. A la hora de especificar los parámetros de la función, se debe respetar la convención de llamada de JOS para syscalls (leer y estudiar el archivo <em>lib/syscall.c</em>).</p>
+  </li>
+  <li>
+    <p>Implementar en <code class="highlighter-rouge">syscall()</code> soporte para cada tipo de syscall definido en <em>inc/syscall.h</em>. Se debe devolver <code class="highlighter-rouge">-E_INVAL</code> para números de syscall desconocidos.</p>
+
+    <p>Nota: solo hace falta despachar, desde <code class="highlighter-rouge">syscall()</code>, cada tipo a las funciones estáticas ya implementadas: <code class="highlighter-rouge">SYS_cputs</code> a <code class="highlighter-rouge">sys_cputs()</code>, <code class="highlighter-rouge">SYS_getenvid</code> a <code class="highlighter-rouge">sys_getenvid()</code>, etc.</p>
+  </li>
+</ol>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ make grade
+...
+testbss: OK (1.0s)
+hello: OK (1.0s)
+</code></pre></div></div>
+
+<p><strong>IMPORTANTE</strong>: Aplicar el siguiente cambio a <em>user/hello.c:</em></p>
+
+<div class="language-diff highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gd">--- user/hello.c
+</span><span class="gi">+++ user/hello.c
+</span><span class="gu">@@ -5,5 +5,5 @@ void
+</span> umain(int argc, char **argv)
+ {
+        cprintf("hello, world\n");
+<span class="gd">-       cprintf("i am environment %08x\n", thisenv-&gt;env_id);
+</span><span class="gi">+       cprintf("i am environment %08x\n", sys_getenvid());
+</span> }
+</code></pre></div></div>
+
+<h2 id="parte-5-protección-de-memoria">Parte 5: protección de memoria</h2>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ git show --stat tp2_parte5
+ kern/pmap.c    | 22 ++++++++++++++++++++++
+ kern/syscall.c |  1 +
+ kern/trap.c    |  5 +++++
+ 3 files changed, 28 insertions(+)
+</code></pre></div></div>
+
+<p>En la implementación actual de algunas syscalls ¡no se realiza suficiente validación! Por ejemplo, con el código actual es posible que cualquier procesos de usuario acceda (imprima) cualquier dato de la memoria del kernel mediante <code class="highlighter-rouge">sys_cputs()</code>. Ver, por ejemplo, el programa <em>user/evilhello.c:</em></p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>// Imprime el primer byte del entry point como caracter.
+sys_cputs(0xf010000c, 1);
+</code></pre></div></div>
+
+<h3 id="tarea-user_evilhello">Tarea: user_evilhello</h3>
+
+<p>Ejecutar el siguiente programa y describir qué ocurre:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include &lt;inc/lib.h&gt;
+</span>
+<span class="kt">void</span>
+<span class="nf">umain</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="kt">char</span> <span class="o">*</span><span class="n">entry</span> <span class="o">=</span> <span class="p">(</span><span class="kt">char</span> <span class="o">*</span><span class="p">)</span> <span class="mh">0xf010000c</span><span class="p">;</span>
+    <span class="kt">char</span> <span class="n">first</span> <span class="o">=</span> <span class="o">*</span><span class="n">entry</span><span class="p">;</span>
+    <span class="n">sys_cputs</span><span class="p">(</span><span class="o">&amp;</span><span class="n">first</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Responder las siguientes preguntas:</p>
+
+<ul>
+  <li>¿En qué se diferencia el código de la versión en <em>evilhello.c</em> mostrada arriba?</li>
+  <li>¿En qué cambia el comportamiento durante la ejecución?
+    <ul>
+      <li>¿Por qué?</li>
+      <li>¿Cuál es el mecanismo?</li>
+    </ul>
+  </li>
+</ul>
+
+<h3 id="tarea-user_mem_check">Tarea: user_mem_check</h3>
+
+<p>Leer la sección <a href="https://pdos.csail.mit.edu/6.828/2016/labs/lab3/#Page-faults-and-memory-protection">Page faults and memory protection</a> de la consigna original de 6.828 y completar el ejercicio 9:</p>
+
+<ol>
+  <li>
+    <p>Llamar a <code class="highlighter-rouge">panic()</code> en <em>trap.c</em> si un page fault ocurre en el ring 0.</p>
+  </li>
+  <li>
+    <p>Implementar <code class="highlighter-rouge">user_mem_check()</code>, previa lectura de <code class="highlighter-rouge">user_mem_assert()</code> en <em>kern/pmap.c</em>.</p>
+  </li>
+  <li>
+    <p>Para cada syscall que lo necesite, invocar a <code class="highlighter-rouge">user_mem_check()</code> para verificar las ubicaciones de memoria.</p>
+  </li>
+</ol>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ make grade
+...
+buggyhello: OK (1.1s)
+buggyhello2: OK (2.1s)
+evilhello: OK (0.9s)
+Part B score: 10/10
+</code></pre></div></div>
+
+<script>
+function addAnchors() {
+    anchors.options.visible = "always";
+    anchors.add("h3");
+}
+</script>
+
+<script async="" onload="addAnchors();" src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/3.2.2/anchor.min.js">
+</script>
+
+<script defer="" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+
+<script defer="" onload="$.bigfoot();" src="https://cdnjs.cloudflare.com/ajax/libs/bigfoot/2.1.4/bigfoot.min.js"></script>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bigfoot/2.1.4/bigfoot-default.min.css" />
+
+<div class="footnotes">
+  <ol>
+    <li id="fn:src">
+      <p>Material original en inglés: <a href="https://pdos.csail.mit.edu/6.828/2016/labs/lab3/">Lab 3: User Environments</a>&nbsp;<a href="index.html#fnref:src" class="reversefootnote">&#x21A9;&#xFE0E;</a></p>
+    </li>
+    <li id="fn:env_id">
+      <p>El identificador de proceso es único a lo largo de la ejecución del sistema, esto es: una vez termina un proceso con identificador <em>N</em>, jamás se vuelve a usar ese valor como identificador. De esto se encarga la función <code class="highlighter-rouge">env_alloc()</code>, ya implementada.&nbsp;<a href="index.html#fnref:env_id" class="reversefootnote">&#x21A9;&#xFE0E;</a></p>
+    </li>
+    <li id="fn:uenvsro">
+      <p>Así, cuando el kernel necesite modificar el arreglo, lo hará mediante la variable global <code class="highlighter-rouge">envs</code>; pero los procesos de usuario podrán <em>consultar</em> la información en la dirección <code class="highlighter-rouge">UENVS</code>.&nbsp;<a href="index.html#fnref:uenvsro" class="reversefootnote">&#x21A9;&#xFE0E;</a></p>
+    </li>
+    <li id="fn:int3">
+      <p>Para una lectura opcional sobre el tema ver, por ejemplo, <a href="http://www.alexonlinux.com/how-debugger-works">How debuggers work</a>, en particular la sección <em>The magic behind INT 3</em>.&nbsp;<a href="index.html#fnref:int3" class="reversefootnote">&#x21A9;&#xFE0E;</a></p>
+    </li>
+  </ol>
+</div>
+
+</article>
+
+    </main>
+
+    
+
+
+
+
+<footer class="site-footer">
+  <div class="wrapper">
+    <a style="float: left;" rel="license" title="© 2016-2017 Adeodato Simó" href="http://creativecommons.org/licenses/by-sa/4.0/"><img src="../assets/by-sa.svg"></a>
+    <a style="float: right;" rel="source" href="../tp2.md"><img height="16" alt="Link to Markdown source" src="../assets/source-md.svg"></a>
+  </div>
+</footer>
+
+
+  </body>
+
+</html>

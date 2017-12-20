@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="es">
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>TP1: Memoria virtual en JOS</title>
+  <meta name="description" content="Sistemas Operativos. Facultad de Ingeniería, Universidad de Buenos Aires.">
+
+  <link rel="stylesheet" href="../assets/main.css">
+  <link rel="canonical" href="index.html">
+</head>
+
+
+  <body>
+
+    <header class="site-header">
+
+  <div class="wrapper">
+
+    <a class="site-title" href="../index.html">
+      
+      <span>
+        <svg height="22px" version="1.1" viewBox="0 0 20 19" width="22px" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><title/><desc/><defs/><g fill="none" fill-rule="evenodd" id="Page-1" stroke="none" stroke-width="1"><g fill="#000000" id="Core" transform="translate(-506.000000, -255.000000)"><g id="home" transform="translate(506.000000, 255.500000)"><path d="M8,17 L8,11 L12,11 L12,17 L17,17 L17,9 L20,9 L10,0 L0,9 L3,9 L3,17 L8,17 Z" id="Shape"/></g></g></g></svg>
+      </span>
+      
+    </a>
+
+    <nav class="site-nav">
+      <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+      <label for="nav-trigger">
+      <span class="menu-icon">
+        <svg viewBox="0 0 18 15" width="18px" height="15px">
+          <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+          <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+          <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+        </svg>
+      </span>
+      </label>
+
+      <ul class="trigger">
+        
+        <li class="dropdown">
+          
+          
+            <a href="index.html">Teoría</a>
+          
+        
+        <li class="dropdown">
+          
+          
+            <a href="javascript:void(0)">Labs</a>
+            <div class="dropdown-content">
+            
+              <a href="../lab/kern0/index.html">kern0</a>
+            
+              <a href="../lab/x86/index.html">x86</a>
+            
+              <a href="../lab/kern2/index.html">kern2</a>
+            
+              <a href="../ejercicios/index.html">Guía POSIX</a>
+            
+            </div>
+          
+        
+        <li class="dropdown">
+          
+          
+            <a href="javascript:void(0)">TPs</a>
+            <div class="dropdown-content">
+            
+              <a href="../tps/index.html">JOS</a>
+            
+              <a href="../tp0/index.html">TP0</a>
+            
+              <a href="index.html">TP1</a>
+            
+              <a href="../tp2/index.html">TP2</a>
+            
+            </div>
+          
+        
+        <li class="dropdown">
+          
+          
+            <a href="javascript:void(0)">Enlaces</a>
+            <div class="dropdown-content">
+            
+              <a href="../bibliografia/index.html">Bibliografía</a>
+            
+              <a href="../regimen/index.html">Evaluaciones</a>
+            
+              <a href="../kit/index.html">Software</a>
+            
+            </div>
+          
+        
+      </ul>
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <main class="wrapper" aria-label="Content">
+      <article class="post post-content">
+  <h1 id="tp1-memoria-virtual-en-jos">TP1: Memoria virtual en JOS<sup id="fnref:src"><a href="index.html#fn:src" class="footnote">1</a></sup></h1>
+
+<p>El código de JOS para este TP <a href="https://github.com/fisop/jos/commit/3bc74e4815902ec1a9551fdede1ad23fed07b54b#diff-7fd43f1f263e186ee9517c9003da0044L35">añade</a> en <code class="highlighter-rouge">i386_init()</code> una llamada para inicializar el sistema de memoria:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>// Memory management initialization function
+mem_init();
+</code></pre></div></div>
+
+<p>Este trabajo práctico consiste en implementar esa función y el resto de la API del sistema de memoria.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ git diff --stat tp1..tp1_sol -- kern
+ kern/pmap.c | 126 ++++++++++++++++----
+ 1 file changed, 106 insertions(+), 20 deletions(-)
+
+$ wc --words &lt; TP1.md
+245
+</code></pre></div></div>
+
+<p><strong>IMPORTANTE</strong>: se debe leer antes la <a href="../tps/index.html">información general sobre TPs con JOS</a> y realizar el <a href="../tp0/index.html">TP0</a> (grupal).</p>
+
+<h2 class="no_toc" id="resumen">Resumen</h2>
+
+<p>La implementación del sistema de memoria (en JOS o cualquier otro kernel) consiste de, al menos, los siguientes componentes:</p>
+
+<ol>
+  <li>
+    <p>la lista de páginas físicas libres, construida a partir de la cantidad de memoria de la computadora.</p>
+  </li>
+  <li>
+    <p>funciones para manipular <em>page tables</em> y <em>page directories</em>.</p>
+  </li>
+  <li>
+    <p>el espacio virtual de memoria del propio kernel, que persiste toda la ejecución una vez inicializado.</p>
+  </li>
+</ol>
+
+<h2 class="no_toc" id="índice">Índice</h2>
+
+<ul id="markdown-toc">
+  <li><a href="index.html#pt1-memoria-fisica" id="markdown-toc-pt1-memoria-fisica">Parte 1: Memoria física</a>    <ul>
+      <li><a href="index.html#page2pa" id="markdown-toc-page2pa">Tarea: page2pa</a></li>
+      <li><a href="index.html#mem_init_pages" id="markdown-toc-mem_init_pages">Tarea: mem_init_pages</a></li>
+      <li><a href="index.html#boot_alloc" id="markdown-toc-boot_alloc">Tarea: boot_alloc</a></li>
+      <li><a href="index.html#tarea-boot_alloc_pos" id="markdown-toc-tarea-boot_alloc_pos">Tarea: boot_alloc_pos</a></li>
+      <li><a href="index.html#page_init" id="markdown-toc-page_init">Tarea: page_init</a></li>
+      <li><a href="index.html#page_alloc" id="markdown-toc-page_alloc">Tarea: page_alloc</a></li>
+      <li><a href="index.html#page_free" id="markdown-toc-page_free">Tarea: page_free</a></li>
+    </ul>
+  </li>
+  <li><a href="index.html#pt2-memoria-virtual" id="markdown-toc-pt2-memoria-virtual">Parte 2: Memoria virtual</a>    <ul>
+      <li><a href="index.html#pgdir_walk" id="markdown-toc-pgdir_walk">Tarea: pgdir_walk</a></li>
+      <li><a href="index.html#pgdir_lookup" id="markdown-toc-pgdir_lookup">Tarea: page_lookup</a></li>
+      <li><a href="index.html#pgdir_insert" id="markdown-toc-pgdir_insert">Tarea: page_insert</a></li>
+      <li><a href="index.html#pgdir_remove" id="markdown-toc-pgdir_remove">Tarea: page_remove</a></li>
+    </ul>
+  </li>
+  <li><a href="index.html#pt3-kernel-pgdir" id="markdown-toc-pt3-kernel-pgdir">Parte 3: Page directory del kernel</a>    <ul>
+      <li><a href="index.html#boot_map_region" id="markdown-toc-boot_map_region">Tarea: boot_map_region</a></li>
+      <li><a href="index.html#kernel_pgdir_setup" id="markdown-toc-kernel_pgdir_setup">Tarea: kernel_pgdir_setup</a></li>
+    </ul>
+  </li>
+  <li><a href="index.html#pt4-large-pages" id="markdown-toc-pt4-large-pages">Parte 4: Large pages (opcional, 2pts adicionales)</a>    <ul>
+      <li><a href="index.html#entry_pgdir_large" id="markdown-toc-entry_pgdir_large">Tarea: entry_pgdir_large</a></li>
+      <li><a href="index.html#map_region_large" id="markdown-toc-map_region_large">Tarea: map_region_large</a></li>
+    </ul>
+  </li>
+</ul>
+
+<h2 id="pt1-memoria-fisica">Parte 1: Memoria física</h2>
+
+<p>En JOS, la información sobre el estado de cada página física se mantiene en un arreglo global definido en <em>pmap.c</em> (el tamaño del arreglo es, precisamente, el número total de páginas físicas):</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>struct PageInfo *pages;  // Arreglo de páginas físicas.
+</code></pre></div></div>
+
+<p>El arreglo se crea en tiempo de ejecución porque el número de páginas no es una constante sino que depende de la cantidad real de memoria de la máquina donde corre JOS.</p>
+
+<p>La función <code class="highlighter-rouge">i386_detect_memory()</code> es quien detecta la cantidad de memoria disponible. Esta función ya está implementada y no es necesario cambiarla. El resultado se almacena en la variable global <code class="highlighter-rouge">npages</code>: el número total de páginas físicas.</p>
+
+<p>De cada página física interesa saber si está asignada o no. Se emplea un entero en lugar de un booleano para, en el futuro, poder compartir una misma página en varios procesos. Asimismo, para poder encontrar la siguiente página libre en <em>O(1)</em>, el mismo struct <em>PageInfo</em> actúa como lista enlazada de páginas libres.</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">struct</span> <span class="n">PageInfo</span> <span class="p">{</span>
+    <span class="kt">uint16_t</span> <span class="n">pp_ref</span><span class="p">;</span>
+    <span class="k">struct</span> <span class="n">PageInfo</span> <span class="o">*</span><span class="n">pp_link</span><span class="p">;</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<h3 id="page2pa">Tarea: page2pa</h3>
+
+<p>El struct <em>PageInfo</em> no guarda la dirección de memoria física donde empieza la página, pues se considera que se puede deducir. La función ya definida <code class="highlighter-rouge">page2pa()</code> toma un puntero a <em>PageInfo</em> y devuelve la dirección física donde comienza la página.</p>
+
+<p>Encontrar la definición de <code class="highlighter-rouge">page2pa()</code> y describir cómo funciona en uno o dos párrafos. En particular: ¿cómo se “deduce” la dirección física a partir del puntero a <em>PageInfo</em>?</p>
+
+<h3 id="mem_init_pages">Tarea: mem_init_pages</h3>
+
+<p>Añadir a <code class="highlighter-rouge">mem_init()</code> código para crear el arreglo de páginas <code class="highlighter-rouge">pages</code>. Se debe determinar cuánto espacio se necesita, e inicializar a 0 usando <code class="highlighter-rouge">memset()</code>.</p>
+
+<p>En esta fase temprana de la inicialización del sistema, la memoria se reserva mediante la función auxiliar <code class="highlighter-rouge">boot_alloc()</code>. Una vez se termine de inicializar el sistema de memoria, todas las reservas se realizarán mediante la función <code class="highlighter-rouge">page_alloc()</code> a implementar en la parte 2.</p>
+
+<h3 id="boot_alloc">Tarea: boot_alloc</h3>
+
+<p>Completar la implementación de <code class="highlighter-rouge">boot_alloc()</code> en <em>pmap.c</em>; esta función implementa una “reserva rudimentaria” de la siguiente manera:</p>
+
+<ul>
+  <li>la variable estática <code class="highlighter-rouge">nextfree</code> guarda la siguiente posición de memoria que se puede usar (alineada a 4096 bytes).</li>
+  <li>la reserva se realiza siempre en páginas físicas (múltiplos de 4096 bytes).</li>
+  <li>se devuelve una dirección virtual, no física.</li>
+</ul>
+
+<p>Si no hubiera suficiente memoria, la invocación debe resultar en <code class="highlighter-rouge">panic()</code>.</p>
+
+<h3 id="tarea-boot_alloc_pos">Tarea: boot_alloc_pos</h3>
+
+<p>Incluir en el archivo <em>TP1.md</em>:</p>
+
+<ol class="lower_alpha">
+  <li>
+    <p>Un cálculo manual de la primera dirección de memoria que devolverá <code class="highlighter-rouge">boot_alloc()</code> tras el arranque. Se puede calcular a partir del binario compilado (<code class="highlighter-rouge">obj/kern/kernel</code>), usando los comandos <code class="highlighter-rouge">readelf</code> y/o <code class="highlighter-rouge">nm</code> y operaciones matemáticas.</p>
+  </li>
+  <li>
+    <p>Una sesión de GDB en la que, poniendo un breakpoint en la función <code class="highlighter-rouge">boot_alloc()</code>, se muestre el valor de <code class="highlighter-rouge">end</code> y <code class="highlighter-rouge">nextfree</code> al comienzo y fin de esa primera llamada a <code class="highlighter-rouge">boot_alloc()</code>.</p>
+  </li>
+</ol>
+
+<h3 id="page_init">Tarea: page_init</h3>
+
+<p>El siguiente paso tras construir el arreglo <code class="highlighter-rouge">pages</code> es inicializar la lista de páginas libres. Es una lista enlazada cuya cabeza se guarda en la variable estática <code class="highlighter-rouge">page_free_list</code>.<sup id="fnref:o1"><a href="index.html#fn:o1" class="footnote">2</a></sup> Para construirla, se debe enlazar cada página a la siguiente <em>exceptuando</em> aquellas que ya estén en uso o que nunca se deban usar.</p>
+
+<p>Esta función no modifica el campo <code class="highlighter-rouge">pp_ref</code> de <em>PageInfo</em>. Simplemente decide, para cada página física, si incluirla en la lista de páginas libres inicial, o ignorarla. En particular, se deben ignorar las páginas que quedaron en uso tras el arranque.</p>
+
+<p>Implementar la función <code class="highlighter-rouge">page_init()</code>, cuya documentación describe exactamente qué regiones de memoria no se deben incluir en la lista (consultar también el archivo <a href="https://github.com/fisop/jos/blob/tp1/inc/memlayout.h">memlayout.h</a>):</p>
+
+<ul>
+  <li>la página 0</li>
+  <li>una sección de 384K para I/O</li>
+  <li>la región donde se encuentra el código del kernel</li>
+  <li>toda la memoria ya asignada por <code class="highlighter-rouge">boot_alloc()</code></li>
+</ul>
+
+<h3 id="page_alloc">Tarea: page_alloc</h3>
+
+<p>Implementar la función <code class="highlighter-rouge">page_alloc()</code>, que saca una página de la lista de páginas libres y devuelve su <code class="highlighter-rouge">struct PageInfo</code> asociado.</p>
+
+<p>Si el argumento a la función incluye <code class="highlighter-rouge">ALLOC_ZERO</code>, se escriben ceros en toda la longitud de la página.</p>
+
+<p>Responder: ¿en qué se diferencia <code class="highlighter-rouge">page2pa()</code> de <code class="highlighter-rouge">page2kva()</code>?</p>
+
+<h3 id="page_free">Tarea: page_free</h3>
+
+<p>Implementar la función <code class="highlighter-rouge">page_free()</code> siguiendo los comentarios en el código.</p>
+
+<hr />
+
+<p>Para esta primera parte, la función de corrección <code class="highlighter-rouge">check_page_alloc()</code> debe terminar con éxito:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ make qemu-nox
+Physical memory: 131072K available, base = 640K ...
+check_page_alloc() succeeded!
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+</code></pre></div></div>
+
+<h2 id="pt2-memoria-virtual">Parte 2: Memoria virtual</h2>
+
+<p>En esta parte no se realizarán cambios en <code class="highlighter-rouge">mem_init()</code>, solamente se implementarán funciones para manejar las entradas de <em>page directory</em> y <em>page tables</em>.</p>
+
+<h3 id="pgdir_walk">Tarea: pgdir_walk</h3>
+
+<p>La función:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>pte_t *pgdir_walk(pde_t *pgdir, const void *va) ...
+</code></pre></div></div>
+
+<p>se encarga de navegar la estructura de doble nivel <em>page directory</em> → <em>page table entry</em>.</p>
+
+<p>Recibe una dirección virtual más un puntero al comienzo del directorio, y devuelve un puntero a la <em>page table <strong>entry</strong></em> correspondiente. Por ejemplo, para la dirección:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>0x4C3C00A  (binario: 0000010011 0000111100 000000001010)
+                     ---------- ----------
+                      PDE (19)   PTE (60)
+</code></pre></div></div>
+
+<p>devolvería un puntero a la 60.ª posición en la <em>page table</em> a que apunte <code class="highlighter-rouge">pgdir[19]</code>. (En caso de <code class="highlighter-rouge">pgdir[19]</code> ser NULL, el parámetro booleano <em>create</em> marcaría si se debe crear la page table correspondiente, o no.)</p>
+
+<p><strong>Ayuda 1:</strong> revisar todas las macros disponibles en la primera parte del archivo <a href="https://github.com/fisop/jos/blob/tp1/inc/mmu.h">mmu.h</a>.</p>
+
+<p><strong>Ayuda 2:</strong> tanto <em>page directories</em> como <em>page tables</em> almacenan direcciones <em>físicas</em> (ya que es la MMU quien las procesa). La función debe devolver una dirección virtual.</p>
+
+<h3 id="pgdir_lookup">Tarea: page_lookup</h3>
+
+<p>La función:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>struct PageInfo *page_lookup(pde_t *pgdir, void *va) ...
+</code></pre></div></div>
+
+<p>devuelve la página física en la que se aloja una dirección virtual. Emplea <code class="highlighter-rouge">pgdir_walk()</code> para encontrar en qué <em>page table entry</em> se encuentra mapeada la dirección, y dereferencia el puntero devuelto para acceder a su contenido.</p>
+
+<p>De nuevo, revisar las macros en el archivo <a href="https://github.com/fisop/jos/blob/tp1/inc/mmu.h">mmu.h</a>, en particular <code class="highlighter-rouge">PTE_ADDR()</code>.</p>
+
+<h3 id="pgdir_insert">Tarea: page_insert</h3>
+
+<p>La función <code class="highlighter-rouge">page_insert()</code> configura la relación dirección virtual → dirección física en un determinado directorio.</p>
+
+<p>De manera similar a <code class="highlighter-rouge">page_lookup()</code>, obtiene con <code class="highlighter-rouge">pgdir_walk()</code> el PTE donde se debe configurar, y escribe en esa posición el número de página más los permisos apropiados.</p>
+
+<p><strong>Ayuda</strong>: el paso de “TLB invalidation” se puede realizar directamente como parte de la función <code class="highlighter-rouge">page_remove()</code>.</p>
+
+<h3 id="pgdir_remove">Tarea: page_remove</h3>
+
+<p>Implementar la función <code class="highlighter-rouge">page_remove()</code> siguiendo los comentarios en el código.</p>
+
+<hr />
+
+<p>Para esta segunda parte, la función de corrección <code class="highlighter-rouge">check_page()</code> debe terminar con éxito:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ make qemu-nox
+Physical memory: 131072K available, base = 640K ...
+check_page_alloc() succeeded!
+check_page() succeeded!
+^^^^^^^^^^^^^^^^^^^^^^^
+</code></pre></div></div>
+
+<h2 id="pt3-kernel-pgdir">Parte 3: Page directory del kernel</h2>
+
+<p>Al comienzo de <code class="highlighter-rouge">mem_init()</code> se reserva una página para el <em>page directory</em> del kernel, y se guarda en la variable global <code class="highlighter-rouge">kern_pgdir</code>. Al final de la función, se carga en <code class="highlighter-rouge">%cr3</code> en sustitución del usado en el proceso de arranque.</p>
+
+<p>Antes de poder usarlo, se le debe añadir las entradas correspondientes a la configuración expresada en <a href="https://github.com/fisop/jos/blob/tp1/inc/memlayout.h">memlayout.h</a> para direcciones mayores que <code class="highlighter-rouge">UTOP</code>.<sup id="fnref:1"><a href="index.html#fn:1" class="footnote">3</a></sup></p>
+
+<h3 id="boot_map_region">Tarea: boot_map_region</h3>
+
+<p>Implementar la función encargada de configurar estas regiones:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>static void boot_map_region(pgdir, va, size, pa, int perm) ...
+</code></pre></div></div>
+
+<p>Es similar a <code class="highlighter-rouge">page_insert()</code> en tanto que escribe en el PTE correspondiente, pero:</p>
+
+<ol>
+  <li>no incrementa el contador de referencias de las páginas</li>
+  <li>puede ser llamada con regiones mucho mayores de 4KiB</li>
+</ol>
+
+<h3 id="kernel_pgdir_setup">Tarea: kernel_pgdir_setup</h3>
+
+<p>Añadir en <code class="highlighter-rouge">mem_init()</code> las tres llamadas a <code class="highlighter-rouge">boot_map_region()</code> necesarias para configurar:</p>
+
+<ul>
+  <li>el stack del kernel en <code class="highlighter-rouge">KSTACKTOP</code></li>
+  <li>el arreglo <code class="highlighter-rouge">pages</code> en <code class="highlighter-rouge">UPAGES</code></li>
+  <li>los primeros 256 MiB de memoria física en <code class="highlighter-rouge">KERNBASE</code></li>
+</ul>
+
+<hr />
+
+<p>Para esta tercera parte parte, deben terminar con éxito las funciones de corrección <code class="highlighter-rouge">check_kern_pgdir()</code> y <code class="highlighter-rouge">check_page_installed_pgdir()</code>:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ make qemu-nox
+Physical memory: 131072K available, base = 640K ...
+check_page_alloc() succeeded!
+check_page() succeeded!
+check_kern_pgdir() succeeded!
+check_page_installed_pgdir() succeeded!
+
+$ make grade
+running JOS: (1.0s)
+  Physical page allocator: OK
+  Page management: OK
+  Kernel page directory: OK
+  Page management 2: OK
+Score: 4/4
+</code></pre></div></div>
+
+<h2 id="pt4-large-pages">Parte 4: Large pages (opcional, 2pts adicionales)</h2>
+
+<p>Usando <em>large pages</em>, se puede mapear 4 MiB de un espacio de direcciones usando un solo PDE —una sola entrada en el <em>page directory</em>— sin necesidad de una <em>page table</em> intermedia. Se debe activar soporte para <em>large pages</em> mediante el registro <code class="highlighter-rouge">%cr4</code> de la CPU, y poner a 1 el bit <code class="highlighter-rouge">PTE_PS</code> en el PDE correspondiente.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ git diff --stat tp1_sol..tp1_sol_opt
+ kern/entry.S      |  4 +++
+ kern/entrypgdir.c | 10 +++---
+ kern/pmap.c       | 28 ++++++++++++---
+ 3 files changed, 32 insertions(+), 10 deletions(-)
+
+$ wc --words &lt; TP1.md
+354
+</code></pre></div></div>
+
+<p><strong>N.B.:</strong> los ejercicios de esta sección se pueden entregar, por la mitad de los puntos adicionales, hasta 1 semana más tarde de la fecha de entrega de la parte obligatoria.</p>
+
+<h3 id="entry_pgdir_large">Tarea: entry_pgdir_large</h3>
+
+<p>Durante el arranque de JOS, antes de llamar a <code class="highlighter-rouge">i386_init()</code>, se mapean los primeros 4 MiB de memoria física en las direcciones 0x0 y 0xF0000000. Para ello, se crea un <em>page directory</em> inicial con dos entradas (<a href="https://github.com/fisop/jos/blob/tp1/kern/entrypgdir.c#L6">entry_pgdir</a>) y un <em>page table</em> asociado que lista cada página individual en esos 4 MiB (<a href="https://github.com/fisop/jos/blob/tp1/kern/entrypgdir.c#L30">entry_pgtable</a>). Al tratarse de 4 MiB exactos, no obstante, se puede conseguir el mismo efecto usando tan solo <code class="highlighter-rouge">entry_pgdir</code>.</p>
+
+<p>Se pide:</p>
+
+<ol>
+  <li>
+    <p>añadir en <em>entry.S</em> el código necesario para activar soporte de large pages en la CPU</p>
+  </li>
+  <li>
+    <p>modificar <code class="highlighter-rouge">entry_pgdir</code> para que haga uso de “large pages”</p>
+  </li>
+  <li>
+    <p>eliminar el arreglo estático <code class="highlighter-rouge">entry_pgtable</code>, ya que no debería necesitarse más.</p>
+
+    <p>Para no generar un diff innecesariamente grande, se puede omitir de la compilación mediante una instrucción al pre-procesador:</p>
+
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>#if 0  // entry_pgtable no longer needed.
+pte_t entry_pgtable[NPTENTRIES] = {
+    0x000000 | PTE_P | PTE_W,
+    ...
+    0x3ff000 | PTE_P | PTE_W,
+};
+#endif
+</code></pre></div>    </div>
+  </li>
+</ol>
+
+<h3 id="map_region_large">Tarea: map_region_large</h3>
+
+<p>Modificar la función <code class="highlighter-rouge">boot_map_region()</code> para que use page directory entries de 4 MiB cuando sea apropriado. (En particular, sólo se pueden usar en direcciones alineadas a 22 bits.)</p>
+
+<p>Guardar la implementación con un flag <code class="highlighter-rouge">TP1_PSE</code>:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">static</span> <span class="kt">void</span> <span class="nf">boot_map_region</span><span class="p">(...)</span>
+<span class="p">{</span>
+<span class="cp">#ifndef TP1_PSE
+</span>    <span class="c1">// Código original.
+</span><span class="cp">#else
+</span>    <span class="c1">// Nueva implementación.
+</span><span class="cp">#endif
+</span><span class="p">}</span>
+</code></pre></div></div>
+
+<p>Responder: ¿cuánta memoria se ahorró de este modo? ¿Es una cantidad fija, o depende de la memoria física de la computadora?</p>
+
+<script>
+function addAnchors() {
+    anchors.options.visible = "always";
+    anchors.add("h3");
+}
+</script>
+
+<script async="" onload="addAnchors();" src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/3.2.2/anchor.min.js">
+</script>
+
+<script defer="" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+
+<script defer="" onload="$.bigfoot();" src="https://cdnjs.cloudflare.com/ajax/libs/bigfoot/2.1.4/bigfoot.min.js"></script>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bigfoot/2.1.4/bigfoot-default.min.css" />
+
+<div class="footnotes">
+  <ol>
+    <li id="fn:src">
+      <p>Material original en inglés: <a href="https://pdos.csail.mit.edu/6.828/2016/labs/lab2/">Lab 2: Memory Management</a>&nbsp;<a href="index.html#fnref:src" class="reversefootnote">&#x21A9;&#xFE0E;</a></p>
+    </li>
+    <li id="fn:o1">
+      <p>El uso de una lista enlazada permite a <code class="highlighter-rouge">page_alloc()</code> encontrar una página libre en <em>O(1)</em>, en lugar de recorrer el arreglo de páginas al completo.&nbsp;<a href="index.html#fnref:o1" class="reversefootnote">&#x21A9;&#xFE0E;</a></p>
+    </li>
+    <li id="fn:1">
+      <p>Las direcciones por debajo de <code class="highlighter-rouge">UTOP</code> corresponden a procesos de ususario, y se configurarán en futuros TPs.&nbsp;<a href="index.html#fnref:1" class="reversefootnote">&#x21A9;&#xFE0E;</a></p>
+    </li>
+  </ol>
+</div>
+
+</article>
+
+    </main>
+
+    
+
+
+
+
+<footer class="site-footer">
+  <div class="wrapper">
+    <a style="float: left;" rel="license" title="© 2016-2017 Adeodato Simó" href="http://creativecommons.org/licenses/by-sa/4.0/"><img src="../assets/by-sa.svg"></a>
+    <a style="float: right;" rel="source" href="../tp1.md"><img height="16" alt="Link to Markdown source" src="../assets/source-md.svg"></a>
+  </div>
+</footer>
+
+
+  </body>
+
+</html>

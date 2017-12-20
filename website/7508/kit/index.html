@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="es">
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Kit de supervivencia para trabajos prácticos</title>
+  <meta name="description" content="Sistemas Operativos. Facultad de Ingeniería, Universidad de Buenos Aires.">
+
+  <link rel="stylesheet" href="../assets/main.css">
+  <link rel="canonical" href="index.html">
+</head>
+
+
+  <body>
+
+    <header class="site-header">
+
+  <div class="wrapper">
+
+    <a class="site-title" href="../index.html">
+      
+      <span>
+        <svg height="22px" version="1.1" viewBox="0 0 20 19" width="22px" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><title/><desc/><defs/><g fill="none" fill-rule="evenodd" id="Page-1" stroke="none" stroke-width="1"><g fill="#000000" id="Core" transform="translate(-506.000000, -255.000000)"><g id="home" transform="translate(506.000000, 255.500000)"><path d="M8,17 L8,11 L12,11 L12,17 L17,17 L17,9 L20,9 L10,0 L0,9 L3,9 L3,17 L8,17 Z" id="Shape"/></g></g></g></svg>
+      </span>
+      
+    </a>
+
+    <nav class="site-nav">
+      <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+      <label for="nav-trigger">
+      <span class="menu-icon">
+        <svg viewBox="0 0 18 15" width="18px" height="15px">
+          <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+          <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+          <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+        </svg>
+      </span>
+      </label>
+
+      <ul class="trigger">
+        
+        <li class="dropdown">
+          
+          
+            <a href="index.html">Teoría</a>
+          
+        
+        <li class="dropdown">
+          
+          
+            <a href="javascript:void(0)">Labs</a>
+            <div class="dropdown-content">
+            
+              <a href="../lab/kern0/index.html">kern0</a>
+            
+              <a href="../lab/x86/index.html">x86</a>
+            
+              <a href="../lab/kern2/index.html">kern2</a>
+            
+              <a href="../ejercicios/index.html">Guía POSIX</a>
+            
+            </div>
+          
+        
+        <li class="dropdown">
+          
+          
+            <a href="javascript:void(0)">TPs</a>
+            <div class="dropdown-content">
+            
+              <a href="../tps/index.html">JOS</a>
+            
+              <a href="../tp0/index.html">TP0</a>
+            
+              <a href="../tp1/index.html">TP1</a>
+            
+              <a href="../tp2/index.html">TP2</a>
+            
+            </div>
+          
+        
+        <li class="dropdown">
+          
+          
+            <a href="javascript:void(0)">Enlaces</a>
+            <div class="dropdown-content">
+            
+              <a href="../bibliografia/index.html">Bibliografía</a>
+            
+              <a href="../regimen/index.html">Evaluaciones</a>
+            
+              <a href="index.html">Software</a>
+            
+            </div>
+          
+        
+      </ul>
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <main class="wrapper" aria-label="Content">
+      <article class="post post-content">
+  <h1 id="kit-de-supervivencia-para-trabajos-prácticos">Kit de supervivencia para trabajos prácticos</h1>
+
+<p>Listamos aquí un material de referencia sobre un conjunto de conocimientos previos necesarios para la parte práctica de la materia.</p>
+
+<p>Sin prejuicio a  talleres puntuales que se planteen sobre la cursada, se recomienda el estudio individual de aquellas herramientas con las que los estudiantes estén menos familiarizados.</p>
+
+<h2 id="tools">Software a instalar</h2>
+
+<!-- Work in progress -->
+
+<p>El software indispensable para realizar los trabajos prácticos es:</p>
+
+<ul>
+  <li>Compiladores GCC (con soporte para 32-bits) y <a href="https://en.wikipedia.org/wiki/Clang">Clang</a></li>
+  <li>glibc (biblioteca estándar de C) y archivos <em>“include”</em> de Linux</li>
+  <li>QEMU (virtualizador de hardware) y seabios (simulador de BIOS)</li>
+  <li>gdb, make, git</li>
+</ul>
+
+<p>En Debian y distribuciones derivadas, se puede instalar mediante:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>apt-get install make git gdb seabios clang libbsd-dev \
+        gcc-multilib libc6-dev linux-libc-dev qemu-system-x86
+</code></pre></div></div>
+
+<p>La versión de QEMU debe ser 2.5 o superior, y la versión de seabios 1.10 o superior.</p>
+
+<h3 id="versión-modificada-de-qemu">Versión modificada de QEMU</h3>
+
+<p>En la arquitectura x86, el sistema se reinicia automáticamente cuando ocurre una “triple falla” <em>(triple fault)</em>. QEMU, por omisión, obecede esta especificación.</p>
+
+<p>Sin embargo, durante el desarrollo de sistemas operativos en modo protegido de x86, las triple fallas ocurren casi exclusivamente por un bug en el kernel. Por esto, es más deseable que QEMU detenga la ejecución en lugar de reiniciarse constantemente.</p>
+
+<p>Como parte de la materia, <strong>se ofrece una versión modificada de QEMU que impide los ciclos de reinicio infinito</strong>. Se puede instalar desde el repositorio personal: <a href="https://launchpad.net/~dato/+archive/ubuntu/qemu">launchpad.net/~dato/ppa/qemu</a>.</p>
+
+<p>El repositorio es válido para versiones de Ubuntu a partir de 16.04. Además, la versión para Ubuntu 17.04 “zesty” también sirve para Debian 9 “stretch”.</p>
+
+<h2 id="manejo-básico-de-entornos-unix-wip">Manejo básico de entornos Unix (WIP)</h2>
+
+<ul>
+  <li>Google-fu
+    <ul>
+      <li>https://en.wiktionary.org/wiki/Google-fu</li>
+    </ul>
+  </li>
+  <li>Tener una distribución de Linux instalada en hardware real (NO máquina virtual). Esto es necesario para poder correr máquinas virtuales.</li>
+  <li>Utilizar el administrador de paquetes de la distribución instalada (apt, yum, etc) para instalar software.</li>
+  <li>Shell scripting, en bash o shell de su preferencia.</li>
+  <li>Manejo de la línea de comandos:
+    <ul>
+      <li>man, vi, cd, ls, mkdir, chmod, chown, grep, sudo, head, tail, ps, cat, less, kill, strace</li>
+      <li><a href="https://docs.google.com/spreadsheets/d/1eKCDfeSbdcydg0VPmW0oaIONgv1DPnSSILOk2vQSv4Y/pubhtml">Guía básica de la materia</a></li>
+    </ul>
+  </li>
+  <li>Lenguaje C:
+    <ul>
+      <li>Manejo de punteros y memoria dinámica.</li>
+      <li>Uso de debugger gdb.</li>
+      <li>Compilación con gcc: https://gcc.gnu.org</li>
+    </ul>
+  </li>
+  <li>Lenguaje Assembler intel X86
+    <ul>
+      <li>nasm (Netwide Assembler): http://www.nasm.us/</li>
+      <li>Una referencia rápida: https://www.cs.uaf.edu/2005/fall/cs301/support/x86/index.html</li>
+      <li>Una referencia un poco mas completa: http://www.jegerlehner.ch/intel/IntelCodeTable.pdf</li>
+    </ul>
+  </li>
+  <li>Make: uso de la herramienta y archivos Makefile
+    <ul>
+      <li>https://www.gnu.org/software/make/manual/html_node/Quick-Reference.html</li>
+    </ul>
+  </li>
+</ul>
+
+</article>
+
+    </main>
+
+    
+
+
+
+
+<footer class="site-footer">
+  <div class="wrapper">
+    <a style="float: left;" rel="license" title="© 2016-2017 Adeodato Simó" href="http://creativecommons.org/licenses/by-sa/4.0/"><img src="../assets/by-sa.svg"></a>
+    <a style="float: right;" rel="source" href="../kit.md"><img height="16" alt="Link to Markdown source" src="../assets/source-md.svg"></a>
+  </div>
+</footer>
+
+
+  </body>
+
+</html>

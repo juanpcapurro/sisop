@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="es">
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Trabajos prácticos con JOS</title>
+  <meta name="description" content="Sistemas Operativos. Facultad de Ingeniería, Universidad de Buenos Aires.">
+
+  <link rel="stylesheet" href="../assets/main.css">
+  <link rel="canonical" href="index.html">
+</head>
+
+
+  <body>
+
+    <header class="site-header">
+
+  <div class="wrapper">
+
+    <a class="site-title" href="../index.html">
+      
+      <span>
+        <svg height="22px" version="1.1" viewBox="0 0 20 19" width="22px" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><title/><desc/><defs/><g fill="none" fill-rule="evenodd" id="Page-1" stroke="none" stroke-width="1"><g fill="#000000" id="Core" transform="translate(-506.000000, -255.000000)"><g id="home" transform="translate(506.000000, 255.500000)"><path d="M8,17 L8,11 L12,11 L12,17 L17,17 L17,9 L20,9 L10,0 L0,9 L3,9 L3,17 L8,17 Z" id="Shape"/></g></g></g></svg>
+      </span>
+      
+    </a>
+
+    <nav class="site-nav">
+      <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+      <label for="nav-trigger">
+      <span class="menu-icon">
+        <svg viewBox="0 0 18 15" width="18px" height="15px">
+          <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+          <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+          <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+        </svg>
+      </span>
+      </label>
+
+      <ul class="trigger">
+        
+        <li class="dropdown">
+          
+          
+            <a href="index.html">Teoría</a>
+          
+        
+        <li class="dropdown">
+          
+          
+            <a href="javascript:void(0)">Labs</a>
+            <div class="dropdown-content">
+            
+              <a href="../lab/kern0/index.html">kern0</a>
+            
+              <a href="../lab/x86/index.html">x86</a>
+            
+              <a href="../lab/kern2/index.html">kern2</a>
+            
+              <a href="../ejercicios/index.html">Guía POSIX</a>
+            
+            </div>
+          
+        
+        <li class="dropdown">
+          
+          
+            <a href="javascript:void(0)">TPs</a>
+            <div class="dropdown-content">
+            
+              <a href="index.html">JOS</a>
+            
+              <a href="../tp0/index.html">TP0</a>
+            
+              <a href="../tp1/index.html">TP1</a>
+            
+              <a href="../tp2/index.html">TP2</a>
+            
+            </div>
+          
+        
+        <li class="dropdown">
+          
+          
+            <a href="javascript:void(0)">Enlaces</a>
+            <div class="dropdown-content">
+            
+              <a href="../bibliografia/index.html">Bibliografía</a>
+            
+              <a href="../regimen/index.html">Evaluaciones</a>
+            
+              <a href="../kit/index.html">Software</a>
+            
+            </div>
+          
+        
+      </ul>
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <main class="wrapper" aria-label="Content">
+      <article class="post post-content">
+  <h1 id="trabajos-prácticos-con-jos">Trabajos prácticos con JOS</h1>
+
+<p>En 2017, los TPs se implementan sobre <strong>JOS</strong>, el exokernel educativo con licencia libre del grupo de <a href="https://pdos.csail.mit.edu/">Sistemas Operativos Distribuidos</a> del MIT.</p>
+
+<p>En cada consigna, se referenciará el contenido original equivalente (en inglés) en la página de su materia <a href="https://pdos.csail.mit.edu/6.828/2016/">6.828: Operating Systems Engineering</a>. Se recomienda su uso como complemento a la consigna en castellano.</p>
+
+<blockquote>
+  <p>The programming assignments […] are not easy. <strong>It is far from unusual for a single one-line bug to take two days to track down.</strong></p>
+
+  <p>— Carnegie Mellon University, <a href="https://www.cs.cmu.edu/~410/expectations.html">Operating System Design and Implementation</a>.</p>
+</blockquote>
+
+<h2 class="no_toc" id="índice">Índice</h2>
+
+<ul id="markdown-toc">
+  <li><a href="index.html#jos-repo" id="markdown-toc-jos-repo">Código fuente</a></li>
+  <li><a href="index.html#compilación-y-depurado" id="markdown-toc-compilación-y-depurado">Compilación y depurado</a></li>
+  <li><a href="index.html#modo-de-entrega" id="markdown-toc-modo-de-entrega">Modo de entrega</a></li>
+  <li><a href="index.html#grading" id="markdown-toc-grading">Auto-corrección</a></li>
+</ul>
+
+<h2 id="jos-repo">Código fuente</h2>
+
+<p>La copia de JOS para la materia se encuentra en el repositorio <a href="https://github.com/fisop/jos/">fisop/jos</a> de GitHub:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ git clone https://github.com/fisop/jos
+</code></pre></div></div>
+
+<p>En la rama <em>master</em> se encuentra el esqueleto para el <a href="../tp0/index.html">TP0</a>. Cada TP posterior tiene una rama con el código adicional que se proporciona como base para la entrega. Lo más fácil, para progresar al siguiente TP, es añadir un commit con los cambios del alumno, e integrar en el repositorio la nueva base:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ git add kern/pmap.c
+$ git commit -m "Solución TP1"
+$ git fetch
+$ git merge origin/tp2
+$ git tag base_tp2
+</code></pre></div></div>
+
+<p>Alternativamente, se puede clonar directamente la rama de un TP en un directorio nuevo:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ git clone --branch tp2 https://github.com/fisop/jos sisop_tp2
+$ cd sisop_tp2
+
+# Copiar cambios de "pmap.c" del TP1 a mano...
+
+$ git add kern/pmap.c
+$ git commit -m "Solución TP1"
+$ git tag base_tp2
+</code></pre></div></div>
+
+<h2 id="compilación-y-depurado">Compilación y depurado</h2>
+
+<p>La compilación se realiza mediante <code class="highlighter-rouge">make</code>. En el directorio <code class="highlighter-rouge">obj/kern</code> se puede encontrar:</p>
+
+<ul>
+  <li><em>kernel</em> — el binario ELF con el kernel</li>
+  <li><em>kernel.asm</em> — assembler asociado al binario</li>
+</ul>
+
+<p>Para correr JOS, se puede usar <code class="highlighter-rouge">make qemu</code> o <code class="highlighter-rouge">make qemu-nox</code>.</p>
+
+<h3 id="gdb">GDB</h3>
+
+<p>El <em>Makefile</em> de JOS incluye dos reglas para correr QEMU junto con GDB. En dos terminales distintas:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ make qemu-gdb
+***
+*** Now run 'make gdb'.
+***
+qemu-system-i386 ...
+</code></pre></div></div>
+
+<p>y:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ make gdb
+gdb -q -ex 'target remote ...' -n -x .gdbinit
+Reading symbols from obj/kern/kernel...done.
+Remote debugging using 127.0.0.1:...
+0x0000fff0 in ?? ()
+(gdb)
+</code></pre></div></div>
+
+<p>Para más información, consultar <a href="https://pdos.csail.mit.edu/6.828/2016/labguide.html">esta guía</a>.</p>
+
+<h2 id="modo-de-entrega">Modo de entrega</h2>
+
+<p>Los trabajos prácticos realizados sobre JOS se entregan:</p>
+
+<ol>
+  <li>en papel, imprimiendo la salida de <code class="highlighter-rouge">git diff</code> y <code class="highlighter-rouge">make grade</code></li>
+  <li>(opcional) vía Git, en un repositorio proporcionado por la cátedra</li>
+</ol>
+
+<p>El código entregado <em>debería</em> pasar las pruebas de auto-corrección. <strong>En caso de no pasar las pruebas, se debe indicar explícitamente en el material entregado</strong>.</p>
+
+<p><em class="deadline">Una entrega que no pase las pruebas <strong>y no lo indique</strong> no cuenta como entrega.</em> (Por el contrario, una entrega que no pasa todas las pruebas, pero así lo indica, es perfectamente aceptable.)</p>
+
+<h3 id="git-diff-en-papel">git diff en papel</h3>
+
+<p>En lugar de archivos completos, para los trabajos prácticos con JOS se imprimen solamente los cambios realizados en el código; esto es, estrictamente la solución al TP.</p>
+
+<p>Se debe imprimir el resultado de <code class="highlighter-rouge">git diff</code> entre la base del TP y la solución. Antes, se debe correr <code class="highlighter-rouge">make format</code> para que el código quede conforme a la guía de estilo.</p>
+
+<p>También se debe incluir la salida de <code class="highlighter-rouge">make grade</code>, indicando si el código pasa las pruebas de auto-corrección, o no.</p>
+
+<p>La ‘base’ del TP es el “merge” realizado entre la solución al TP anterior y la base del actual. Por ejemplo, usando la etiqueta <em>base_tp2</em> mostrada anteriormente:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ make format
+$ git diff base_tp2 &gt;imprimir_tp2.txt
+$ make grade
+</code></pre></div></div>
+
+<h3 id="entrega-opcional-vía-git">Entrega opcional vía Git</h3>
+
+<p>Para obtener un repositorio privado, se debe crear una cuenta en el <a href="https://git.turing.pink">sitio Gerrit de la materia</a> y, para trabajos grupales, completar el siguiente <a href="https://goo.gl/forms/4bWqlu56FeTnzzW93">formulario</a>.</p>
+
+<h3 id="respuestas-en-prosa">Respuestas en prosa</h3>
+
+<p>Algunos ejercicios de los TPs consisten en responder en prosa ciertas preguntas breves. Estas se deben responder en el archivo <em>TP1.md</em>, <em>TP2.md</em>, … del repositorio. Se pueden imprimir como parte del diff, o como archivos aparte (por ejemplo, convertidos a PDF con <a href="http://pandoc.org/">pandoc</a>).</p>
+
+<!-- TODO: dar ejemplo de gdb session -->
+
+<h2 id="grading">Auto-corrección</h2>
+
+<p>La mayoría de los TPs incluyen un auto-corrector que informa al alumno sobre su progreso:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ make grade
+./grade-lab2
+running JOS: (1.2s)
+  Physical page allocator: OK
+  Page management: OK
+  Kernel page directory: OK
+  Page management 2: OK
+Score: 4/4
+</code></pre></div></div>
+
+<script defer="" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+
+<script defer="" onload="$.bigfoot();" src="https://cdnjs.cloudflare.com/ajax/libs/bigfoot/2.1.4/bigfoot.min.js"></script>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bigfoot/2.1.4/bigfoot-default.min.css" />
+
+
+</article>
+
+    </main>
+
+    
+
+
+
+
+<footer class="site-footer">
+  <div class="wrapper">
+    <a style="float: left;" rel="license" title="© 2016-2017 Adeodato Simó" href="http://creativecommons.org/licenses/by-sa/4.0/"><img src="../assets/by-sa.svg"></a>
+    <a style="float: right;" rel="source" href="../tps.md"><img height="16" alt="Link to Markdown source" src="../assets/source-md.svg"></a>
+  </div>
+</footer>
+
+
+  </body>
+
+</html>

@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="es">
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>TP0: Introducción a JOS</title>
+  <meta name="description" content="Sistemas Operativos. Facultad de Ingeniería, Universidad de Buenos Aires.">
+
+  <link rel="stylesheet" href="../assets/main.css">
+  <link rel="canonical" href="index.html">
+</head>
+
+
+  <body>
+
+    <header class="site-header">
+
+  <div class="wrapper">
+
+    <a class="site-title" href="../index.html">
+      
+      <span>
+        <svg height="22px" version="1.1" viewBox="0 0 20 19" width="22px" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><title/><desc/><defs/><g fill="none" fill-rule="evenodd" id="Page-1" stroke="none" stroke-width="1"><g fill="#000000" id="Core" transform="translate(-506.000000, -255.000000)"><g id="home" transform="translate(506.000000, 255.500000)"><path d="M8,17 L8,11 L12,11 L12,17 L17,17 L17,9 L20,9 L10,0 L0,9 L3,9 L3,17 L8,17 Z" id="Shape"/></g></g></g></svg>
+      </span>
+      
+    </a>
+
+    <nav class="site-nav">
+      <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+      <label for="nav-trigger">
+      <span class="menu-icon">
+        <svg viewBox="0 0 18 15" width="18px" height="15px">
+          <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+          <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+          <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+        </svg>
+      </span>
+      </label>
+
+      <ul class="trigger">
+        
+        <li class="dropdown">
+          
+          
+            <a href="index.html">Teoría</a>
+          
+        
+        <li class="dropdown">
+          
+          
+            <a href="javascript:void(0)">Labs</a>
+            <div class="dropdown-content">
+            
+              <a href="../lab/kern0/index.html">kern0</a>
+            
+              <a href="../lab/x86/index.html">x86</a>
+            
+              <a href="../lab/kern2/index.html">kern2</a>
+            
+              <a href="../ejercicios/index.html">Guía POSIX</a>
+            
+            </div>
+          
+        
+        <li class="dropdown">
+          
+          
+            <a href="javascript:void(0)">TPs</a>
+            <div class="dropdown-content">
+            
+              <a href="../tps/index.html">JOS</a>
+            
+              <a href="index.html">TP0</a>
+            
+              <a href="../tp1/index.html">TP1</a>
+            
+              <a href="../tp2/index.html">TP2</a>
+            
+            </div>
+          
+        
+        <li class="dropdown">
+          
+          
+            <a href="javascript:void(0)">Enlaces</a>
+            <div class="dropdown-content">
+            
+              <a href="../bibliografia/index.html">Bibliografía</a>
+            
+              <a href="../regimen/index.html">Evaluaciones</a>
+            
+              <a href="../kit/index.html">Software</a>
+            
+            </div>
+          
+        
+      </ul>
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <main class="wrapper" aria-label="Content">
+      <article class="post post-content">
+  <h1 id="tp0-introducción-a-jos">TP0: Introducción a JOS<sup id="fnref:src"><a href="index.html#fn:src" class="footnote">1</a></sup></h1>
+
+<p>Para esta TP, es suficiente con usar la rama <em>master</em> del [repositorio]:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code> $ git clone https://github.com/fisop/jos
+</code></pre></div></div>
+
+<p>El resultado de la [auto-corrección][grade] tiene este aspecto:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ make grade
+./grade-lab1
+running JOS: (1.0s)
+  backtrace count: OK
+  backtrace arguments: OK
+  backtrace symbols: OK
+  backtrace lines: OK
+Score: 4/4
+</code></pre></div></div>
+
+<p><strong>IMPORTANTE</strong>: se debe leer antes la <a href="../tps/index.html">información general sobre TPs con JOS</a> y el <a href="../kit/index.html#tools">software a instalar</a>.</p>
+
+<p><strong>Modo de entrega</strong>: para el TP0 se debe traer impresa en papel la función <code class="highlighter-rouge">mon_backtrace()</code> más el archivo de respuestas <em>TP0.md</em>.
+[repositorio]: /7508/tps/#jos-repo
+[grade]: /7508/tps/#grading</p>
+
+<h2 class="no_toc" id="resumen">Resumen</h2>
+
+<p>Se pide la implementación de una única función <code class="highlighter-rouge">mon_backtrace()</code>, en el archivo <em>kern/monitor.c</em>.<sup id="fnref:stat"><a href="index.html#fn:stat" class="footnote">2</a></sup></p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ git diff --stat tp0..tp0_sol
+ TP0.md         | 10 +++++++++-
+ kern/monitor.c | 14 +++++++++++++-
+ 2 files changed, 22 insertions(+), 2 deletions(-)
+</code></pre></div></div>
+
+<h2 class="no_toc" id="índice">Índice</h2>
+
+<ul id="markdown-toc">
+  <li><a href="index.html#convención-de-llamadas--backtrace" id="markdown-toc-convención-de-llamadas--backtrace">Convención de llamadas + backtrace</a>    <ul>
+      <li><a href="index.html#backtrace_eip" id="markdown-toc-backtrace_eip">Tarea: backtrace_eip</a></li>
+      <li><a href="index.html#backtrace_cmd" id="markdown-toc-backtrace_cmd">Tarea: backtrace_cmd</a></li>
+      <li><a href="index.html#backtrace_func_names" id="markdown-toc-backtrace_func_names">Tarea: backtrace_func_names</a></li>
+    </ul>
+  </li>
+</ul>
+
+<h2 id="convención-de-llamadas--backtrace">Convención de llamadas + backtrace</h2>
+
+<p>Dada la convención de llamadas en x86, es posible saber la secuencia de llamadas anidadas que condujo al estado actual de ejecución. En particular, mediante la instrucción estándar:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>push %ebp
+</code></pre></div></div>
+
+<p>cada función almacena en el stack una referencia al marco de ejecución de la función inmediatamente anterior. Se puede obtener el punto de retorno y los parámetros de cada llamada “saltando” hacia atrás cada <em>frame pointer</em>. (Algo parecido hace el comando <code class="highlighter-rouge">bt</code> de GDB.)</p>
+
+<p>Se proporcionan dos funciones auxiliares:</p>
+
+<ul>
+  <li>
+    <p><code class="highlighter-rouge">read_ebp()</code>: devuelve el valor actual del registro <code class="highlighter-rouge">%ebp</code>.</p>
+  </li>
+  <li>
+    <p><code class="highlighter-rouge">debuginfo_eip()</code>: usa la información de debug ELF para determinar, dada la dirección de una instrucción, en qué función reside. Proporciona información sobre dicha función en un <code class="highlighter-rouge">struct Eipdebuginfo</code>:</p>
+
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>struct Eipdebuginfo {
+    const char *eip_file;   // Source code filename for EIP
+    int eip_line;           // Source code linenumber for EIP
+
+    const char *eip_fn_name;  // Name of function containing EIP
+                              //     Note: not null terminated!
+    int eip_fn_namelen;       // Length of function name
+    uintptr_t eip_fn_addr;    // Address of start of function
+    int eip_fn_narg;          // Number of function arguments
+};
+</code></pre></div>    </div>
+  </li>
+</ul>
+
+<p>La función <code class="highlighter-rouge">mon_backtrace()</code> visita hacia atrás los sucesivos marcos de ejecución, imprimiendo información sobre cada uno de ellos.</p>
+
+<h3 id="backtrace_eip">Tarea: backtrace_eip</h3>
+
+<p>Implementar una primera versión de <code class="highlighter-rouge">mon_backtrace()</code> que, para cada marco de ejecución, imprima en hexadecimal con <code class="highlighter-rouge">cprintf()</code> el frame pointer, instruction pointer y los cinco primeros argumentos de la función, en este formato:<sup id="fnref:args"><a href="index.html#fn:args" class="footnote">3</a></sup></p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  ebp f0109e58  eip f0100a62  args 00000001 f0109e80 f0109e98 f0100ed2 00000031
+  ebp f0109ed8  eip f01000d6  args 00000000 00000000 f0100058 f0109f28 00000061
+␣␣   ␣        ␣␣   ␣        ␣␣
+</code></pre></div></div>
+
+<p>Para cada función, <em>ebp</em> se refiere al valor del registro <code class="highlighter-rouge">%ebp</code> (esto es, el valor del <em>stack pointer</em> al entrar a la función), y <em>eip</em> a la instrucción de retorno.</p>
+
+<p>La primera línea se referirá siempre a la función actualmente en ejecución, esto es, siempre será <code class="highlighter-rouge">mon_backtrace()</code>. La segunda línea refleja quién llamó a <code class="highlighter-rouge">mon_backtrace()</code>, y así sucesivamente.</p>
+
+<p>El auto-corrector comprueba el comportamiento de esta función llamándola al final de una serie de llamadas recursivas a <code class="highlighter-rouge">test_backtrace()</code>:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ make grade
+running JOS: (0.8s)
+  backtrace count: OK
+  backtrace arguments: OK
+  backtrace symbols: FAIL
+  backtrace lines: FAIL
+</code></pre></div></div>
+
+<p><strong>Ayuda</strong>: para saber cuándo se llega al <em>primer</em> marco de ejecución, averiguar si JOS inicializa <code class="highlighter-rouge">%ebp</code> durante el arranque a algún valor pre-establecido. (Usar, por ejemplo, el comando <code class="highlighter-rouge">git grep -F %ebp</code>.)</p>
+
+<h3 id="backtrace_cmd">Tarea: backtrace_cmd</h3>
+
+<p>Añadir en el archivo <em>monitor.c</em> un comando <em>backtrace</em> que llame a la función <code class="highlighter-rouge">mon_backtrace()</code>. Así, en el monitor interactivo de JOS será posible escribir:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ make qemu-nox
+...
+Welcome to the JOS kernel monitor!
+Type 'help' for a list of commands.
+
+K&gt; help
+help - Display this list of commands
+kerninfo - Display information about the kernel
+backtrace - Display the current backtrace
+
+K&gt; backtrace
+  ebp f010ff48  eip f0100a03  args  00000001 f010ff70 00000000 0000000a 00000009
+  ebp f010ffc8  eip f0100a48  args  00010094 00010094 f010fff8 f01000e1 00000000
+  ebp f010ffd8  eip f01000e1  args  00000000 00001aac 00000644 00000000 00000000
+  ebp f010fff8  eip f010003e  args  00111021 00000000 00000000 00000000 00000000
+</code></pre></div></div>
+
+<h3 id="backtrace_func_names">Tarea: backtrace_func_names</h3>
+
+<p>La función auxiliar <code class="highlighter-rouge">debuginfo_eip()</code> también proporciona el nombre y ubicación de la función a que corresponde <code class="highlighter-rouge">%eip</code>.</p>
+
+<p>Se pide ampliar la salida de <code class="highlighter-rouge">mon_backtrace()</code> para que, usando campos adicionales de <code class="highlighter-rouge">Eipdebuginfo</code>, muestre el archivo y número de línea en que se halla la instrucción, así como el offset de <em>eip</em> respecto a la dirección de comienzo de la función:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  ebp f010ff48  eip f0100a01  args  00000001 f010ff70 00000000 0000000a 00000009
+         kern/monitor.c:116: runcmd+261
+  ...
+</code></pre></div></div>
+
+<p>Escribir en el archivo <a href="../tps/index.html#prosa">TP0.md</a> la salida del comando <code class="highlighter-rouge">backtrace</code> al arrancar JOS.</p>
+
+<p><strong>Ayuda</strong>: la familia de funciones <em>printf</em> permite forzar un ancho para el valor a imprimir; por ejemplo:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>printf("%04d", n)
+</code></pre></div></div>
+
+<p>imprime el entero <em>n</em> con un ancho de al menos 4; y:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>printf("%.4f", r)
+</code></pre></div></div>
+
+<p>imprime el float <em>r</em> con cuatro dígitos de precisión.</p>
+
+<p>El ancho y/o la precisión pueden aplicarse vía variables mediante el modificador <code class="highlighter-rouge">'*'</code>, por ejemplo: <code class="highlighter-rouge">printf("%0*d", ancho, n)</code> y <code class="highlighter-rouge">printf("%.*4f", precision, r)</code>.</p>
+
+<p>Esto último es útil para cadenas no terminadas en <code class="highlighter-rouge">'\0'</code> como  <code class="highlighter-rouge">eip_fn_name</code>. Para más detalles, consultar la página de manual <code class="highlighter-rouge">printf(3)</code>.</p>
+
+<script>
+function addAnchors() {
+    anchors.options.visible = "always";
+    anchors.add("h3");
+}
+</script>
+
+<script async="" onload="addAnchors();" src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/3.2.2/anchor.min.js">
+</script>
+
+<script defer="" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+
+<script defer="" onload="$.bigfoot();" src="https://cdnjs.cloudflare.com/ajax/libs/bigfoot/2.1.4/bigfoot.min.js"></script>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bigfoot/2.1.4/bigfoot-default.min.css" />
+
+<div class="footnotes">
+  <ol>
+    <li id="fn:src">
+      <p>Material original en inglés: <a href="https://pdos.csail.mit.edu/6.828/2016/labs/lab1/#Part-3--The-Kernel">Lab 1, part 3: The Kernel</a>. El ejercicio 7 se realizó en clase, pero se recomienda repetirlo de manera individual.&nbsp;<a href="index.html#fnref:src" class="reversefootnote">&#x21A9;&#xFE0E;</a></p>
+    </li>
+    <li id="fn:stat">
+      <p>La salida de <code class="highlighter-rouge">git diff --stat</code> que sigue indica, a modo de guía, la cantidad de código en la solución de los docentes al TP. En este caso son solamente 14 líneas de código, todas en el archivo <em>monitor.c</em>.&nbsp;<a href="index.html#fnref:stat" class="reversefootnote">&#x21A9;&#xFE0E;</a></p>
+    </li>
+    <li id="fn:args">
+      <p>Quizás la función tome menos de cinco argumentos. En ese caso, se imprimirá igualmente las posiciones del stack donde <em>estarían</em> esos argumentos.&nbsp;<a href="index.html#fnref:args" class="reversefootnote">&#x21A9;&#xFE0E;</a></p>
+    </li>
+  </ol>
+</div>
+
+</article>
+
+    </main>
+
+    
+
+
+
+
+<footer class="site-footer">
+  <div class="wrapper">
+    <a style="float: left;" rel="license" title="© 2016-2017 Adeodato Simó" href="http://creativecommons.org/licenses/by-sa/4.0/"><img src="../assets/by-sa.svg"></a>
+    <a style="float: right;" rel="source" href="../tp0.md"><img height="16" alt="Link to Markdown source" src="../assets/source-md.svg"></a>
+  </div>
+</footer>
+
+
+  </body>
+
+</html>

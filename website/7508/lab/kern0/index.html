@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="es">
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Kernel mínimo en C</title>
+  <meta name="description" content="Sistemas Operativos. Facultad de Ingeniería, Universidad de Buenos Aires.">
+
+  <link rel="stylesheet" href="../../assets/main.css">
+  <link rel="canonical" href="index.html">
+</head>
+
+
+  <body>
+
+    <header class="site-header">
+
+  <div class="wrapper">
+
+    <a class="site-title" href="../../index.html">
+      
+      <span>
+        <svg height="22px" version="1.1" viewBox="0 0 20 19" width="22px" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><title/><desc/><defs/><g fill="none" fill-rule="evenodd" id="Page-1" stroke="none" stroke-width="1"><g fill="#000000" id="Core" transform="translate(-506.000000, -255.000000)"><g id="home" transform="translate(506.000000, 255.500000)"><path d="M8,17 L8,11 L12,11 L12,17 L17,17 L17,9 L20,9 L10,0 L0,9 L3,9 L3,17 L8,17 Z" id="Shape"/></g></g></g></svg>
+      </span>
+      
+    </a>
+
+    <nav class="site-nav">
+      <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+      <label for="nav-trigger">
+      <span class="menu-icon">
+        <svg viewBox="0 0 18 15" width="18px" height="15px">
+          <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+          <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+          <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+        </svg>
+      </span>
+      </label>
+
+      <ul class="trigger">
+        
+        <li class="dropdown">
+          
+          
+            <a href="index.html">Teoría</a>
+          
+        
+        <li class="dropdown">
+          
+          
+            <a href="javascript:void(0)">Labs</a>
+            <div class="dropdown-content">
+            
+              <a href="index.html">kern0</a>
+            
+              <a href="../x86/index.html">x86</a>
+            
+              <a href="../kern2/index.html">kern2</a>
+            
+              <a href="../../ejercicios/index.html">Guía POSIX</a>
+            
+            </div>
+          
+        
+        <li class="dropdown">
+          
+          
+            <a href="javascript:void(0)">TPs</a>
+            <div class="dropdown-content">
+            
+              <a href="../../tps/index.html">JOS</a>
+            
+              <a href="../../tp0/index.html">TP0</a>
+            
+              <a href="../../tp1/index.html">TP1</a>
+            
+              <a href="../../tp2/index.html">TP2</a>
+            
+            </div>
+          
+        
+        <li class="dropdown">
+          
+          
+            <a href="javascript:void(0)">Enlaces</a>
+            <div class="dropdown-content">
+            
+              <a href="../../bibliografia/index.html">Bibliografía</a>
+            
+              <a href="../../regimen/index.html">Evaluaciones</a>
+            
+              <a href="../../kit/index.html">Software</a>
+            
+            </div>
+          
+        
+      </ul>
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <main class="wrapper" aria-label="Content">
+      <article class="post post-content">
+  <h1 id="kernel-mínimo-en-c">Kernel mínimo en C</h1>
+
+<p>Para realizar el lab, se debe <a href="../../kit/index.html#tools"><strong>instalar el software necesario</strong></a>. La entrega se realiza en horario de clase del día indicado siguiendo las <a href="../../entregas/index.html#papel">instrucciones de entrega en papel</a>.</p>
+
+<h2 class="no_toc" id="índice">Índice</h2>
+
+<ul id="markdown-toc">
+  <li><a href="index.html#boot" id="markdown-toc-boot">Compilar un kernel y lanzarlo en QEMU</a>    <ul>
+      <li><a href="index.html#ej-boot" id="markdown-toc-ej-boot">Ej: kern0-boot</a></li>
+      <li><a href="index.html#ej-quit" id="markdown-toc-ej-quit">Ej: kern0-quit</a></li>
+      <li><a href="index.html#ej-hlt" id="markdown-toc-ej-hlt">Ej: kern0-hlt</a></li>
+      <li><a href="index.html#ej-gdb" id="markdown-toc-ej-gdb">Ej: kern0-gdb</a></li>
+    </ul>
+  </li>
+  <li><a href="index.html#make" id="markdown-toc-make">Makefile y flags de compilación</a>    <ul>
+      <li><a href="index.html#ej-flags" id="markdown-toc-ej-flags">Ej: make-flags</a></li>
+      <li><a href="index.html#ej-pattern" id="markdown-toc-ej-pattern">Ej: make-pattern</a></li>
+      <li><a href="index.html#ej-implicit" id="markdown-toc-ej-implicit">Ej: make-implicit</a></li>
+      <li><a href="index.html#ej-wildcard" id="markdown-toc-ej-wildcard">Ej: make-wildcard</a></li>
+    </ul>
+  </li>
+  <li><a href="index.html#el-buffer-vga" id="markdown-toc-el-buffer-vga">El buffer VGA</a>    <ul>
+      <li><a href="index.html#ej-vga" id="markdown-toc-ej-vga">Ej: kern0-vga</a></li>
+      <li><a href="index.html#ej-const" id="markdown-toc-ej-const">Ej: kern0-const</a></li>
+      <li><a href="index.html#ej-endian" id="markdown-toc-ej-endian">Ej: kern0-endian</a></li>
+      <li><a href="index.html#ej-objdump" id="markdown-toc-ej-objdump">Ej: kern0-objdump</a></li>
+    </ul>
+  </li>
+</ul>
+
+<h2 id="boot">Compilar un kernel y lanzarlo en QEMU</h2>
+
+<ul class="biblio">
+  <li>
+    <p>Lecturas obligatorias<sup id="fnref:bibref"><a href="index.html#fn:bibref" class="footnote">1</a></sup></p>
+
+    <ul>
+      <li>BRY2
+        <ul>
+          <li>cap. 1: §1-10</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>
+    <p>Lecturas recomendadas</p>
+
+    <ul>
+      <li>BRY2
+        <ul>
+          <li>cap. 2: §1-3</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<p>El siguiente código, una vez lanzado en el procesador, constituye un kernel completo con una única tarea: mantener la computadora prendida.</p>
+
+<div class="language-nasm highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">comienzo</span><span class="o">:</span>
+    <span class="k">jmp</span> <span class="n">comienzo</span>
+</code></pre></div></div>
+
+<p>Es equivalente al siguiente bucle infinito en C:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">void</span> <span class="nf">comienzo</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">while</span> <span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">continue</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>El código se compila con gcc, siempre (en estos labs) en modo 32-bits:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ gcc -g -m32 -O1 -c kern0.c
+</code></pre></div></div>
+
+<p>Una vez compilado el código del kernel, se debe generar una imagen binaria que pueda ser ejecutada bien en una computadora física, bien en un simulador como <a href="https://en.wikipedia.org/wiki/QEMU">QEMU</a>. Para ello, se deben enlazar los objetos  (archivos <code class="highlighter-rouge">*.o</code>) con las instrucciones de arranque que correspondan según la arquitectura.</p>
+
+<p>El estándar <a href="https://en.wikipedia.org/wiki/Multiboot_Specification">Multiboot</a> simplifica enormemente la tarea, pues permite arrancar un kernel directamente en <em>protected mode</em> (32-bits) sin tener que cargar la imagen desde disco, ni realizar el paso desde <em>real mode</em> a mano (ver ejercicio <a href="index.html#ej-mbr">kern2-mbr</a>).  <em>Grub</em> y muchos otros gestores de arranque ofrecen soporte para multiboot; en QEMU se activa mediante la opción <code class="highlighter-rouge">-kernel</code> (versión 1 de multiboot solamente).</p>
+
+<p>Para indicar al gestor de arranque que configure multiboot se debe incluir, en los primeros bytes del binario final, la constante numérica <code class="highlighter-rouge">0x1BADB002</code> y el <a href="https://simple.wikipedia.org/wiki/Cyclic_redundancy_check">CRC</a> adecuado, ambos alineados a 32-bits; por ejemplo, en un archivo <em>boot.S:</em></p>
+
+<div class="language-nasm highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">#</span><span class="n">define</span> <span class="n">MAGIC</span> <span class="mh">0x1BADB002</span>
+<span class="err">#</span><span class="n">define</span> <span class="n">FLAGS</span> <span class="mi">0</span>
+<span class="err">#</span><span class="n">define</span> <span class="n">CRC</span> <span class="p">(</span> <span class="o">-</span><span class="p">(</span><span class="n">MAGIC</span> <span class="o">+</span> <span class="n">FLAGS</span><span class="p">)</span> <span class="p">)</span>
+
+<span class="p">.</span><span class="n">align</span> <span class="mi">4</span>
+<span class="n">multiboot</span><span class="o">:</span>
+    <span class="p">.</span><span class="n">long</span> <span class="n">MAGIC</span>
+    <span class="p">.</span><span class="n">long</span> <span class="n">FLAGS</span>
+    <span class="p">.</span><span class="n">long</span> <span class="n">CRC</span>
+</code></pre></div></div>
+
+<p>Así, el proceso completo para generar la imagen es:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code># Compilar C y ASM
+$ gcc -g -m32 -O1 -c kern0.c boot.S
+
+# Enlazar
+$ ld -m elf_i386 -Ttext 0x100000 kern0.o boot.o -o kern0
+
+# Lanzar
+$ qemu-system-i386 -serial mon:stdio -kernel kern0
+</code></pre></div></div>
+
+<h3 id="ej-boot">Ej: kern0-boot</h3>
+
+<p>Compilar <em>kern0</em> y lanzarlo en QEMU tal y como se ha indicado.
+Responder:</p>
+
+<ul>
+  <li>
+    <p>¿emite algún aviso el proceso de compilado o enlazado? Si lo hubo, indicar cómo usar la opción <a href="https://sourceware.org/binutils/docs/ld/Entry-Point.html"><code class="highlighter-rouge">--entry</code></a> de <em>ld(1)</em> para subsanarlo.</p>
+  </li>
+  <li>
+    <p>¿cuánta CPU consume el proceso <em>qemu-system-i386</em> mientras ejecuta este kernel? ¿Qué está haciendo?<sup id="fnref:top"><a href="index.html#fn:top" class="footnote">2</a></sup></p>
+  </li>
+</ul>
+
+<h3 id="ej-quit">Ej: kern0-quit</h3>
+
+<p>Para finalizar la ejecución de QEMU, se puede cerrar directamente la ventana. Alternativamente, y por haber especificado la opción <code class="highlighter-rouge">-serial mon:stdio</code>, se puede controlar la simulación desde la terminal en que se lanzó:</p>
+
+<ol>
+  <li>
+    <p>Lanzar una vez más el kernel, y verificar que se puede finalizar su ejecución desde la terminal mediante la combinación de teclas <code class="highlighter-rouge">Ctrl-a x</code>.<sup id="fnref:ctrlax"><a href="index.html#fn:ctrlax" class="footnote">3</a></sup></p>
+  </li>
+  <li>
+    <p>Asimismo, la combinación <code class="highlighter-rouge">Ctrl-a c</code> permite entrar al “monitor” de QEMU, desde donde se puede obtener información adicional sobre el entorno de ejecución. Ejecutar el comando <code class="highlighter-rouge">info registers</code> en el monitor de QEMU, e incluir el resultado en la entrega. (El mismo comando, <code class="highlighter-rouge">info reg</code>, existe también en GDB.)</p>
+  </li>
+</ol>
+
+<p>Ejemplo:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ qemu-system-i386 -serial mon:stdio -kernel kern0
+&lt;Ctrl-a c&gt;
+
+QEMU 2.8.1 monitor - type 'help' for more information
+(qemu) info registers↩︎
+EAX=...
+
+(qemu) &lt;Ctrl-a x&gt;
+QEMU: Terminated
+</code></pre></div></div>
+
+<h3 id="ej-hlt">Ej: kern0-hlt</h3>
+
+<p>Un sistema operativo debe mantener siempre, al menos, un flujo de ejecución en la CPU. De lo contrario, finalizaría la ejecución del kernel.</p>
+
+<p>El ciclo infinito en <code class="highlighter-rouge">comienzo()</code> asegura un flujo de ejecución constante, pero mantiene a la CPU permanentemente ocupada.</p>
+
+<p>La instrucción <code class="highlighter-rouge">hlt</code> se usa para detener la CPU cuando no hay trabajo “real” que realizar. La instrucción se puede incluir directamente en código C así:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">void</span> <span class="nf">comienzo</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">while</span> <span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">asm</span><span class="p">(</span><span class="s">"hlt"</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Leer la página de Wikipedia <a href="https://en.wikipedia.org/wiki/HLT_(x86_instruction)">HLT (x86 instruction)</a>, y responder:</p>
+
+<ul>
+  <li>una vez invocado <code class="highlighter-rouge">hlt</code> ¿cuándo se reanuda la ejecución?</li>
+</ul>
+
+<p>Usar el comando <a href="https://en.wikipedia.org/wiki/PowerTOP">powertop</a> para comprobar el consumo de recursos de ambas versiones del kernel. En particular, para cada versión, anotar:</p>
+
+<ul>
+  <li>
+    <p>columna <em>Usage:</em> fragmento de tiempo usado por QEMU en cada segundo.</p>
+  </li>
+  <li>
+    <p>columna <em>Events/s:</em> número de veces por segundo que QEMU reclama la atención de la CPU.</p>
+  </li>
+</ul>
+
+<h3 id="ej-gdb">Ej: kern0-gdb</h3>
+
+<ul class="biblio">
+  <li>
+    <p>Lecturas obligatorias</p>
+
+    <ul>
+      <li>BRY2
+        <ul>
+          <li>cap. 3: §1-5</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>
+    <p>Lecturas recomendadas</p>
+
+    <ul>
+      <li>BRY2
+        <ul>
+          <li>cap. 3: §6-12</li>
+        </ul>
+      </li>
+      <li>yale.edu
+        <ul>
+          <li><a href="http://flint.cs.yale.edu/cs421/papers/x86-asm/asm.html"><strong>x86 Assembly Guide</strong></a></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<p>Un kernel no puede correr directamente desde GDB, ya que la ejecución de dicho kernel debe ocurrir <em>afuera</em> del sistema operativo sobre el cual corre GDB. No obstante, GDB permite depurar de manera <a href="https://sourceware.org/gdb/onlinedocs/gdb/Remote-Debugging.html">remota</a>. Para ello, GDB y el entorno remoto se comunican por red mediante un protocolo específico <em>(<a href="https://sourceware.org/gdb/onlinedocs/gdb/Remote-Protocol.html">GDB Remote Serial Protocol</a>)</em>.</p>
+
+<p>En este caso, el “entorno remoto” es QEMU, el cual implementa el protocolo específico de GDB con la opción <code class="highlighter-rouge">-gdb</code> y un número de puerto TCP. Además, con la opción <code class="highlighter-rouge">-S</code> se indica a QEMU que no comience la ejecución del sistema hasta que así lo ordene remotamente GDB:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ qemu-system-i386 -serial mon:stdio \
+                   -S -kernel kern0  \
+                   -gdb tcp:127.0.0.1:7508
+</code></pre></div></div>
+
+<p>Entonces, desde otra terminal GDB se puede comunicar con esta ejecución del kernel:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ gdb -q -s kern0 -n -ex 'target remote 127.0.0.1:7508'
+</code></pre></div></div>
+
+<p>Mostrar una sesión de GDB en la que se realicen los siguientes pasos:<sup id="fnref:powersave"><a href="index.html#fn:powersave" class="footnote">4</a></sup></p>
+
+<ul>
+  <li>
+    <p>poner un breakpoint en la función <em>comienzo</em> (p.ej. <code class="highlighter-rouge">b comienzo</code>)</p>
+  </li>
+  <li>
+    <p>continuar la ejecución hasta ese punto (<code class="highlighter-rouge">c</code>)</p>
+  </li>
+  <li>
+    <p>mostrar el valor del <em>stack pointer</em> en ese momento (<code class="highlighter-rouge">p $esp</code>), así como del registro <em>%eax</em> en formato hexadecimal (<code class="highlighter-rouge">p/x $eax</code>).<sup id="fnref:gdbregnames"><a href="index.html#fn:gdbregnames" class="footnote">5</a></sup> Responder:</p>
+
+    <ul>
+      <li>¿Por qué hace falta el modificador <a href="https://sourceware.org/gdb/onlinedocs/gdb/Output-Formats.html"><code class="highlighter-rouge">/x</code></a> al imprimir <em>%eax</em>, y no así <em>%esp</em>?</li>
+      <li>¿Qué significado tiene el valor que contiene <em>%eax</em>, y cómo llegó hasta ahí? (Revisar la documentación de Multiboot, en particular la sección <a href="https://www.gnu.org/software/grub/manual/multiboot/html_node/Machine-state.html">Machine state</a>.)</li>
+    </ul>
+  </li>
+  <li>
+    <p>el estándar Multiboot proporciona cierta informacion (<a href="https://www.gnu.org/software/grub/manual/multiboot/html_node/Boot-information-format.html">Multiboot Information</a>) que se puede consultar desde la función principal vía el registro <em>%ebx</em>. Desde el breakpoint en <em>comienzo</em> imprimir, con el comando <a href="https://sourceware.org/gdb/onlinedocs/gdb/Memory.html"><code class="highlighter-rouge">x/4xw</code></a>, los cuatro primeros valores enteros de dicha información, y explicar qué significan. A continuación, usar y mostrar las distintas invocaciones de <code class="highlighter-rouge">x/... $ebx + ...</code> necesarias para imprimir:</p>
+    <ul>
+      <li>el campo <em>flags</em> en formato binario</li>
+      <li>la cantidad de memoria “baja” en formato decimal (en <a href="https://en.wikipedia.org/wiki/Kibibyte">KiB</a>)</li>
+      <li>la línea de comandos o “cadena de arranque” recibida por el kernel (al igual que en C, las expresiones de GDB permiten dereferenciar con el operador <code class="highlighter-rouge">*</code>)</li>
+      <li>si está presente (¿cómo saberlo?), el nombre del gestor de arranque.</li>
+      <li>la cantidad de memoria “alta”, en <a href="https://en.wikipedia.org/wiki/Mebibyte">MiB</a>. (Hacerlo en dos pasos, primero un comando <code class="highlighter-rouge">x</code> y a continuación una expresión con la variable de GDB <a href="https://sourceware.org/gdb/onlinedocs/gdb/Convenience-Vars.html"><code class="highlighter-rouge">$__</code></a>.)</li>
+    </ul>
+  </li>
+</ul>
+
+<h2 id="make">Makefile y flags de compilación</h2>
+
+<ul class="biblio">
+  <li>
+    <p>Lecturas obligatorias</p>
+
+    <ul>
+      <li>BRY2
+        <ul>
+          <li>cap. 7: §1-3</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<p>Se puede usar el siguiente archivo <em>Makefile</em> para simplificar la compilación del kernel (utilizando la solución al ejercicio <a href="index.html#ej-boot">kern0-boot</a> para completar <code class="highlighter-rouge">--entry ???</code>):</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">CFLAGS</span> <span class="o">:=</span> <span class="nt">-g</span> <span class="nt">-m32</span> <span class="nt">-O1</span>
+
+<span class="nl">kern0</span><span class="o">:</span> <span class="nf">boot.o kern0.o</span>
+	ld <span class="nt">-m</span> elf_i386 <span class="nt">-Ttext</span> 0x100000 <span class="nt">--entry</span> ??? <span class="nv">$^</span> <span class="nt">-o</span> <span class="nv">$@</span>
+	<span class="c"># Verificar imagen Multiboot v1.</span>
+	grub-file <span class="nt">--is-x86-multiboot</span> <span class="nv">$@</span>
+
+<span class="nl">%.o</span><span class="o">:</span> <span class="nf">%.S</span>
+	<span class="nv">$(CC)</span> <span class="nv">$(CFLAGS)</span> <span class="nt">-c</span> <span class="nv">$&lt;</span>
+
+<span class="nl">clean</span><span class="o">:</span>
+	rm <span class="nt">-f</span> kern0 <span class="k">*</span>.o core
+
+<span class="nl">.PHONY</span><span class="o">:</span> <span class="nf">clean</span>
+</code></pre></div></div>
+
+<p>A continuación se proponen unos ejercicios para expandir este <em>makefile</em>, y los flags de compilación usados. Referencias útiles sobre <em>make</em>:</p>
+
+<ul>
+  <li><a href="https://www.gnu.org/software/make/manual/html_node/Implicit-Rules.html">Implicit rules</a></li>
+  <li><a href="https://www.gnu.org/software/make/manual/html_node/Pattern-Rules.html">Pattern rules</a></li>
+  <li><a href="https://www.gnu.org/software/make/manual/html_node/Running.html">Invoking make</a></li>
+</ul>
+
+<h3 id="ej-flags">Ej: make-flags</h3>
+
+<p>Todo el código C de la materia debe seguir el estándar <a href="https://en.wikipedia.org/wiki/C99">C99</a>. A continuación se describen las opciones de compilación que se deben usar:</p>
+
+<ul>
+  <li>
+    <p>Para todo el código C de la materia:</p>
+
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>CFLAGS := -g -std=c99 -Wall -Wextra -Wpedantic
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>Adicionalmente, para código de kernel (labs <em>kern0</em> y <em>kern2</em>):</p>
+
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>CFLAGS += -m32 -O1 -ffreestanding
+</code></pre></div>    </div>
+  </li>
+</ul>
+
+<p>Se pide:</p>
+
+<ol>
+  <li>
+    <p>Recompilar el kernel usando <code class="highlighter-rouge">make</code> y, si ocurre algún error en la línea <code class="highlighter-rouge">asm("hlt")</code>, explicar por qué ocurre y por qué la opción <code class="highlighter-rouge">-fasm</code> lo arregla.<sup id="fnref:fasm"><a href="index.html#fn:fasm" class="footnote">6</a></sup></p>
+  </li>
+  <li>
+    <p>¿Qué compilador usa <em>make</em> por omisión? ¿Es o no gcc? Explicar cómo se podría forzar el uso de <a href="https://en.wikipedia.org/wiki/Clang">clang</a>:</p>
+
+    <ul>
+      <li>por una sola vez, desde la línea de comandos.</li>
+      <li>para todas las compilaciones del proyecto.</li>
+    </ul>
+  </li>
+  <li>
+    <p>Leer la sección sobre <code class="highlighter-rouge">-ffreestanding</code> en <a href="https://cs107e.github.io/guides/gcc/">Guide to Bare Metal Programming with GCC</a> (la segunda sección, sobre <code class="highlighter-rouge">-nostdlib</code>, se cubre en el lab <a href="../x86/index.html">x86</a>); responder:</p>
+
+    <ul>
+      <li>
+        <p>¿Se pueden usar booleanos en modo “free standing”?</p>
+      </li>
+      <li>
+        <p>¿Dónde se definen los tipos <code class="highlighter-rouge">uint8_t</code>, <code class="highlighter-rouge">int32_t</code>, etc.?</p>
+      </li>
+      <li>
+        <p>Teniendo en cuenta los tamaños de <code class="highlighter-rouge">char</code>, <code class="highlighter-rouge">short</code>, <code class="highlighter-rouge">int</code>, <code class="highlighter-rouge">long</code> y <code class="highlighter-rouge">long long</code>, escribir un archivo <em>c99int.h</em> con las directivas <code class="highlighter-rouge">typedef</code> necesarias para definir tipos enteros propios de 8, 16, 32 y 64 bits, con signo y sin signo. Por ejemplo:</p>
+
+        <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>typedef short uint16_t;
+typedef unsigned short uint16_t;
+</code></pre></div>        </div>
+
+        <p>Hacerlo de manera que las mismas directivas puedan usarse en x86 y x86_64. Se recomienda poner especial atención en el signo de <code class="highlighter-rouge">char</code> y el tamaño de <code class="highlighter-rouge">long</code>.</p>
+      </li>
+    </ul>
+  </li>
+</ol>
+
+<h3 id="ej-pattern">Ej: make-pattern</h3>
+
+<ul>
+  <li>¿Cómo funciona la regla que compila <em>boot.S</em> a <em>boot.o</em>?</li>
+  <li>¿Qué son las variables <code class="highlighter-rouge">$@</code>, <code class="highlighter-rouge">$^</code> y <code class="highlighter-rouge">$&lt;</code>?</li>
+  <li>La regla <em>kern0</em> usa <code class="highlighter-rouge">$^</code> y la regla con <em>%.S</em> usa <code class="highlighter-rouge">$&lt;</code>. ¿Qué ocurriría si se intercambiaran estas dos variables entre ambas reglas?</li>
+</ul>
+
+<h3 id="ej-implicit">Ej: make-implicit</h3>
+
+<ul>
+  <li>¿Mediante qué regla se genera el archivo <em>kernel.o</em>?</li>
+  <li>Eliminar la regla <code class="highlighter-rouge">%.o: %.S</code> y ejecutar <code class="highlighter-rouge">make clean kern0</code>:
+    <ul>
+      <li>¿Se llega a generar el archivo <em>boot.o</em>?</li>
+      <li>¿Ocurre algún otro error? (Si no ocurre, mostrar la salida del comando <code class="highlighter-rouge">uname -m</code>).</li>
+      <li>¿Se puede subsanar el error sin re-introducir la regla eliminada?</li>
+    </ul>
+  </li>
+</ul>
+
+<h3 id="ej-wildcard">Ej: make-wildcard</h3>
+
+<p>Según aumenta el tamaño del kernel, se hace tedioso especificar uno a uno todos los archivos objeto que componen el kernel. Se pueden usar las funciones <a href="https://www.gnu.org/software/make/manual/html_node/Wildcard-Function.html">wildcard</a> y <a href="https://www.gnu.org/software/make/manual/html_node/Text-Functions.html">patsubst</a> de <em>make</em> para obtener la lista de todos los archivos C del directorio actual, y de ahí derivar la lista de objetos a enlazar.</p>
+
+<p>Reconfigurar el archivo <em>Makefile</em> para que quede así:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>SRCS := ...  # usar wildcard *.c
+OBJS := ...  # usar patsubst sobre SRCS
+
+kern0: boot.o $(OBJS)
+	...
+</code></pre></div></div>
+
+<p>Inicialmente, <code class="highlighter-rouge">SRCS</code> contendría tan solo <em>kern0.c</em>.</p>
+
+<h4 id="make-qemu">Reglas QEMU</h4>
+
+<p>Al archivo <em>Makefile</em> se le pueden agregar las siguientes reglas para facilitar la ejecución y depurado con QEMU:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">QEMU</span> <span class="o">:=</span> qemu-system-i386 <span class="nt">-serial</span> mon:stdio
+<span class="nv">KERN</span> <span class="o">:=</span> kern0
+<span class="nv">BOOT</span> <span class="o">:=</span> <span class="nt">-kernel</span> <span class="nv">$(KERN)</span>
+
+<span class="nl">qemu</span><span class="o">:</span> <span class="nf">$(KERN)</span>
+	<span class="nv">$(QEMU)</span> <span class="nv">$(BOOT)</span>
+
+<span class="nl">qemu-gdb</span><span class="o">:</span> <span class="nf">$(KERN)</span>
+	<span class="nv">$(QEMU)</span> <span class="nt">-kernel</span> kern0 <span class="nt">-S</span> <span class="nt">-gdb</span> tcp:127.0.0.1:7508 <span class="nv">$(BOOT)</span>
+
+<span class="nl">gdb</span><span class="o">:</span>
+	gdb <span class="nt">-q</span> <span class="nt">-s</span> kern0 <span class="nt">-n</span> <span class="nt">-ex</span> <span class="s1">'target remote 127.0.0.1:7508'</span>
+
+<span class="nl">.PHONY</span><span class="o">:</span> <span class="nf">qemu qemu-gdb gdb</span>
+</code></pre></div></div>
+
+<h2 id="el-buffer-vga">El buffer VGA</h2>
+
+<ul class="biblio">
+  <li>
+    <p>Lecturas obligatorias</p>
+
+    <ul>
+      <li>REES
+        <ul>
+          <li>cap. 1</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>
+    <p>Lecturas recomendadas</p>
+
+    <ul>
+      <li>K&amp;R
+        <ul>
+          <li>cap. 5: §1-6</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<p>El siguiente kernel imprime, de manera bastante rudimentaria, un mensaje por pantalla al arrancar, usando el <a href="http://wiki.osdev.org/Printing_To_Screen">buffer VGA</a>:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#define VGABUF ((volatile char *) 0xb8000)
+</span>
+<span class="kt">void</span> <span class="nf">comienzo</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">volatile</span> <span class="kt">char</span> <span class="o">*</span><span class="n">buf</span> <span class="o">=</span> <span class="n">VGABUF</span><span class="p">;</span>
+
+    <span class="o">*</span><span class="n">buf</span><span class="o">++</span> <span class="o">=</span> <span class="mi">79</span><span class="p">;</span>
+    <span class="o">*</span><span class="n">buf</span><span class="o">++</span> <span class="o">=</span> <span class="mi">47</span><span class="p">;</span>
+    <span class="o">*</span><span class="n">buf</span><span class="o">++</span> <span class="o">=</span> <span class="mi">75</span><span class="p">;</span>
+    <span class="o">*</span><span class="n">buf</span><span class="o">++</span> <span class="o">=</span> <span class="mi">47</span><span class="p">;</span>
+
+    <span class="k">while</span> <span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">asm</span><span class="p">(</span><span class="s">"hlt"</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h3 id="ej-vga">Ej: kern0-vga</h3>
+
+<p>Explicar el código anterior, en particular:</p>
+
+<ul>
+  <li>qué se imprime por pantalla al arrancar.</li>
+  <li>qué representan cada uno de los valores enteros (incluyendo <code class="highlighter-rouge">0xb8000</code>).</li>
+  <li>por qué se usa el modificador <em>volatile</em> para el puntero al buffer.</li>
+</ul>
+
+<p>Ahora, implementar una función más genérica para imprimir en el buffer VGA:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">static</span> <span class="kt">void</span>
+<span class="nf">vga_write</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">s</span><span class="p">,</span> <span class="kt">int8_t</span> <span class="n">linea</span><span class="p">,</span> <span class="kt">uint8_t</span> <span class="n">color</span><span class="p">)</span> <span class="p">{</span> <span class="p">...</span> <span class="p">}</span>
+</code></pre></div></div>
+
+<p>donde se escribe la cadena en la línea indicada de la pantalla (si <code class="highlighter-rouge">linea</code> es menor que cero, se empieza a contar desde abajo).</p>
+
+<h3 id="ej-const">Ej: kern0-const</h3>
+
+<p>Supongamos que se definiera <code class="highlighter-rouge">VGABUF</code> como una variable global <em>const</em> (de tal manera que no pueda ser modificada y que por tanto apunte siempre al comienzo del buffer):</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">static</span> <span class="k">const</span> <span class="k">volatile</span> <span class="kt">char</span> <span class="o">*</span><span class="n">VGABUF</span> <span class="o">=</span> <span class="p">(</span><span class="k">volatile</span> <span class="kt">char</span> <span class="o">*</span><span class="p">)</span> <span class="mh">0xb8000</span><span class="p">;</span>
+</code></pre></div></div>
+
+<ol>
+  <li>
+    <p>Explicar los errores o avisos de compilación que ocurren al recompilar el código original con la nueva definición:</p>
+
+    <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">void</span> <span class="nf">comienzo</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">volatile</span> <span class="kt">char</span> <span class="o">*</span><span class="n">buf</span> <span class="o">=</span> <span class="n">VGABUF</span><span class="p">;</span>
+    <span class="o">*</span><span class="n">buf</span><span class="o">++</span> <span class="o">=</span> <span class="mi">79</span><span class="p">;</span>
+    <span class="o">*</span><span class="n">buf</span><span class="o">++</span> <span class="o">=</span> <span class="mi">47</span><span class="p">;</span>
+    <span class="c1">// ...
+</span><span class="p">}</span>
+</code></pre></div>    </div>
+
+    <p>¿Es adecuada la declaración de <code class="highlighter-rouge">VGABUF</code> propuesta? ¿Se puede agregar o quitar algo para subsanar el error?</p>
+  </li>
+  <li>
+    <p>La declaración de <code class="highlighter-rouge">VGABUF</code> resultante del punto anterior ¿permite avanzar directamente la variable global? ¿Qué ocurre al añadir la siguiente línea a la función <em>comienzo</em>?</p>
+
+    <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">void</span> <span class="nf">comienzo</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">VGABUF</span> <span class="o">+=</span> <span class="mi">80</span><span class="p">;</span>  <span class="c1">// ?!?!
+</span>
+    <span class="k">volatile</span> <span class="kt">char</span> <span class="o">*</span><span class="n">buf</span> <span class="o">=</span> <span class="n">VGABUF</span><span class="p">;</span>
+    <span class="c1">// ...
+</span><span class="p">}</span>
+</code></pre></div>    </div>
+
+    <p>¿Se puede de alguna manera reintroducir el modificador <em>const</em> para que no compile esta nueva versión, pero siga compilando el código original? Justificar y explicar el cambio.</p>
+  </li>
+  <li>
+    <p>Finalmente, sobre la solución del punto anterior: ¿qué ocurre al ejecutar la siguiente versión?</p>
+
+    <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">void</span> <span class="nf">comienzo</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">{</span>
+    <span class="o">*</span><span class="p">(</span><span class="n">VGABUF</span> <span class="o">+</span> <span class="mi">120</span><span class="p">)</span> <span class="o">+=</span> <span class="mi">88</span><span class="p">;</span>
+
+    <span class="k">volatile</span> <span class="kt">char</span> <span class="o">*</span><span class="n">buf</span> <span class="o">=</span> <span class="n">VGABUF</span><span class="p">;</span>
+    <span class="c1">// ...
+</span><span class="p">}</span>
+</code></pre></div>    </div>
+
+    <p>¿Se podría cambiar el <em>tipo</em> de <code class="highlighter-rouge">VGABUF</code> para que no se permita el uso directo de <code class="highlighter-rouge">VGABUF</code>? (Pero siga compilando, <em>sin modificaciones</em>, el código original.) Justificar por qué el nuevo tipo produce error al usar <code class="highlighter-rouge">*VGABUF</code>, y por qué no se hace necesario cambiar el código original.</p>
+  </li>
+</ol>
+
+<h3 id="ej-endian">Ej: kern0-endian</h3>
+
+<ol>
+  <li>
+    <p>Compilar el siguiente programa y justificar la salida que produce en la terminal:</p>
+
+    <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include &lt;stdio.h&gt;
+</span>
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mh">0x00646c72</span><span class="p">;</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"H%x Wo%s</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="mi">57616</span><span class="p">,</span> <span class="p">(</span><span class="kt">char</span> <span class="o">*</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">i</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div>    </div>
+
+    <p>A continuación, reescribir el código para una arquitectura <a href="https://en.wikipedia.org/wiki/Endianness#Illustration">big-endian</a>, de manera que imprima exactamente lo mismo.</p>
+  </li>
+  <li>
+    <p>Cambiar el código de <code class="highlighter-rouge">comienzo()</code> para imprimir el mismo mensaje original con una sola asignación, “abusando” de un puntero a entero:</p>
+
+    <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">static</span> <span class="p">...</span> <span class="o">*</span><span class="n">VGABUF</span> <span class="o">=</span> <span class="p">...</span>
+
+<span class="kt">void</span> <span class="n">comienzo</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">volatile</span> <span class="kt">unsigned</span> <span class="o">*</span><span class="n">p</span> <span class="o">=</span> <span class="n">VGABUF</span><span class="p">;</span>
+    <span class="o">*</span><span class="n">p</span> <span class="o">=</span> <span class="mi">0</span><span class="n">x</span><span class="p">...</span>
+
+    <span class="k">while</span> <span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">asm</span><span class="p">(</span><span class="s">"hlt"</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div>    </div>
+
+    <p><strong>Ayuda</strong>: convertir los valores 47, 75 y 79 de base 10 a base 16, y componer directamente una constante entera en hexadecimal.</p>
+  </li>
+  <li>
+    <p>Usar un puntero a <code class="highlighter-rouge">uint64_t</code> para imprimir en la segunda línea de la pantalla la palabra <code class="highlighter-rouge">HOLA</code>, en negro sobre amarillo.</p>
+
+    <p>Realizar la inicialización de “p” de dos maneras distintas:</p>
+
+    <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// Versión 1
+</span><span class="k">volatile</span> <span class="kt">uint64_t</span> <span class="o">*</span><span class="n">p</span> <span class="o">=</span> <span class="n">VGABUF</span> <span class="o">+</span> <span class="mi">160</span><span class="p">;</span>
+<span class="o">*</span><span class="n">p</span> <span class="o">=</span> <span class="mi">0</span><span class="n">x</span><span class="p">...</span>
+
+<span class="c1">// Versión 2
+</span><span class="k">volatile</span> <span class="kt">uint64_t</span> <span class="o">*</span><span class="n">p</span> <span class="o">=</span> <span class="n">VGABUF</span><span class="p">;</span>
+<span class="n">p</span> <span class="o">+=</span> <span class="mi">160</span><span class="p">;</span>
+<span class="o">*</span><span class="n">p</span> <span class="o">=</span> <span class="mi">0</span><span class="n">x</span><span class="p">...</span>
+</code></pre></div>    </div>
+
+    <p>Justificar las diferencias de comportamiento entre ambas versiones.</p>
+  </li>
+</ol>
+
+<h3 id="ej-objdump">Ej: kern0-objdump</h3>
+
+<ul class="biblio">
+  <li>
+    <p>Lectura sugerida</p>
+
+    <ul>
+      <li>BRY2
+        <ul>
+          <li>cap. 7: §12-13</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<p>Incluir en la entrega la versión final del archivo <em>Makefile</em> (incluyendo los cambios propuestos en esta tarea), y un archivo <em>kern0.c</em> con:</p>
+
+<ul>
+  <li>la declaración correcta de la variable <code class="highlighter-rouge">VGABUF</code></li>
+  <li>la función <strong>estática</strong> <code class="highlighter-rouge">vga_write()</code></li>
+  <li>la función <code class="highlighter-rouge">comienzo()</code>, ahora con sendas invocaciones a <code class="highlighter-rouge">vga_write()</code> para imprimir, primero, el mensaje original en la línea 0; a continuación,  <code class="highlighter-rouge">HOLA</code> en la siguiente línea, en negro sobre amarillo.</li>
+</ul>
+
+<p>Sobre este código:</p>
+
+<ol>
+  <li>
+    <p>Obtener el código máquina del binario final usando <em>objdump:</em></p>
+
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ make
+$ objdump -d kern0
+</code></pre></div>    </div>
+
+    <p>Típicamente, se guarda la salida en un archivo con extensión <em>.asm</em> para tenerlo siempre a mano. Se puede usar la funcionalidad de <a href="http://es.tldp.org/COMO-INSFLUG/COMOs/Bash-Prog-Intro-COMO/Bash-Prog-Intro-COMO-3.html">redirección</a> del intérprete de comandos:</p>
+
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ objdump -d kern0 &gt;kern0.asm
+</code></pre></div>    </div>
+
+    <p>Añadir al archivo <em>Makefile</em> una invocación de manera que se genere <em>kern0.asm</em> automáticamente tras la fase de enlazado, y se borre como parte de la regla <em>clean</em>. Usar la variable <code class="highlighter-rouge">$@</code> según corresponda.</p>
+  </li>
+  <li>
+    <p>¿En qué cambia el código generado si se añade la opción <code class="highlighter-rouge">-fno-inline</code>?</p>
+  </li>
+  <li>
+    <p>Buscar la documentación de la opción <code class="highlighter-rouge">-fno-pic</code> y describir su propósito. Con el commando <code class="highlighter-rouge"><span class="gh">diff -u</span></code>, mostrar las diferencias en el código generado con ella y sin ella.</p>
+  </li>
+  <li>
+    <p>Sustituir la opción <code class="highlighter-rouge">-d</code> de <em>objdump</em> por <code class="highlighter-rouge">-S</code>, y explicar las diferencias en el resultado.</p>
+  </li>
+  <li>
+    <p>De la salida de <em>objdump -S</em> sobre el binario compilado con <code class="highlighter-rouge">-fno-inline</code> y <code class="highlighter-rouge">-fno-pic</code>, incluir la sección correspondiente a la función <code class="highlighter-rouge">vga_write()</code> y explicar cada instrucción de assembler en relación al código C original.</p>
+  </li>
+</ol>
+
+<script>
+function addAnchors() {
+    anchors.options.visible = "always";
+    anchors.add("h3");
+}
+</script>
+
+<script async="" onload="addAnchors();" src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/3.2.2/anchor.min.js">
+</script>
+
+<script defer="" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+
+<script defer="" onload="$.bigfoot();" src="https://cdnjs.cloudflare.com/ajax/libs/bigfoot/2.1.4/bigfoot.min.js"></script>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bigfoot/2.1.4/bigfoot-default.min.css" />
+
+<div class="footnotes">
+  <ol>
+    <li id="fn:bibref">
+      <p>Consultar lista de abreviaturas en la <a href="../../bibliografia/index.html">bibliografía</a>.&nbsp;<a href="index.html#fnref:bibref" class="reversefootnote">&#x21A9;&#xFE0E;</a></p>
+    </li>
+    <li id="fn:top">
+      <p>Se puede comprobar el uso de CPU de cada proceso en el sistema mediante el comando: <code class="highlighter-rouge">top -d 1</code> (salir pulsando <code class="highlighter-rouge">q</code>).&nbsp;<a href="index.html#fnref:top" class="reversefootnote">&#x21A9;&#xFE0E;</a></p>
+    </li>
+    <li id="fn:ctrlax">
+      <p>Esto es: presionar <code class="highlighter-rouge">Ctrl-a</code>, soltar, y a continuación teclear la letra <code class="highlighter-rouge">x</code> en minúscula.&nbsp;<a href="index.html#fnref:ctrlax" class="reversefootnote">&#x21A9;&#xFE0E;</a></p>
+    </li>
+    <li id="fn:powersave">
+      <p>Para cuidar tanto el medio ambiente como sus baterías, se recomienda haber completado el ejercicio <a href="index.html#ej-hlt">kern0-hlt</a> primero.&nbsp;<a href="index.html#fnref:powersave" class="reversefootnote">&#x21A9;&#xFE0E;</a></p>
+    </li>
+    <li id="fn:gdbregnames">
+      <p>Existe para cada registro una <a href="https://sourceware.org/gdb/onlinedocs/gdb/Registers.html">variable asociada</a>. GDB define también cuatro variables genéricas que se definen según la arquitectura actual. En el caso de x86, la asociación es:</p>
+
+      <ul>
+        <li><code class="highlighter-rouge">$eip :: $pc</code> <em>(program counter)</em></li>
+        <li><code class="highlighter-rouge">$esp :: $sp</code> <em>(stack pointer)</em></li>
+        <li><code class="highlighter-rouge">$ebp :: $fp</code> <em>(frame pointer)</em></li>
+        <li><code class="highlighter-rouge">$eflags :: $ps</code> <em>(processor status)</em></li>
+      </ul>
+      <p><a href="index.html#fnref:gdbregnames" class="reversefootnote">&#x21A9;&#xFE0E;</a></p>
+    </li>
+    <li id="fn:fasm">
+      <p>Para encontrar <code class="highlighter-rouge">-fasm</code> en la página de manual <code class="highlighter-rouge">gcc(1)</code>, buscar <a href="https://gcc.gnu.org/onlinedocs/gcc/C-Dialect-Options.html"><code class="highlighter-rouge">-fno-asm</code></a>.&nbsp;<a href="index.html#fnref:fasm" class="reversefootnote">&#x21A9;&#xFE0E;</a></p>
+    </li>
+  </ol>
+</div>
+
+</article>
+
+    </main>
+
+    
+
+
+
+
+<footer class="site-footer">
+  <div class="wrapper">
+    <a style="float: left;" rel="license" title="© 2016-2017 Adeodato Simó" href="http://creativecommons.org/licenses/by-sa/4.0/"><img src="../../assets/by-sa.svg"></a>
+    <a style="float: right;" rel="source" href="../kern0.md"><img height="16" alt="Link to Markdown source" src="../../assets/source-md.svg"></a>
+  </div>
+</footer>
+
+
+  </body>
+
+</html>

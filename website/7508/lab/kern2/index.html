@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html lang="es">
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Un kernel con reloj y tres tareas</title>
+  <meta name="description" content="Sistemas Operativos. Facultad de Ingeniería, Universidad de Buenos Aires.">
+
+  <link rel="stylesheet" href="../../assets/main.css">
+  <link rel="canonical" href="index.html">
+</head>
+
+
+  <body>
+
+    <header class="site-header">
+
+  <div class="wrapper">
+
+    <a class="site-title" href="../../index.html">
+      
+      <span>
+        <svg height="22px" version="1.1" viewBox="0 0 20 19" width="22px" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><title/><desc/><defs/><g fill="none" fill-rule="evenodd" id="Page-1" stroke="none" stroke-width="1"><g fill="#000000" id="Core" transform="translate(-506.000000, -255.000000)"><g id="home" transform="translate(506.000000, 255.500000)"><path d="M8,17 L8,11 L12,11 L12,17 L17,17 L17,9 L20,9 L10,0 L0,9 L3,9 L3,17 L8,17 Z" id="Shape"/></g></g></g></svg>
+      </span>
+      
+    </a>
+
+    <nav class="site-nav">
+      <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+      <label for="nav-trigger">
+      <span class="menu-icon">
+        <svg viewBox="0 0 18 15" width="18px" height="15px">
+          <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+          <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+          <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+        </svg>
+      </span>
+      </label>
+
+      <ul class="trigger">
+        
+        <li class="dropdown">
+          
+          
+            <a href="index.html">Teoría</a>
+          
+        
+        <li class="dropdown">
+          
+          
+            <a href="javascript:void(0)">Labs</a>
+            <div class="dropdown-content">
+            
+              <a href="../kern0/index.html">kern0</a>
+            
+              <a href="../x86/index.html">x86</a>
+            
+              <a href="index.html">kern2</a>
+            
+              <a href="../../ejercicios/index.html">Guía POSIX</a>
+            
+            </div>
+          
+        
+        <li class="dropdown">
+          
+          
+            <a href="javascript:void(0)">TPs</a>
+            <div class="dropdown-content">
+            
+              <a href="../../tps/index.html">JOS</a>
+            
+              <a href="../../tp0/index.html">TP0</a>
+            
+              <a href="../../tp1/index.html">TP1</a>
+            
+              <a href="../../tp2/index.html">TP2</a>
+            
+            </div>
+          
+        
+        <li class="dropdown">
+          
+          
+            <a href="javascript:void(0)">Enlaces</a>
+            <div class="dropdown-content">
+            
+              <a href="../../bibliografia/index.html">Bibliografía</a>
+            
+              <a href="../../regimen/index.html">Evaluaciones</a>
+            
+              <a href="../../kit/index.html">Software</a>
+            
+            </div>
+          
+        
+      </ul>
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <main class="wrapper" aria-label="Content">
+      <article class="post post-content">
+  <h1 id="un-kernel-con-reloj-y-tres-tareas">Un kernel con reloj y tres tareas</h1>
+
+<p>Material de apoyo:</p>
+
+<ul>
+  <li><a href="decls.h">decls.h</a></li>
+  <li><a href="interrupts.h">interrupts.h</a></li>
+</ul>
+
+<h2 class="no_toc" id="índice">Índice</h2>
+
+<ul id="markdown-toc">
+  <li><a href="index.html#inline-asm" id="markdown-toc-inline-asm">Conocimientos previos: “inline assembler”</a>    <ul>
+      <li><a href="index.html#inline-inc" id="markdown-toc-inline-inc">Ej: asm-inc</a></li>
+      <li><a href="index.html#inline-ptr" id="markdown-toc-inline-ptr">Ej: asm-ptr</a></li>
+      <li><a href="index.html#inline-regs" id="markdown-toc-inline-regs">Ej: asm-regs</a></li>
+      <li><a href="index.html#inline-volatile" id="markdown-toc-inline-volatile">Ej: asm-volatile</a></li>
+    </ul>
+  </li>
+  <li><a href="index.html#cooperative" id="markdown-toc-cooperative">Concurrencia cooperativa</a>    <ul>
+      <li><a href="index.html#ej-task" id="markdown-toc-ej-task">Ej: kern2-task</a></li>
+      <li><a href="index.html#ej-exec" id="markdown-toc-ej-exec">Ej: kern2-exec</a></li>
+      <li><a href="index.html#ej-regcall" id="markdown-toc-ej-regcall">Ej: kern2-regcall</a></li>
+      <li><a href="index.html#ej-swap" id="markdown-toc-ej-swap">Ej: kern2-swap</a></li>
+      <li><a href="index.html#ej-exit" id="markdown-toc-ej-exit">Ej: kern2-exit ★</a></li>
+    </ul>
+  </li>
+  <li><a href="index.html#interrupts" id="markdown-toc-interrupts">Interrupciones: reloj y teclado</a>    <ul>
+      <li><a href="index.html#ej-kern2-idt" id="markdown-toc-ej-kern2-idt">Ej: kern2-idt</a></li>
+      <li><a href="index.html#ej-isr" id="markdown-toc-ej-isr">Ej: kern2-isr</a></li>
+      <li><a href="index.html#ej-irq" id="markdown-toc-ej-irq">Ej: kern2-irq</a></li>
+      <li><a href="index.html#ej-div" id="markdown-toc-ej-div">Ej: kern2-div</a></li>
+      <li><a href="index.html#ej-kbd" id="markdown-toc-ej-kbd">Ej: kern2-kbd ★</a></li>
+    </ul>
+  </li>
+  <li><a href="index.html#preempt" id="markdown-toc-preempt">Desalojo</a></li>
+  <li><a href="index.html#elf" id="markdown-toc-elf">Enlazado y archivos ELF</a></li>
+</ul>
+
+<h2 id="inline-asm">Conocimientos previos: “inline assembler”</h2>
+
+<p>En labs anteriores se observó que es posible integrar instrucciones en assembler directamente en código C:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">void</span> <span class="nf">comienzo</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">while</span> <span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">asm</span><span class="p">(</span><span class="s">"hlt"</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Existe además una sintaxis extendida:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">asm</span><span class="p">(</span><span class="s">"..."</span> <span class="o">:</span> <span class="cm">/* opciones... */</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>que permite una mayor integración entre el código generado por el compilador, y las instrucciones assembler manuales. Por ejemplo, es posible escribir el valor de una variable a un registro concreto, o extraer el resultado de una instrucción a una variable de la función.</p>
+
+<p>Para los ejercicios de esta parte, se recomienda la siguiente bibliografía:</p>
+
+<ul>
+  <li>
+    <p><em>ibm.com:</em> <a href="https://www.ibm.com/developerworks/linux/library/l-ia/index.html">Inline assembly for x86 in Linux</a>. Artículo breve, ideal para familiarizarse con el concepto y uso de inline assembly.</p>
+  </li>
+  <li>
+    <p><em>ibiblio.org:</em> <a href="http://www.ibiblio.org/gferg/ldp/GCC-Inline-Assembly-HOWTO.html">GCC-Inline-Assembly-HOWTO</a>. Tutorial más extenso.</p>
+  </li>
+  <li>
+    <p><em>gcc.gnu.org:</em> <a href="https://gcc.gnu.org/onlinedocs/gcc/Using-Assembly-Language-with-C.html">How to Use Inline Assembly Language in C Code</a>. Documentación oficial de GCC; ver, en particular, las secciones <a href="https://gcc.gnu.org/onlinedocs/gcc/Basic-Asm.html">Basic Asm</a> y <a href="https://gcc.gnu.org/onlinedocs/gcc/Extended-Asm.html">Extended Asm</a>.</p>
+  </li>
+</ul>
+
+<h3 id="inline-inc">Ej: asm-inc</h3>
+
+<p>La siguiente función incrementa un entero usando directamente una instrucción <code class="highlighter-rouge">inc</code> de assembler:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="nf">inc</span><span class="p">(</span><span class="kt">int</span> <span class="n">x</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">asm</span><span class="p">(</span><span class="s">"incl %1"</span> <span class="o">:</span> <span class="s">"=g"</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">:</span> <span class="s">"0"</span><span class="p">(</span><span class="n">x</span><span class="p">));</span>
+    <span class="k">return</span> <span class="n">x</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Se pide:</p>
+
+<ul>
+  <li>
+    <p>Explicar los parámetros de la instrucción <code class="highlighter-rouge">asm</code> mostrada.</p>
+  </li>
+  <li>
+    <p>Compilar el código con <code class="highlighter-rouge">gcc -c</code> y describir, usando para ello la salida de <code class="highlighter-rouge">objdump -d</code>, la correspondencia entre el código original y las instrucciones assembler generadas tras la compilación.<sup id="fnref:defaultO1"><a href="index.html#fn:defaultO1" class="footnote">1</a></sup></p>
+  </li>
+  <li>
+    <p>Mostrar, de nuevo usando <code class="highlighter-rouge">gcc -c</code> y <code class="highlighter-rouge">objdump -d</code>, en qué cambia el código generado para la siguiente versión, y razonar el por qué de las diferencias:</p>
+
+    <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="nf">inc2</span><span class="p">(</span><span class="kt">int</span> <span class="n">x</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kt">int</span> <span class="n">ret</span><span class="p">;</span>
+    <span class="n">asm</span><span class="p">(</span><span class="s">"incl %1; movl %1, %0"</span> <span class="o">:</span> <span class="s">"=r"</span><span class="p">(</span><span class="n">ret</span><span class="p">)</span> <span class="o">:</span> <span class="s">"m"</span><span class="p">(</span><span class="n">x</span><span class="p">));</span>
+    <span class="k">return</span> <span class="n">ret</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>    </div>
+
+    <p>Responder: ¿Sería válido especificar <code class="highlighter-rouge">"m"(x)</code> si <code class="highlighter-rouge">inc</code> solo funcionase con un registro como operando?</p>
+  </li>
+  <li>
+    <p>Recompilar ambas versiones cambiando <code class="highlighter-rouge">incl</code> por <code class="highlighter-rouge">inc</code> y, si alguna de las dos versiones no compila, explicar el porqué de la diferencia.</p>
+  </li>
+</ul>
+
+<h3 id="inline-ptr">Ej: asm-ptr</h3>
+
+<p>La función <code class="highlighter-rouge">inc_p()</code> incrementa el valor de un entero vía su dirección de memoria:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include &lt;stdio.h&gt;
+</span>
+<span class="kt">void</span> <span class="nf">inc_p</span><span class="p">(</span><span class="kt">int</span> <span class="o">*</span><span class="n">p</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// ...
+</span><span class="p">}</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="n">inc_p</span><span class="p">(</span><span class="o">&amp;</span><span class="n">n</span><span class="p">);</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"n = %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">n</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>de tal manera que el programa anterior imprime <code class="highlighter-rouge">n = 1</code>:<sup id="fnref:useO0"><a href="index.html#fn:useO0" class="footnote">2</a></sup></p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ cc -m32 -O0 inc_p.c &amp;&amp; ./a.out
+n = 1
+</code></pre></div></div>
+
+<p>Se proponen las siguientes tres implementaciones de <code class="highlighter-rouge">inc_p()</code>; indicar cuáles funcionan y cuáles no y, examinando el código generado por gcc, explicar por qué:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">void</span> <span class="nf">inc_p</span><span class="p">(</span><span class="kt">int</span> <span class="o">*</span><span class="n">p</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// (0)
+</span>    <span class="n">asm</span><span class="p">(</span><span class="s">"incl %0"</span> <span class="o">:</span> <span class="o">:</span> <span class="s">"m"</span><span class="p">(</span><span class="n">p</span><span class="p">));</span>
+
+    <span class="c1">// (1)
+</span>    <span class="n">asm</span><span class="p">(</span><span class="s">"incl %0"</span> <span class="o">:</span> <span class="o">:</span> <span class="s">"m"</span><span class="p">(</span><span class="o">*</span><span class="n">p</span><span class="p">));</span>
+
+    <span class="c1">// (2)
+</span>    <span class="n">asm</span><span class="p">(</span><span class="s">"incl %0"</span> <span class="o">:</span> <span class="s">"=m"</span><span class="p">(</span><span class="o">*</span><span class="n">p</span><span class="p">));</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Finalmente, se pide componer una tabla en que se muestre el resultado usando un nivel de optimización mayor en GCC:</p>
+
+<table class="gcc_kern2">
+  <thead>
+    <tr>
+      <th>Opciones gcc</th>
+      <th><code class="highlighter-rouge">:: "m"(*p)</code></th>
+      <th><code class="highlighter-rouge">: "=m"(*p)</code></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>-O2</td>
+      <td> </td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>-O2 -fno-inline</td>
+      <td> </td>
+      <td> </td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Explicar cualquier diferencia en los resultados y, si alguno es incorrecto, intentar mejorar el código para que funcione en todos los casos.<sup id="fnref:finline"><a href="index.html#fn:finline" class="footnote">3</a></sup></p>
+
+<h3 id="inline-regs">Ej: asm-regs</h3>
+
+<p>En general, los <a href="https://gcc.gnu.org/onlinedocs/gcc/Simple-Constraints.html">constraints</a> genéricos como <code class="highlighter-rouge">"r"</code> o <code class="highlighter-rouge">"g"</code> dan libertad al compilador para elegir el registro o ubicación que más convenga según los operandos y el código colindante. Sin embargo, existen constraints particulares <a href="https://gcc.gnu.org/onlinedocs/gcc/Machine-Constraints.html">a cada arquitectura</a> que permiten forzar el uso de registros específicos.</p>
+
+<p>Se puede hacer uso de estos constraints para, por ejemplo, preparar los parámetros de una llamada al sistema:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include &lt;sys/types.h&gt;
+#include &lt;sys/syscall.h&gt;
+</span>
+<span class="kt">void</span> <span class="nf">my_write</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">msg</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">count</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">asm</span><span class="p">(</span><span class="s">"int $0x80"</span> <span class="o">:</span> <span class="o">:</span>
+        <span class="s">"?"</span><span class="p">(</span><span class="n">SYS_write</span><span class="p">),</span> <span class="s">"?"</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="s">"?"</span><span class="p">(</span><span class="n">msg</span><span class="p">),</span> <span class="s">"?"</span><span class="p">(</span><span class="n">count</span><span class="p">));</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">my_write</span><span class="p">(</span><span class="s">"Hello, world!</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="mi">14</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Completar los constraints en la función <em>my_write</em>, de manera que la llamada al sistema funcione. ¿En qué cambia el código generado (incluyendo el código de <em>main</em>) si se declara <em>my_write</em> con atributo <a href="https://gcc.gnu.org/onlinedocs/gcc/x86-Function-Attributes.html"><em>fastcall</em></a>?</p>
+
+<h3 id="inline-volatile">Ej: asm-volatile</h3>
+
+<p>Modificar la función <em>my_write</em> del ejercicio anterior para que devuelva un booleano indicando si se escribió el número de bytes esperado (que la llamada al sistema devuelve en <em>%eax</em>):</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">bool</span> <span class="nf">my_write2</span><span class="p">(</span><span class="kt">int</span> <span class="n">fd</span><span class="p">,</span> <span class="k">const</span> <span class="kt">void</span> <span class="o">*</span><span class="n">buf</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">count</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kt">ssize_t</span> <span class="n">ret</span><span class="p">;</span>
+
+    <span class="n">asm</span> <span class="k">volatile</span><span class="p">(</span><span class="s">"int $0x80"</span> <span class="o">:</span> <span class="cm">/* ... */</span><span class="p">(</span><span class="n">ret</span><span class="p">)</span> <span class="o">:</span> <span class="cm">/* ... */</span><span class="p">);</span>
+    <span class="c1">//  ^^^^^^^^
+</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">ret</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="kt">size_t</span><span class="p">)</span> <span class="n">ret</span> <span class="o">==</span> <span class="n">count</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">bool</span> <span class="n">result</span> <span class="o">=</span> <span class="n">my_write2</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s">"Hello, write2!</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="mi">15</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">result</span><span class="p">)</span>
+        <span class="n">puts</span><span class="p">(</span><span class="s">"write2 falló"</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Indicar qué ocurre al ejecutar el programa con las siguientes modificaciones:</p>
+
+<ol>
+  <li>Eliminando el modificador <em>volatile</em> de la instrucción assembler.</li>
+  <li>Con <em>volatile</em> de vuelta en su lugar, eliminando el <code class="highlighter-rouge">if (!result) ...</code> de la función <em>main</em>.</li>
+  <li>Eliminando tanto <em>volatile</em> como la comprobación del booleano. ¿Qué código genera gcc para <em>main</em> en este caso? ¿Cambió el código generado para <em>my_write2</em>?</li>
+</ol>
+
+<p>Leer la documentación de <a href="https://gcc.gnu.org/onlinedocs/gcc/Extended-Asm.html#Volatile">asm volatile</a>, y explicar:</p>
+
+<ul>
+  <li>por qué cada uno de 1-3 funciona, o no</li>
+  <li>por qué no se hizo necesario <em>volatile</em> en el ejercicio <a href="index.html#inline-regs">asm-regs</a>, ni tampoco en <a href="index.html#inline-inc">asm-inc</a></li>
+</ul>
+
+<h2 id="cooperative">Concurrencia cooperativa</h2>
+
+<p>Dadas dos o más tareas que se desea ejecutar de manera concurrente en un procesador —﻿por ejemplo, el cálculo de números primos o de los dígitos de π, o cualquier otra tarea <a href="https://en.wikipedia.org/wiki/CPU-bound">CPU-bound</a>﻿— lo habitual es asignar a cada un flujo de ejecución separado (ya sean procesos o hilos); y delegar al sistema operativo la implementación de la concurrencia, esto es, la alternancia de ambos flujos.</p>
+
+<p>Suponiendo, para el resto del lab, un sistema con un solo <a href="https://unix.stackexchange.com/a/146240"><em>core</em></a>, se presenta ahora la pregunta: ¿es posible implementar concurrencia de algún tipo sin ayuda del sistema operativo?<sup id="fnref:noos"><a href="index.html#fn:noos" class="footnote">4</a></sup></p>
+
+<p>La respuesta a esta pregunta es una <em>planificación cooperativa</em> en la que dos o más tareas se cedan mutuamente el uso del procesador por un internalo de tiempo. Como se verá, este tipo de cooperación puede implementarse sin ayuda del sistema operativo; y la implementación más sencilla se consigue proporcionando a cada tarea su propio stack.</p>
+
+<h3 id="ej-task">Ej: kern2-task</h3>
+
+<p>En el ejercicio <a href="../x86/index.html#kern1-stack">kern1-stack</a> se vio cómo declarar espacio para stacks adicionales. En este ejercicio se realizarán, en dos stacks separados de 4 KiB, sendas llamadas a la función ya implementada <code class="highlighter-rouge">vga_write()</code>.</p>
+
+<p>Partiendo de un archivo <em>kern2.c</em> similar a:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include "decls.h"
+#include "multiboot.h"
+</span>
+<span class="kt">void</span> <span class="nf">kmain</span><span class="p">(</span><span class="k">const</span> <span class="n">multiboot_info_t</span> <span class="o">*</span><span class="n">mbi</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">vga_write</span><span class="p">(</span><span class="s">"kern2 loading............."</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mh">0x70</span><span class="p">);</span>
+
+    <span class="c1">// A remplazar por una llamada a two_stacks(),
+</span>    <span class="c1">// definida en stacks.S.
+</span>    <span class="n">vga_write</span><span class="p">(</span><span class="s">"vga_write() from stack1"</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mh">0x17</span><span class="p">);</span>
+    <span class="n">vga_write</span><span class="p">(</span><span class="s">"vga_write() from stack2"</span><span class="p">,</span> <span class="mi">13</span><span class="p">,</span> <span class="mh">0x90</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>se pide implementar una función <code class="highlighter-rouge">two_stacks()</code> en assembler que realice las llamadas mostradas en stacks distintos. Se recomienda usar el siguiente segmento de datos:</p>
+
+<div class="language-nasm highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// stacks.S
+</span><span class="err">#</span><span class="n">define</span> <span class="n">USTACK_SIZE</span> <span class="mi">4096</span>
+
+<span class="p">.</span><span class="n">data</span>
+        <span class="p">.</span><span class="n">align</span> <span class="mi">4096</span>
+<span class="n">stack1</span><span class="o">:</span>
+        <span class="p">.</span><span class="n">space</span> <span class="n">USTACK_SIZE</span>
+<span class="n">stack1_top</span><span class="o">:</span>
+
+        <span class="p">.</span><span class="n">p2align</span> <span class="mi">12</span>
+<span class="n">stack2</span><span class="o">:</span>
+        <span class="p">.</span><span class="n">space</span> <span class="n">USTACK_SIZE</span>
+<span class="n">stack2_top</span><span class="o">:</span>
+
+<span class="n">msg1</span><span class="o">:</span>
+        <span class="p">.</span><span class="n">asciz</span> <span class="s">"vga_write() from stack1"</span>
+<span class="n">msg2</span><span class="o">:</span>
+        <span class="p">.</span><span class="n">asciz</span> <span class="s">"vga_write() from stack2"</span>
+</code></pre></div></div>
+
+<p>y el siguiente esqueleto de implementación:</p>
+
+<div class="language-nasm highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// stacks.S continuado
+</span><span class="p">.</span><span class="n">text</span>
+<span class="p">.</span><span class="n">globl</span> <span class="n">two_stacks</span>
+<span class="n">two_stacks</span><span class="o">:</span>
+        <span class="c1">// Preámbulo estándar
+</span>        <span class="k">push</span> <span class="err">%</span><span class="n">ebp</span>
+        <span class="n">movl</span> <span class="err">%</span><span class="n">esp</span><span class="p">,</span> <span class="err">%</span><span class="n">ebp</span>
+
+        <span class="c1">// Registros para apuntar a stack1 y stack2.
+</span>        <span class="k">mov</span> <span class="err">$</span><span class="n">stack1_top</span><span class="p">,</span> <span class="err">%</span><span class="n">eax</span>
+        <span class="k">mov</span> <span class="err">$</span><span class="n">stack2_top</span><span class="p">,</span> <span class="p">...</span>   <span class="c1">// Decidir qué registro usar.
+</span>
+        <span class="c1">// Cargar argumentos a ambos stacks en paralelo. Ayuda:
+</span>        <span class="c1">// usar offsets respecto a %eax ($stack1_top), y lo mismo
+</span>        <span class="c1">// para el registro usado para stack2_top.
+</span>        <span class="n">movl</span> <span class="err">$</span><span class="mh">0x17</span><span class="p">,</span> <span class="p">...(</span><span class="err">%</span><span class="n">eax</span><span class="p">)</span>
+        <span class="n">movl</span> <span class="err">$</span><span class="mh">0x90</span><span class="p">,</span> <span class="p">...(...)</span>
+
+        <span class="n">movl</span> <span class="err">$</span><span class="mi">12</span><span class="p">,</span> <span class="p">...</span>
+        <span class="n">movl</span> <span class="err">$</span><span class="mi">13</span><span class="p">,</span> <span class="p">...</span>
+
+        <span class="n">movl</span> <span class="err">$</span><span class="n">msg1</span><span class="p">,</span> <span class="p">...</span>
+        <span class="n">movl</span> <span class="err">$</span><span class="n">msg2</span><span class="p">,</span> <span class="p">...</span>
+
+        <span class="c1">// Realizar primera llamada con stack1. Ayuda: usar LEA
+</span>        <span class="c1">// con el mismo offset que los últimos MOV para calcular
+</span>        <span class="c1">// la dirección deseada de ESP.
+</span>        <span class="n">leal</span> <span class="p">...(</span><span class="err">%</span><span class="n">eax</span><span class="p">),</span> <span class="err">%</span><span class="n">esp</span>
+        <span class="k">call</span> <span class="n">vga_write</span>
+
+        <span class="c1">// Restaurar stack original. ¿Es %ebp suficiente?
+</span>        <span class="n">movl</span> <span class="p">...,</span> <span class="err">%</span><span class="n">esp</span>
+
+        <span class="c1">// Realizar segunda llamada con stack2.
+</span>        <span class="n">leal</span> <span class="p">...(...),</span> <span class="err">%</span><span class="n">esp</span>
+        <span class="k">call</span> <span class="n">vga_write</span>
+
+        <span class="c1">// Restaurar registros callee-saved, si se usaron.
+</span>        <span class="p">...</span>
+
+        <span class="k">leave</span>
+        <span class="k">ret</span>
+</code></pre></div></div>
+
+<h3 id="ej-exec">Ej: kern2-exec</h3>
+
+<p>Implementar ahora una función en C que realice la misma tarea que <code class="highlighter-rouge">two_stacks()</code>, realizando las llamadas de escritura de la siguiente manera:</p>
+
+<ol>
+  <li>
+    <p>para la primera llamada, definir una función auxiliar en un nuevo archivo <em>tasks.S:</em></p>
+
+    <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// Realiza una llamada a "entry" sobre el stack proporcionado.
+</span><span class="kt">void</span> <span class="n">task_exec</span><span class="p">(</span><span class="kt">uintptr_t</span> <span class="n">entry</span><span class="p">,</span> <span class="kt">uintptr_t</span> <span class="n">stack</span><span class="p">);</span>
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>para la segunda llamada, realizar la llamada directamente mediante assembler <em>inline</em>.</p>
+  </li>
+</ol>
+
+<p>El código en C puede estar en el mismo archivo <em>kern2.c</em>, y debe preparar sus stacks de modo análogo a <em>stacks.S</em>. Se sugiere el siguiente esqueleto de implementación:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include "decls.h"
+#include "multiboot.h"
+</span>
+<span class="cp">#define USTACK_SIZE 4096
+</span>
+<span class="kt">void</span> <span class="nf">kmain</span><span class="p">(</span><span class="k">const</span> <span class="n">multiboot_info_t</span> <span class="o">*</span><span class="n">mbi</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">vga_write</span><span class="p">(</span><span class="s">"kern2 loading............."</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mh">0x70</span><span class="p">);</span>
+
+    <span class="n">two_stacks</span><span class="p">();</span>
+    <span class="n">two_stacks_c</span><span class="p">();</span>
+<span class="p">}</span>
+
+<span class="k">static</span> <span class="kt">uint8_t</span> <span class="n">stack1</span><span class="p">[</span><span class="n">USTACK_SIZE</span><span class="p">]</span> <span class="n">__attribute__</span><span class="p">((</span><span class="n">aligned</span><span class="p">(</span><span class="mi">4096</span><span class="p">)));</span>
+<span class="k">static</span> <span class="kt">uint8_t</span> <span class="n">stack2</span><span class="p">[</span><span class="n">USTACK_SIZE</span><span class="p">]</span> <span class="n">__attribute__</span><span class="p">((</span><span class="n">aligned</span><span class="p">(</span><span class="mi">4096</span><span class="p">)));</span>
+
+<span class="kt">void</span> <span class="nf">two_stacks_c</span><span class="p">()</span> <span class="p">{</span>
+    <span class="c1">// Inicializar al *tope* de cada pila.
+</span>    <span class="kt">uintptr_t</span> <span class="o">*</span><span class="n">a</span> <span class="o">=</span> <span class="p">...</span>
+    <span class="kt">uintptr_t</span> <span class="o">*</span><span class="n">b</span> <span class="o">=</span> <span class="p">...</span>
+
+    <span class="c1">// Preparar, en stack1, la llamada:
+</span>    <span class="n">vga_write</span><span class="p">(</span><span class="s">"vga_write() from stack1"</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mh">0x57</span><span class="p">);</span>
+
+    <span class="c1">// AYUDA 1: se puede usar alguna forma de pre- o post-
+</span>    <span class="c1">// incremento/decremento, según corresponda:
+</span>    <span class="c1">//
+</span>    <span class="c1">//     *(a++) = ...
+</span>    <span class="c1">//     *(++a) = ...
+</span>    <span class="c1">//     *(a--) = ...
+</span>    <span class="c1">//     *(--a) = ...
+</span>
+    <span class="c1">// AYUDA 2: para apuntar a la cadena con el mensaje,
+</span>    <span class="c1">// es suficiente con el siguiente cast:
+</span>    <span class="c1">//
+</span>    <span class="c1">//   ... a ... = (uintptr_t) "vga_write() from stack1";
+</span>
+    <span class="c1">// Preparar, en s2, la llamada:
+</span>    <span class="n">vga_write</span><span class="p">(</span><span class="s">"vga_write() from stack2"</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mh">0xD0</span><span class="p">);</span>
+
+    <span class="c1">// AYUDA 3: para esta segunda llamada, usar esta forma de
+</span>    <span class="c1">// asignación alternativa:
+</span>    <span class="n">b</span> <span class="o">-=</span> <span class="mi">3</span><span class="p">;</span>
+    <span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="p">...</span>
+    <span class="n">b</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">...</span>
+    <span class="n">b</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="p">...</span>
+
+    <span class="c1">// Primera llamada usando task_exec().
+</span>    <span class="n">task_exec</span><span class="p">((</span><span class="kt">uintptr_t</span><span class="p">)</span> <span class="n">vga_write</span><span class="p">,</span> <span class="p">(</span><span class="kt">uintptr_t</span><span class="p">)</span> <span class="n">s1</span><span class="p">);</span>
+
+    <span class="c1">// Segunda llamada con ASM directo. Importante: no
+</span>    <span class="c1">// olvidar restaurar el valor de %esp al terminar, y
+</span>    <span class="c1">// compilar con: -fasm -fno-omit-frame-pointer.
+</span>    <span class="n">asm</span><span class="p">(</span><span class="s">"...; call *%1; ..."</span>
+        <span class="o">:</span> <span class="cm">/* no outputs */</span>
+        <span class="o">:</span> <span class="s">"r"</span><span class="p">(</span><span class="n">s2</span><span class="p">),</span> <span class="s">"r"</span><span class="p">(</span><span class="n">vga_write</span><span class="p">));</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h3 id="ej-regcall">Ej: kern2-regcall</h3>
+
+<p>Para este ejercicio se añadirá una segunda versión de <code class="highlighter-rouge">vga_write()</code> que toma sus parámetros directamente por registros:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// decls.h
+</span><span class="kt">void</span> <span class="n">__attribute__</span><span class="p">((</span><span class="n">regparm</span><span class="p">(</span><span class="mi">3</span><span class="p">)))</span>
+<span class="n">vga_write2</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">s</span><span class="p">,</span> <span class="kt">int8_t</span> <span class="n">linea</span><span class="p">,</span> <span class="kt">uint8_t</span> <span class="n">color</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>Se pide, en primer lugar, leer la documentación de la convención de llamadas <a href="https://gcc.gnu.org/onlinedocs/gcc/x86-Function-Attributes.html">regparm</a> para implementar la función <code class="highlighter-rouge">vga_write2()</code> en el archivo <em>funcs.S:</em></p>
+
+<div class="language-nasm highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// tasks.S
+</span><span class="p">.</span><span class="n">globl</span> <span class="n">vga_write2</span>
+<span class="n">vga_write2</span><span class="o">:</span>
+        <span class="k">push</span> <span class="err">%</span><span class="n">ebp</span>
+        <span class="n">movl</span> <span class="err">%</span><span class="n">esp</span><span class="p">,</span> <span class="err">%</span><span class="n">ebp</span>
+
+        <span class="c1">// ...
+</span>        <span class="k">call</span> <span class="n">vga_write</span>
+
+        <span class="k">leave</span>
+        <span class="k">ret</span>
+</code></pre></div></div>
+
+<p>A continuación, mostrar con <code class="highlighter-rouge">objdump -d</code> el código generado por GCC para la siguiente llamada a <em>vga_write2()</em> desde la función principal:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">void</span> <span class="nf">kmain</span><span class="p">(</span><span class="k">const</span> <span class="n">multiboot_info_t</span> <span class="o">*</span><span class="n">mbi</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">vga_write</span><span class="p">(</span><span class="s">"kern2 loading............."</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mh">0x70</span><span class="p">);</span>
+
+    <span class="n">two_stacks</span><span class="p">();</span>
+    <span class="n">two_stacks_c</span><span class="p">();</span>
+
+    <span class="n">vga_write2</span><span class="p">(</span><span class="s">"Funciona vga_write2?"</span><span class="p">,</span> <span class="mi">18</span><span class="p">,</span> <span class="mh">0xE0</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h3 id="ej-swap">Ej: kern2-swap</h3>
+
+<p>En el archivo <a href="contador.c">contador.c</a> se proporciona una función <code class="highlighter-rouge">contador_yield()</code> que muestra en el buffer VGA una cuenta desde 0 hasta un número pasado como parámetro. Para simular un retardo entre número y número, a cada incremento se le añade un ciclo <em>while</em> con un número alto de iteraciones (controlado por la macro <code class="highlighter-rouge">DELAY</code>).</p>
+
+<p>Añadir el archivo a las fuentes de <em>kern2</em> y comprobar que se ejecutan dos contadores (uno verde y otro rojo) al invocar a <code class="highlighter-rouge">contador_run()</code> desde la función principal:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">void</span> <span class="nf">kmain</span><span class="p">(</span><span class="k">const</span> <span class="n">multiboot_info_t</span> <span class="o">*</span><span class="n">mbi</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">vga_write</span><span class="p">(</span><span class="s">"kern2 loading............."</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mh">0x70</span><span class="p">);</span>
+
+    <span class="n">two_stacks</span><span class="p">();</span>
+    <span class="n">two_stacks_c</span><span class="p">();</span>
+    <span class="n">contador_run</span><span class="p">();</span>  <span class="c1">// Nueva llamada ej. kern2-swap.
+</span>
+    <span class="n">vga_write2</span><span class="p">(</span><span class="s">"Funciona vga_write2?"</span><span class="p">,</span> <span class="mi">18</span><span class="p">,</span> <span class="mh">0xE0</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Al final de cada iteración, esto es, de cada incremento, el código del contador invoca a la función <code class="highlighter-rouge">yield()</code>.<sup id="fnref:yield"><a href="index.html#fn:yield" class="footnote">5</a></sup> Esta función simplemente invoca, pasando una variable estática como parámetro, a la función <code class="highlighter-rouge">task_swap()</code>, que es el verdadero objetivo de este ejercicio:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// Pone en ejecución la tarea cuyo stack está en ‘*esp’, cuyo
+// valor se intercambia por el valor actual de %esp. Guarda y
+// restaura todos los callee-called registers.
+</span><span class="kt">void</span> <span class="n">task_swap</span><span class="p">(</span><span class="kt">uintptr_t</span> <span class="o">**</span><span class="n">esp</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>En este ejercicio se pide, siguiendo las instrucciones indicadas:</p>
+
+<ol>
+  <li>
+    <p>Reescribir la función <code class="highlighter-rouge">contador_run()</code> para que se ejecute cada contador en un stack separado:</p>
+
+    <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">void</span> <span class="nf">contador_run</span><span class="p">()</span> <span class="p">{</span>
+    <span class="c1">// Configurar stack1 y stack2 con los valores apropiados.
+</span>    <span class="kt">uintptr_t</span> <span class="o">*</span><span class="n">a</span> <span class="o">=</span> <span class="p">...</span>
+    <span class="kt">uintptr_t</span> <span class="o">*</span><span class="n">b</span> <span class="o">=</span> <span class="p">...</span>
+
+    <span class="p">...</span>
+
+    <span class="c1">// Actualizar la variable estática ‘esp’ para que apunte
+</span>    <span class="c1">// al del segundo contador.
+</span>    <span class="p">...</span>
+
+    <span class="c1">// Lanzar el primer contador con task_exec.
+</span>    <span class="n">task_exec</span><span class="p">(...);</span>
+<span class="p">}</span>
+</code></pre></div>    </div>
+
+    <p>Consideraciones:</p>
+
+    <ul>
+      <li>
+        <p>la configuración del stack del primer contador, que se ejecuta con <code class="highlighter-rouge">task_exec()</code>, será muy similar a las realizadas en la función <code class="highlighter-rouge">two_stacks_c()</code> del ejercicio <a href="index.html#ej-exec">kern2-exec</a>.</p>
+      </li>
+      <li>
+        <p>la configuración del segundo contador es más compleja, y seguramente sea mejor realizarla tras implementar <code class="highlighter-rouge">task_swap()</code>; pues se debe crear artificialmente el stack tal y como lo hubiera preparado esta función.</p>
+      </li>
+    </ul>
+
+    <p>Explicar, para el stack de cada contador, cuántas posiciones se asignan, y qué representa cada una.</p>
+  </li>
+  <li>
+    <p>Implementar en <em>tasks.S</em> la función <code class="highlighter-rouge">task_swap()</code>. Como se indicó arriba, esta función recibe como parámetro la ubicación en memoria de la variable <em>esp</em> que apunta al stack de la tarea en “stand-by”. La responsabilidad de esta función es:</p>
+
+    <ul>
+      <li>
+        <p>guardar, en el stack de la tarea actual, los registros que son <em>callee-saved</em></p>
+      </li>
+      <li>
+        <p>cargar en <em>%esp</em> el stack de la nueva tarea, y guardar en la variable <em>esp</em> el valor previo de <em>%esp</em></p>
+      </li>
+      <li>
+        <p>restaurar, desde el nuevo stack, los registros que fueron guardados por una llamada previa a <code class="highlighter-rouge">task_swap()</code>, y retornar (con la instrucción <code class="highlighter-rouge">ret</code>) a la nueva tarea.</p>
+      </li>
+    </ul>
+
+    <p>Para esta función, se recomienda no usar el preámbulo, esto es, no  modificar el registro <em>%ebp</em> al entrar en la función.</p>
+  </li>
+</ol>
+
+<h3 id="ej-exit">Ej: kern2-exit ★</h3>
+
+<p>En la función <code class="highlighter-rouge">contador_run()</code> del ejercicio anterior, se configuran ambos contadores con el mismo número de iteraciones. Reducir ahora el número de iteraciones del <em>segundo</em> contador, y describir qué tipo de error ocurre.</p>
+
+<p>Si la segunda tarea finaliza antes, le corresponde realizar una última llamada a <code class="highlighter-rouge">task_swap()</code> que:</p>
+
+<ol>
+  <li>ceda por una vez más el procesador a la primera tarea</li>
+  <li>anule la variable <em>esp</em>, de manera que la primera tarea no ceda más el control, hasta su finalización</li>
+</ol>
+
+<p>Se podría definir una función a tal efecto:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">static</span> <span class="kt">void</span> <span class="nf">exit</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kt">uintptr_t</span> <span class="o">*</span><span class="n">tmp</span> <span class="o">=</span> <span class="p">...</span>
+    <span class="n">esp</span> <span class="o">=</span> <span class="p">...</span>
+    <span class="n">task_swap</span><span class="p">(...);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Completar la definición, y realizar una llamada a la misma al finalizar el ciclo principal de <code class="highlighter-rouge">contador_yield()</code>: ahora debería funcionar el caso en el que la segunda tarea termina primero.</p>
+
+<p>A continuación, eliminar la llamada explícita a <code class="highlighter-rouge">exit()</code>, y programar su ejecución vía <code class="highlighter-rouge">contador_run()</code>, esto es: al preparar el stack del segundo contador.</p>
+
+<h2 id="interrupts">Interrupciones: reloj y teclado</h2>
+
+<p>Para poder hacer planificación basada en intervalos de tiempo, es necesario tener configurada una interrupción de reloj que de manera periodica devuelva el control de la CPU al kernel. Así, en cada uno de esos instantes el kernel tendrá oportunidad de decidir si corresponde cambiar la tarea en ejecución.</p>
+
+<p>El mismo mecanismo de interrupciones permite también el manejo de dispositivos físicos; por ejemplo, el teclado genera una interrupción para indicar al sistema operativo que se generó un evento (por ejemplo, la pulsación de una tecla).</p>
+
+<!--
+En esta parte, se implementará un contador en pantalla que muestre, en segundos, el tiempo transcurrido desde el arranque del sistema. Para ello se configurará el reloj de la CPU para generar interrupciones una vez cada 100 ms. En cada interrupción, el sistema operativo tendrá oportunidad de actualizar el contador, si corresponde.
+-->
+
+<h3 id="ej-kern2-idt">Ej: kern2-idt</h3>
+
+<p>El mecanismo de interrupciones se describe en detalle en <strong>IA32-3A</strong>, capítulo 6: <em>Interrupt and Exception Handling</em>. El objetivo de este primer ejercicio será la configuración de la tabla de interrupciones <em>(interrupt descriptor table)</em>. Para ello, se implementarán las siguientes funciones:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// interrupts.c
+</span><span class="kt">void</span> <span class="n">idt_init</span><span class="p">(</span><span class="kt">void</span><span class="p">);</span>
+<span class="kt">void</span> <span class="n">idt_install</span><span class="p">(</span><span class="kt">uint8_t</span> <span class="n">n</span><span class="p">,</span> <span class="kt">void</span> <span class="p">(</span><span class="o">*</span><span class="n">handler</span><span class="p">)(</span><span class="kt">void</span><span class="p">));</span>
+
+<span class="c1">// idt_entry.S
+</span><span class="kt">void</span> <span class="n">breakpoint</span><span class="p">(</span><span class="kt">void</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>A continuación se proporciona una guía detallada.</p>
+
+<h4 id="definiciones">Definiciones</h4>
+
+<p>Tras leer las secciones 6.1–6.5 6.10–6.11 de <strong>IA32-3A</strong> y las definiciones del archivo <a href="interrupts.h">interrupts.h</a>, responder:</p>
+
+<ol>
+  <li>
+    <p>¿Cuántos bytes ocupa una entrada en la IDT?</p>
+  </li>
+  <li>
+    <p>¿Cuántas entradas como máximo puede albergar la IDT?</p>
+  </li>
+  <li>
+    <p>¿Cuál es el valor máximo aceptable para el campo <em>limit</em> del registro <em>IDTR</em>?</p>
+  </li>
+  <li>
+    <p>Indicar qué valor exacto tomará el campo <em>limit</em> para una IDT de 64 descriptores solamente.</p>
+  </li>
+  <li>
+    <p>Consultar la sección 6.1 y explicar la diferencia entre interrupciones (§6.3) y excepciones (§6.4).</p>
+  </li>
+</ol>
+
+<h4 id="variables-estáticas">Variables estáticas</h4>
+
+<p>Declarar, en un nuevo archivo <em>interrupts.c</em> dos variables globales estáticas para el registro <em>IDTR</em> y para la <em>IDT</em> en sí:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include "decls.h"
+#include "interrupts.h"
+</span>
+<span class="k">static</span> <span class="p">...</span> <span class="n">idtr</span><span class="p">;</span>
+<span class="k">static</span> <span class="p">...</span> <span class="n">idt</span><span class="p">[...];</span>
+</code></pre></div></div>
+
+<p>A estas variables se accederá desde <code class="highlighter-rouge">idt_init()</code> e <code class="highlighter-rouge">idt_install()</code>.</p>
+
+<h4 id="idt_init">idt_init()</h4>
+
+<p>La función <em>idt_init()</em> debe realizar las siguientes tareas:</p>
+
+<ul>
+  <li>
+    <p>inicializar los campos <em>base</em> y <em>limit</em> de la variable global <em>idtr:</em></p>
+
+    <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">idtr</span><span class="p">.</span><span class="n">base</span> <span class="o">=</span> <span class="p">(</span><span class="kt">uintptr_t</span><span class="p">)</span> <span class="p">...</span>
+<span class="n">idtr</span><span class="p">.</span><span class="n">limit</span> <span class="o">=</span> <span class="p">...</span>
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>mediante la instrucción LIDT, activar el uso de la IDT configurada (inicialmente vacía). Se puede usar la instrucción:</p>
+
+    <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">asm</span><span class="p">(</span><span class="s">"lidt %0"</span> <span class="o">:</span> <span class="o">:</span> <span class="s">"m"</span><span class="p">(</span><span class="n">idtr</span><span class="p">));</span>
+</code></pre></div>    </div>
+  </li>
+</ul>
+
+<h4 id="kmain">kmain()</h4>
+
+<p>Para probar el funcionamiento de las rutinas de interrupción, se puede generar una excepción por software con la instrucción <code class="highlighter-rouge">INT3</code>. Así, antes de pasar a configurar el reloj, en la función <em>kmain()</em> se añadirá:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">void</span> <span class="nf">kmain</span><span class="p">(</span><span class="k">const</span> <span class="n">multiboot_info_t</span> <span class="o">*</span><span class="n">mbi</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// ...
+</span>
+    <span class="n">two_stacks</span><span class="p">();</span>
+    <span class="n">two_stacks_c</span><span class="p">();</span>
+
+    <span class="c1">// Código ejercicio kern2-idt.
+</span>    <span class="n">idt_init</span><span class="p">();</span>   <span class="c1">// (a)
+</span>    <span class="n">asm</span><span class="p">(</span><span class="s">"int3"</span><span class="p">);</span>  <span class="c1">// (b)
+</span>
+    <span class="n">vga_write2</span><span class="p">(</span><span class="s">"Funciona vga_write2?"</span><span class="p">,</span> <span class="mi">18</span><span class="p">,</span> <span class="mh">0xE0</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Si la implementación de <em>idt_init()</em> es correcta, el kernel debería ejecutar la llamada <strong>(a)</strong> con éxito y lanzar un “triple fault” al llegar en <strong>(b)</strong> a la instrucción <code class="highlighter-rouge">INT3</code> (puesto que no se instaló aún una rutina para manejarla).<sup id="fnref:commentint3"><a href="index.html#fn:commentint3" class="footnote">6</a></sup></p>
+
+<h4 id="idt_install">idt_install()</h4>
+
+<p>La función <em>idt_install()</em> actualiza en la tabla global <code class="highlighter-rouge">idt</code> la entrada correspondiente al código de excepción pasado como primer argumento. El segundo argumento es la dirección de la función que manejará la excepción.</p>
+
+<p>En otras palabras, se trata de completar los campos de <code class="highlighter-rouge">idt[n]</code>:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// Multiboot siempre define "8" como el segmento de código.
+// (Ver campo CS en `info registers` de QEMU.)
+</span><span class="k">static</span> <span class="k">const</span> <span class="kt">uint8_t</span> <span class="n">KSEG_CODE</span> <span class="o">=</span> <span class="mi">8</span><span class="p">;</span>
+
+<span class="c1">// Identificador de "Interrupt gate de 32 bits" (ver IA32-3A,
+// tabla 6-2: IDT Gate Descriptors).
+</span><span class="k">static</span> <span class="k">const</span> <span class="kt">uint8_t</span> <span class="n">STS_IG32</span> <span class="o">=</span> <span class="mh">0xE</span><span class="p">;</span>
+
+<span class="kt">void</span> <span class="nf">idt_install</span><span class="p">(</span><span class="kt">uint8_t</span> <span class="n">n</span><span class="p">,</span> <span class="kt">void</span> <span class="p">(</span><span class="o">*</span><span class="n">handler</span><span class="p">)(</span><span class="kt">void</span><span class="p">))</span> <span class="p">{</span>
+    <span class="kt">uintptr_t</span> <span class="n">addr</span> <span class="o">=</span> <span class="p">(</span><span class="kt">uintptr_t</span><span class="p">)</span> <span class="n">handler</span><span class="p">;</span>
+
+    <span class="n">idt</span><span class="p">[</span><span class="n">n</span><span class="p">].</span><span class="n">rpl</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="n">idt</span><span class="p">[</span><span class="n">n</span><span class="p">].</span><span class="n">type</span> <span class="o">=</span> <span class="n">STS_IG32</span><span class="p">;</span>
+    <span class="n">idt</span><span class="p">[</span><span class="n">n</span><span class="p">].</span><span class="n">segment</span> <span class="o">=</span> <span class="n">KSEG_CODE</span><span class="p">;</span>
+
+    <span class="n">idt</span><span class="p">[</span><span class="n">n</span><span class="p">].</span><span class="n">off_15_0</span> <span class="o">=</span> <span class="n">addr</span> <span class="o">&amp;</span> <span class="p">...</span>
+    <span class="n">idt</span><span class="p">[</span><span class="n">n</span><span class="p">].</span><span class="n">off_31_16</span> <span class="o">=</span> <span class="n">addr</span> <span class="o">&gt;&gt;</span> <span class="p">...</span>
+
+    <span class="n">idt</span><span class="p">[</span><span class="n">n</span><span class="p">].</span><span class="n">present</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Una vez implementada, desde <em>idt_init()</em> se deberá instalar el manejador para la excepción <em>breakpoint</em> (<code class="highlighter-rouge">T_BRKPT</code> definida en <em>interrupts.h);</em> el manejador será la función <code class="highlighter-rouge">breakpoint()</code>, cuya implementación inicial también se incluye:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">void</span> <span class="nf">idt_init</span><span class="p">()</span> <span class="p">{</span>
+    <span class="c1">// (1) Instalar manejadores ("interrupt service routines").
+</span>    <span class="n">idt_install</span><span class="p">(</span><span class="n">T_BRKPT</span><span class="p">,</span> <span class="n">breakpoint</span><span class="p">);</span>
+
+    <span class="c1">// (2) Configurar ubicación de la IDT.
+</span>    <span class="n">idtr</span><span class="p">.</span><span class="n">base</span> <span class="o">=</span> <span class="p">(</span><span class="kt">uintptr_t</span><span class="p">)</span> <span class="p">...</span>
+    <span class="n">idtr</span><span class="p">.</span><span class="n">limit</span> <span class="o">=</span> <span class="p">...</span>
+
+    <span class="c1">// (3) Activar IDT.
+</span>    <span class="n">asm</span><span class="p">(</span><span class="s">"lidt %0"</span> <span class="o">:</span> <span class="o">:</span> <span class="s">"m"</span><span class="p">(</span><span class="n">idtr</span><span class="p">));</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Definir también, en un nuevo archivo <em>idt_entry.S</em>, una primera versión de la función <em>breakpoint()</em> con una única instrucción <code class="highlighter-rouge">IRET</code>:</p>
+
+<div class="language-nasm highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">.</span><span class="n">globl</span> <span class="n">breakpoint</span>
+<span class="n">breakpoint</span><span class="o">:</span>
+        <span class="c1">// Manejador mínimo.
+</span>        <span class="k">iret</span>
+</code></pre></div></div>
+
+<p>Con esta primera definición, <em>kern2</em> debería arrancar sin problemas, llegando hasta la ejecución de <code class="highlighter-rouge">vga_write2()</code>.</p>
+
+<h3 id="ej-isr">Ej: kern2-isr</h3>
+
+<p>Cuando ocurre una excepción, la CPU inmediatamente invoca al manejador configurado, esto es, justo tras la instrucción original que produjo la excepción.</p>
+
+<p>Un manejador de interrupciones (en inglés <em>interrupt service routine)</em> es, salvo por algunos detalles, una función común sin parámetros.</p>
+
+<p>Las diferencias principales son:</p>
+
+<ul>
+  <li>
+    <p>desde el punto de vista del manejador, en <code class="highlighter-rouge">(%esp)</code> se encuentra la dirección de retorno; la CPU, no obstante, añade alguna información adicional a la pila, tal y como se verá en la sesión de GDB que se solicita a continuación.</p>
+  </li>
+  <li>
+    <p>a diferencia del ejercicio <a href="index.html#ej-swap">kern2-swap</a>, donde la propia tarea solicitaba un relevo con llamando explícitamente a <em>task_swap()</em>, ahora la tarea es desalojada de la CPU sin previo aviso. Desde el punto de vista de esa tarea original, la ejecución del manejador debería ser “invisible”, esto es, que el manejador deberá restaurar el estado exacto de la CPU antes de devolver el control de la CPU a la tarea anterior.</p>
+  </li>
+</ul>
+
+<p>En este ejercicio se pide:</p>
+
+<ol>
+  <li>
+    <p>Una sesión de GDB que muestre el estado de la pila antes, durante y después de la ejecución del manejador.</p>
+  </li>
+  <li>
+    <p>Una implementación ampliada de <code class="highlighter-rouge">breakpoint()</code> que imprima un mensaje en el buffer VGA.</p>
+  </li>
+</ol>
+
+<h4 id="sesión-de-gdb">Sesión de GDB</h4>
+
+<p>Se debe seguir el mismo guión <strong>dos veces</strong>:</p>
+
+<ul>
+  <li>
+    <p>versión A: usando esta implementación aumentada del manejador:</p>
+
+    <div class="language-nasm highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">.</span><span class="n">globl</span> <span class="n">breakpoint</span>
+<span class="n">breakpoint</span><span class="o">:</span>
+        <span class="k">nop</span>
+        <span class="k">test</span> <span class="err">%</span><span class="n">eax</span><span class="p">,</span> <span class="err">%</span><span class="n">eax</span>
+        <span class="k">iret</span>
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>versión B: con el mismo manejador, pero cambiando la instrucción <code class="highlighter-rouge">IRET</code> por una instrucción <code class="highlighter-rouge">RET</code>.</p>
+  </li>
+</ul>
+
+<p>Los pasos a seguir son:</p>
+
+<ol>
+  <li>
+    <p>Activar la impresión de la siguiente instrucción ejecutando:</p>
+
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>display/i $pc
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>Poner un breakpoint en la función <em>idt_init()</em> y, una vez dentro, finalizar su ejecución con el comando de GDB <code class="highlighter-rouge">finish</code>. Mostrar, en ese momento, las siguientes instrucciones (con el comando <code class="highlighter-rouge">disas</code> o <code class="highlighter-rouge">x/10i $pc</code>): la ejecución debería haberse detenido en la misma instrucción <code class="highlighter-rouge">int3</code>.<sup id="fnref:nobp"><a href="index.html#fn:nobp" class="footnote">7</a></sup> Mostrar:</p>
+
+    <ul>
+      <li>el valor de <em>%esp</em> (<code class="highlighter-rouge">print $esp</code>)</li>
+      <li>el valor de <em>(%esp)</em> (<code class="highlighter-rouge">x/xw $esp</code>)</li>
+      <li>el valor de <code class="highlighter-rouge">$cs</code></li>
+      <li>el resultado de <code class="highlighter-rouge">print $eflags</code> y <code class="highlighter-rouge">print/x $eflags</code></li>
+    </ul>
+  </li>
+  <li>
+    <p>Ejecutar la instrucción <code class="highlighter-rouge">int3</code> mediante el comando de GDB <code class="highlighter-rouge">stepi</code>. La ejecución debería saltar directamente a la instrucción <code class="highlighter-rouge">test %eax, %eax</code>; en ese momento:</p>
+
+    <ul>
+      <li>imprimir el valor de <em>%esp;</em> ¿cuántas posiciones avanzó?</li>
+      <li>si avanzó <em>N</em> posiciones, mostrar (con <code class="highlighter-rouge">x/Nwx $sp</code>) los <em>N</em> valores correspondientes</li>
+      <li>mostrar el valor de <code class="highlighter-rouge">$eflags</code></li>
+    </ul>
+
+    <p>Responder: ¿qué representa cada valor? (Ver IA32-3A, §6.12: <em>Exception and Interrupt Handling</em>.)</p>
+  </li>
+  <li>
+    <p>Avanzar una instrucción más con <code class="highlighter-rouge">stepi</code>, ejecutando la instrucción <code class="highlighter-rouge">TEST</code>. Mostrar, como anteriormente, el valor del registro <em>EFLAGS</em> (en dos formatos distintos, usando <code class="highlighter-rouge">print</code> y <code class="highlighter-rouge">print/x</code>).</p>
+  </li>
+  <li>
+    <p>Avanzar, por última vez, una instrucción, de manera que se ejecute <code class="highlighter-rouge">IRET</code> para la sesión A, y <code class="highlighter-rouge">RET</code> para la sesión B. Mostrar, de nuevo lo pedido que en el punto 1; y explicar cualquier diferencia entre ambas versiones A y B.</p>
+  </li>
+</ol>
+
+<h4 id="versión-final-de-breakpoint">Versión final de breakpoint()</h4>
+
+<p>La versión de <em>breakpoint()</em> a entregar simplemente realiza, desde <em>idt_entry.S,</em> la siguiente llamada:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">vga_write2</span><span class="p">(</span><span class="s">"Hello, breakpoint"</span><span class="p">,</span> <span class="mi">14</span><span class="p">,</span> <span class="mh">0xB0</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>siguiendo la estructura:</p>
+
+<div class="language-nasm highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">.</span><span class="n">globl</span> <span class="n">breakpoint</span>
+<span class="n">breakpoint</span><span class="o">:</span>
+        <span class="c1">// (1) Guardar registros.
+</span>        <span class="p">...</span>
+        <span class="c1">// (2) Preparar argumentos de la llamada.
+</span>        <span class="p">...</span>
+        <span class="c1">// (3) Invocar a vga_write2()
+</span>        <span class="k">call</span> <span class="n">vga_write2</span>
+        <span class="c1">// (4) Restaurar registros.
+</span>        <span class="p">...</span>
+        <span class="c1">// (5) Finalizar ejecución del manejador.
+</span>        <span class="k">iret</span>
+
+<span class="p">.</span><span class="n">data</span>
+<span class="n">breakpoint_msg</span><span class="o">:</span>
+        <span class="p">.</span><span class="n">asciz</span> <span class="s">"Hello, breakpoint"</span>
+</code></pre></div></div>
+
+<p>Como se explicó al comienzo del ejercicio, la ejecución del manejador debe resultar invisible para la tarea original (en este caso, la función <em>kmain)</em>. Por tanto, se debe asegurar que todos los registros volvieron a su valor original antes de ejecutar <code class="highlighter-rouge">iret</code>.</p>
+
+<p>Incluir las respuestas a las siguientes cuestiones:</p>
+
+<ol>
+  <li>
+    <p>Para cada una de las siguientes maneras de guardar/restaurar registros en <em>breakpoint</em>, indicar si es correcto (en el sentido de hacer su ejecución “invisible”), y justificar por qué:</p>
+
+    <div class="language-nasm highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// Opción A.
+</span><span class="n">breakpoint</span><span class="o">:</span>
+    <span class="k">pusha</span>
+    <span class="p">...</span>
+    <span class="k">call</span> <span class="n">vga_write2</span>
+    <span class="k">popa</span>
+    <span class="k">iret</span>
+
+<span class="c1">// Opción B.
+</span><span class="n">breakpoint</span><span class="o">:</span>
+    <span class="k">push</span> <span class="err">%</span><span class="n">eax</span>
+    <span class="k">push</span> <span class="err">%</span><span class="n">edx</span>
+    <span class="k">push</span> <span class="err">%</span><span class="n">ecx</span>
+    <span class="p">...</span>
+    <span class="k">call</span> <span class="n">vga_write2</span>
+    <span class="k">pop</span> <span class="err">%</span><span class="n">ecx</span>
+    <span class="k">pop</span> <span class="err">%</span><span class="n">edx</span>
+    <span class="k">pop</span> <span class="err">%</span><span class="n">eax</span>
+    <span class="k">iret</span>
+
+<span class="c1">// Opción C.
+</span><span class="n">breakpoint</span><span class="o">:</span>
+    <span class="k">push</span> <span class="err">%</span><span class="n">ebx</span>
+    <span class="k">push</span> <span class="err">%</span><span class="n">esi</span>
+    <span class="k">push</span> <span class="err">%</span><span class="n">edi</span>
+    <span class="p">...</span>
+    <span class="k">call</span> <span class="n">vga_write2</span>
+    <span class="k">pop</span> <span class="err">%</span><span class="n">edi</span>
+    <span class="k">pop</span> <span class="err">%</span><span class="n">esi</span>
+    <span class="k">pop</span> <span class="err">%</span><span class="n">ebx</span>
+    <span class="k">iret</span>
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>Responder de nuevo la pregunta anterior, sustituyendo en el código <code class="highlighter-rouge">vga_write2</code> por <code class="highlighter-rouge">vga_write</code>. (Nota: el código representado con <code class="highlighter-rouge">...</code> correspondería a la nueva convención de llamadas.)</p>
+  </li>
+  <li>
+    <p>Si la ejecución del manejador debe ser enteramente invisible ¿no sería necesario guardar y restaurar el registro <em>EFLAGS</em> a mano? ¿Por qué?</p>
+  </li>
+  <li>
+    <p>¿En qué stack se ejecuta la función <em>vga_write()?</em></p>
+  </li>
+</ol>
+
+<h3 id="ej-irq">Ej: kern2-irq</h3>
+
+<p>Los códigos de excepción 0 a 31 forman parte de la definición de la arquitectura x86 (<strong>IA32-3A</strong>, §6.3.1); su significado es fijo. Los códigos 32 a 255 están disponibles para su uso bien por el sistema operativo, bien por dispositivos físicos del sistema.</p>
+
+<p>En la arquitectura PC tradicional, la coordinación entre kernel y dispositivos físicos emplea un <em>Programmable Interrupt Controller</em> (PIC) que, entre otras cosas, permite al sistema operativo:</p>
+
+<ul>
+  <li>detectar los dispositivos presentes</li>
+  <li>configurar aspectos de algunos de los dispositivos</li>
+  <li>asignar a cada uno de ellos un código de interrupción propio</li>
+</ul>
+
+<p>En particular, el procesador i386 dispone de dos PIC 8259 capaces de manejar 8 fuentes de interrupción cada uno; en este lab, usaremos solamente el primero de ellos.</p>
+
+<p>Al arrancar la máquina, no se genera interrupción alguna hasta que se habilita su uso con la instrucción <code class="highlighter-rouge">STI</code>. En ese momento, por ejemplo, si se hace uso del teclado, se generaría una interrupción. En <em>kern2</em>, esto se hará desde una nueva función <em>irq_init():</em></p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// interrupts.c
+</span><span class="kt">void</span> <span class="nf">irq_init</span><span class="p">()</span> <span class="p">{</span>
+    <span class="c1">// (1) Redefinir códigos para IRQs.
+</span>    <span class="p">...</span>
+
+    <span class="c1">// (2) Instalar manejadores.
+</span>    <span class="p">...</span>
+
+    <span class="c1">// (3) Habilitar interrupciones.
+</span>    <span class="n">asm</span><span class="p">(</span><span class="s">"sti"</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="c1">// kern2.c
+</span><span class="kt">void</span> <span class="nf">kmain</span><span class="p">(</span><span class="k">const</span> <span class="n">multiboot_info_t</span> <span class="o">*</span><span class="n">mbi</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// ...
+</span>    <span class="n">idt_init</span><span class="p">();</span>
+    <span class="n">irq_init</span><span class="p">();</span>   <span class="c1">// Nueva función.
+</span>    <span class="n">asm</span><span class="p">(</span><span class="s">"int3"</span><span class="p">);</span>
+
+    <span class="n">vga_write2</span><span class="p">(</span><span class="s">"Funciona vga_write2?"</span><span class="p">,</span> <span class="mi">18</span><span class="p">,</span> <span class="mh">0xE0</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Si no se completan los puntos <strong>(1)</strong> y <strong>(2)</strong> de la función <em>irq_init()</em>, al ejecutar <em>kern2</em> se producirá de nuevo un “triple fault” porque —entre otras cosas— el reloj del sistema comienza a lanzar interrupciones para las que no hay un manejador. Se deberá instalar uno que al menos comunique al PIC que se procesó la interrupción:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">void</span> <span class="nf">irq_init</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">irq_remap</span><span class="p">();</span>
+
+    <span class="n">idt_install</span><span class="p">(</span><span class="n">T_TIMER</span><span class="p">,</span> <span class="n">ack_irq</span><span class="p">);</span>
+    <span class="n">idt_install</span><span class="p">(</span><span class="n">T_KEYBOARD</span><span class="p">,</span> <span class="n">ack_irq</span><span class="p">);</span>
+
+    <span class="n">asm</span><span class="p">(</span><span class="s">"sti"</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>definiendo, en <em>idt_entry.S:</em></p>
+
+<div class="language-nasm highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">#</span><span class="n">define</span> <span class="n">PIC1</span> <span class="mh">0x20</span>
+<span class="err">#</span><span class="n">define</span> <span class="n">ACK_IRQ</span> <span class="mh">0x20</span>
+
+<span class="p">.</span><span class="n">globl</span> <span class="n">ack_irq</span><span class="o">:</span>
+<span class="n">ack_irq</span><span class="o">:</span>
+        <span class="c1">// Indicar que se manejó la interrupción.
+</span>        <span class="n">movl</span> <span class="err">$</span><span class="n">ACK_IRQ</span><span class="p">,</span> <span class="err">%</span><span class="n">eax</span>
+        <span class="n">outb</span> <span class="err">%</span><span class="n">al</span><span class="p">,</span> <span class="err">$</span><span class="n">PIC1</span>
+        <span class="k">iret</span>
+</code></pre></div></div>
+
+<p>Observaciones:</p>
+
+<ul>
+  <li>
+    <p>se instala el mismo manejador para el teclado, de manera que tampoco ocurran errores si se presiona una tecla en la ventana de QEMU.</p>
+  </li>
+  <li>
+    <p>por omisión, el modelo PIC 8259 usa el código 0 para el timer, y el código 1 para el teclado; pero estos códigos de excepción están en conflicto con los códigos propios de la arquitectura x86 (el código 0, por ejemplo, corresponde a un error en una operación <code class="highlighter-rouge">DIV</code>)</p>
+  </li>
+  <li>
+    <p>el propósito de la función <code class="highlighter-rouge">irq_remap()</code>, cuyo código se incluye a continuación, es desplazar los códigos de interrupción PIC de tal manera que comiencen en 32, y no en 0.</p>
+  </li>
+  <li>
+    <p>las constantes <code class="highlighter-rouge">T_TIMER</code> y <code class="highlighter-rouge">T_KEYBOARD</code> se definieron en el archivo <em>interrupts.h</em> con valores 32 y 33, respectivamente.</p>
+
+    <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#define outb(port, data) \
+        asm("outb %b0,%w1" : : "a"(data), "d"(port));
+</span>
+<span class="k">static</span> <span class="kt">void</span> <span class="nf">irq_remap</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">outb</span><span class="p">(</span><span class="mh">0x20</span><span class="p">,</span> <span class="mh">0x11</span><span class="p">);</span>
+    <span class="n">outb</span><span class="p">(</span><span class="mh">0xA0</span><span class="p">,</span> <span class="mh">0x11</span><span class="p">);</span>
+    <span class="n">outb</span><span class="p">(</span><span class="mh">0x21</span><span class="p">,</span> <span class="mh">0x20</span><span class="p">);</span>
+    <span class="n">outb</span><span class="p">(</span><span class="mh">0xA1</span><span class="p">,</span> <span class="mh">0x28</span><span class="p">);</span>
+    <span class="n">outb</span><span class="p">(</span><span class="mh">0x21</span><span class="p">,</span> <span class="mh">0x04</span><span class="p">);</span>
+    <span class="n">outb</span><span class="p">(</span><span class="mh">0xA1</span><span class="p">,</span> <span class="mh">0x02</span><span class="p">);</span>
+    <span class="n">outb</span><span class="p">(</span><span class="mh">0x21</span><span class="p">,</span> <span class="mh">0x01</span><span class="p">);</span>
+    <span class="n">outb</span><span class="p">(</span><span class="mh">0xA1</span><span class="p">,</span> <span class="mh">0x01</span><span class="p">);</span>
+    <span class="n">outb</span><span class="p">(</span><span class="mh">0x21</span><span class="p">,</span> <span class="mh">0x0</span><span class="p">);</span>
+    <span class="n">outb</span><span class="p">(</span><span class="mh">0xA1</span><span class="p">,</span> <span class="mh">0x0</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div>    </div>
+  </li>
+</ul>
+
+<p>La necesidad de escribir los manejadores en assembler surge de la obligación de usar <code class="highlighter-rouge">iret</code> y no <code class="highlighter-rouge">ret</code> para finalizar su ejecución; pero se puede, desde assembler, invocar a rutinas escritas en C, por ejemplo:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// handlers.c
+</span><span class="cp">#include "decls.h"
+</span>
+<span class="k">static</span> <span class="kt">unsigned</span> <span class="n">ticks</span><span class="p">;</span>
+
+<span class="kt">void</span> <span class="nf">timer</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">++</span><span class="n">ticks</span> <span class="o">==</span> <span class="mi">15</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">vga_write</span><span class="p">(</span><span class="s">"Transcurrieron 15 ticks"</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mh">0x07</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Para poder invocar a esta función:</p>
+
+<ul>
+  <li>
+    <p>definir en <em>idt_entry.S</em> un “trampolín” en assembler:</p>
+
+    <div class="language-nasm highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">.</span><span class="n">globl</span> <span class="n">timer_asm</span>
+<span class="n">timer_asm</span><span class="o">:</span>
+        <span class="c1">// Guardar registros.
+</span>        <span class="p">...</span>
+        <span class="k">call</span> <span class="n">timer</span>
+        <span class="c1">// Restaurar registros.
+</span>        <span class="p">...</span>
+        <span class="k">jmp</span> <span class="n">ack_irq</span>
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>en <em>interrupts.c</em>, instalar <code class="highlighter-rouge">timer_asm</code> en lugar de <code class="highlighter-rouge">ack_irq</code> para <code class="highlighter-rouge">T_TIMER</code>.</p>
+  </li>
+</ul>
+
+<h3 id="ej-div">Ej: kern2-div</h3>
+
+<p>En este último ejercicio se estudia el subtipo particular de excepción llamado <em>fault</em> (ver <strong>IA32-3A</strong> §6.5 y §6.6).</p>
+
+<p>Cuando ocurre una interrupción, o una excepción de tipo <em>trap</em>, se ejecuta inmediatamente el manejador y, una vez finalizado éste, se reanuda la ejecución de la tarea original en la <em>siguiente</em> instrucción. Por el contrario, para excepciones de tipo <em>fault</em>, se vuelve a intentar la <em>misma</em> instrucción.<sup id="fnref:segfault"><a href="index.html#fn:segfault" class="footnote">8</a></sup></p>
+
+<p>La instrucción <code class="highlighter-rouge">DIV</code> genera una excepción <em>Divide Error</em> (código numérico 0) cuando, entre otros casos, el divisor es 0. Como la división por 0 también es comportamiento no definido en C, usaremos directamente inline assembly para generar la excepción desde <em>kmain()</em>.</p>
+
+<p>Se pide:</p>
+
+<ol>
+  <li>
+    <p>Modificar la función <em>kmain()</em> como se indica, y verificar que <em>kern2</em> arranca e imprime sus mensajes de manera correcta:</p>
+
+    <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">void</span> <span class="nf">kmain</span><span class="p">(</span><span class="k">const</span> <span class="n">multiboot_info_t</span> <span class="o">*</span><span class="n">mbi</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kt">int8_t</span> <span class="n">linea</span><span class="p">;</span>
+    <span class="kt">uint8_t</span> <span class="n">color</span><span class="p">;</span>
+
+    <span class="c1">// ...
+</span>
+    <span class="n">idt_init</span><span class="p">();</span>
+    <span class="n">irq_init</span><span class="p">();</span>
+
+    <span class="n">asm</span><span class="p">(</span><span class="s">"div %4"</span>
+        <span class="o">:</span> <span class="s">"=a"</span><span class="p">(</span><span class="n">linea</span><span class="p">),</span> <span class="s">"=c"</span><span class="p">(</span><span class="n">color</span><span class="p">)</span>
+        <span class="o">:</span> <span class="s">"0"</span><span class="p">(</span><span class="mi">18</span><span class="p">),</span> <span class="s">"1"</span><span class="p">(</span><span class="mh">0xE0</span><span class="p">),</span> <span class="s">"b"</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="s">"d"</span><span class="p">(</span><span class="mi">0</span><span class="p">));</span>
+
+    <span class="n">vga_write2</span><span class="p">(</span><span class="s">"Funciona vga_write2?"</span><span class="p">,</span> <span class="n">linea</span><span class="p">,</span> <span class="n">color</span><span class="p">);</span>
+<span class="p">}</span>
+
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>Explicar el funcionamiento exacto de la línea <code class="highlighter-rouge">asm(...)</code> del punto anterior:</p>
+
+    <ul>
+      <li>¿qué cómputo se está realizando?</li>
+      <li>¿de dónde sale el valor de la variable <em>color</em>?</li>
+      <li>¿por qué se da valor 0 a <em>%edx?</em></li>
+    </ul>
+  </li>
+  <li>
+    <p>Asignar a <em>%ebx</em> el valor 0 en lugar de 1, y comprobar que se genera una triple falla al ejecutar el kernel.</p>
+  </li>
+  <li>
+    <p>Definir en <em>write.c</em> una nueva variante de escritura:</p>
+
+    <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">void</span> <span class="nf">__attribute__</span><span class="p">((</span><span class="n">regparm</span><span class="p">(</span><span class="mi">2</span><span class="p">)))</span>
+<span class="n">vga_write_cyan</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">s</span><span class="p">,</span> <span class="kt">int8_t</span> <span class="n">linea</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">vga_write</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">linea</span><span class="p">,</span> <span class="mh">0xB0</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>Escribir, en <em>idt_entry.S</em>, un manejador <code class="highlighter-rouge">divzero</code> a instalar desde <em>idt_init():</em></p>
+
+    <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">idt_install</span><span class="p">(</span><span class="n">T_DIVIDE</span><span class="p">,</span> <span class="n">divzero</span><span class="p">);</span>
+</code></pre></div>    </div>
+
+    <p>El manejador debe, primero, incrementar el valor de <em>%ebx</em>, de manera que cuando se reintente la instrucción, ésta tenga éxito.</p>
+
+    <p>Asimismo, realizar desde assembly la llamada:</p>
+
+    <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">vga_write_cyan</span><span class="p">(</span><span class="s">"Se divide por ++ebx"</span><span class="p">,</span> <span class="mi">17</span><span class="p">);</span>
+</code></pre></div>    </div>
+
+    <p>Requerimiento: no usar <code class="highlighter-rouge">pusha</code>/<code class="highlighter-rouge">popa</code>; guardar y restaurar el mínimo número de registros necesarios.</p>
+  </li>
+</ol>
+
+<h3 id="ej-kbd">Ej: kern2-kbd ★</h3>
+
+<p>En el archivo <a href="handlers.c">handlers.c</a> se incluyen un par de ejemplos de manejo del timer y del teclado. Sobre el código del teclado se pide:</p>
+
+<ul>
+  <li>manejar la tecla Shift, y emitir caracteres en mayúsculas cuando esté presionada.</li>
+</ul>
+
+<p>Documentación <a href="http://www.osdever.net/bkerndev/Docs/keyboard.htm">de ejemplo</a>.</p>
+
+<h2 id="preempt">Desalojo</h2>
+
+<h2 id="elf">Enlazado y archivos ELF</h2>
+
+<script>
+function addAnchors() {
+    anchors.options.visible = "always";
+    anchors.add("h3");
+}
+</script>
+
+<script async="" onload="addAnchors();" src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/3.2.2/anchor.min.js">
+</script>
+
+<script defer="" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+
+<script defer="" onload="$.bigfoot();" src="https://cdnjs.cloudflare.com/ajax/libs/bigfoot/2.1.4/bigfoot.min.js"></script>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bigfoot/2.1.4/bigfoot-default.min.css" />
+
+<div class="footnotes">
+  <ol>
+    <li id="fn:defaultO1">
+      <p>Excepto cuando se indique lo contrario, para todos los ejercicios de esta parte es suficiente con usar <code class="highlighter-rouge">-O1 -m32</code> como opciones de compilación.&nbsp;<a href="index.html#fnref:defaultO1" class="reversefootnote">&#x21A9;&#xFE0E;</a></p>
+    </li>
+    <li id="fn:useO0">
+      <p>Nótese que el nivel de optimización para este ejercicio es <code class="highlighter-rouge">-O0</code>, en lugar de <code class="highlighter-rouge">-O1</code>.&nbsp;<a href="index.html#fnref:useO0" class="reversefootnote">&#x21A9;&#xFE0E;</a></p>
+    </li>
+    <li id="fn:finline">
+      <p>Un tipo de optimización que realiza GCC es “inline automático”, esto es: repetir código en lugar de realizar una llamada a función, incluso si ésta no fue marcada <em>inline</em>. En el caso de directivas <code class="highlighter-rouge">asm("...")</code>, los constraints de entrada y salida deben ser exactamente correctos para que la optimización mantenga la semántica esperada.&nbsp;<a href="index.html#fnref:finline" class="reversefootnote">&#x21A9;&#xFE0E;</a></p>
+    </li>
+    <li id="fn:noos">
+      <p>En este contexto, «sin ayuda del sistema operativo» vendría a significar: bien en un solo proceso de usuario sin invocar ninguna llamada al sistema relacionada con la planificación; bien en un kernel básico sin reloj configurado.&nbsp;<a href="index.html#fnref:noos" class="reversefootnote">&#x21A9;&#xFE0E;</a></p>
+    </li>
+    <li id="fn:yield">
+      <p>El verbo <em>yield</em> (en inglés, ceder el paso) es el término que se suele usar para indicar que una tarea cede voluntariamente el uso del procesador a otra.&nbsp;<a href="index.html#fnref:yield" class="reversefootnote">&#x21A9;&#xFE0E;</a></p>
+    </li>
+    <li id="fn:commentint3">
+      <p>Se aconseja dejar la instrucción <code class="highlighter-rouge">INT3</code> comentada hasta que se implemente <em>idt_init()</em> correctamente. Asimismo, para agilizar el desarrollo, se puede dejar comentada la llamada a <em>contador_run()</em>.&nbsp;<a href="index.html#fnref:commentint3" class="reversefootnote">&#x21A9;&#xFE0E;</a></p>
+    </li>
+    <li id="fn:nobp">
+      <p>Para este ejercicio, se debe evitar poner un breakpoint en la instrucción <code class="highlighter-rouge">int3</code> directamente.&nbsp;<a href="index.html#fnref:nobp" class="reversefootnote">&#x21A9;&#xFE0E;</a></p>
+    </li>
+    <li id="fn:segfault">
+      <p>Esta funcionalidad es principalmente útil cuando comienza a haber procesos no privilegiados de usuario, ya que se da oportunidad al kernel de decidir qué hacer si un programa muestra un comportamiento anómalo (por ejemplo, intentar escribir en una región de memoria de sólo lectura).&nbsp;<a href="index.html#fnref:segfault" class="reversefootnote">&#x21A9;&#xFE0E;</a></p>
+    </li>
+  </ol>
+</div>
+
+</article>
+
+    </main>
+
+    
+
+
+
+
+<footer class="site-footer">
+  <div class="wrapper">
+    <a style="float: left;" rel="license" title="© 2016-2017 Adeodato Simó" href="http://creativecommons.org/licenses/by-sa/4.0/"><img src="../../assets/by-sa.svg"></a>
+    <a style="float: right;" rel="source" href="../kern2.md"><img height="16" alt="Link to Markdown source" src="../../assets/source-md.svg"></a>
+  </div>
+</footer>
+
+
+  </body>
+
+</html>
