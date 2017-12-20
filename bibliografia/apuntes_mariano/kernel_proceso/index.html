@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>El Proceso</title>
+  <meta name="description" content="apuntes de sistemas operativos">
+
+  <link rel="stylesheet" href="../assets/main.css">
+  <link rel="canonical" href="index.html">
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/3.2.2/anchor.min.js"></script>
+</head>
+
+
+  <body>
+
+    <!-- TODO: fix site navigation later -->
+
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post">
+
+  <div class="post-content">
+    <h1 id="los-sistemas-operativos">Los Sistemas Operativos</h1>
+
+<p>Como se ha visto, para que un sistema operativo pueda soportar la ejecucion de un Kernel se deben cumplir 3 condiciones:</p>
+<ol>
+  <li>System Calls.</li>
+  <li>Modo de operación dual.</li>
+  <li>Timer Interrupts (Interrupciones por temporizador).</li>
+</ol>
+
+<h2 id="más-sobre-el-kernel">Más Sobre el Kernel</h2>
+
+<p>Según VAHALIA, Uresh en su libro <em>“UNIX internals: the new frontiers” de editorial Pearson Education India, 2008</em>:</p>
+
+<blockquote>
+  <p>Implementa el <strong>Modelo de <em>Procesos</em></strong> y <strong>otros servicios</strong> del sistema.</p>
+</blockquote>
+
+<blockquote>
+  <p>Reside en el disco en un archivo típicamente llamado <strong>/vmlinuz</strong>, <strong>/vmunix</strong> o <strong>/unix</strong> (dependiendo del vendedor de UNIX).</p>
+</blockquote>
+
+<blockquote>
+  <ol>
+    <li>Cuando el sistema se inicia, éste carga al Kernel desde el disco usando un procedimiento especial llamado bootstrapping.</li>
+    <li>El Kernel inicializa el sistema y setea el ambiente para correr procesos.</li>
+    <li>Entonces, el Kernel crea algunos procesos iniciales, los cuales a su vez crean otros procesos.</li>
+    <li>Una vez cargado en la memoria el Kernel permanece allí hasta que se apague la computadora.</li>
+    <li>Él administra los procesos y les provee de varios servicioas (acceso a disco, acceso a network, acceso a usb, etc).</li>
+  </ol>
+</blockquote>
+
+<h3 id="una-versión-primitiva-del-kernell-de-unix">Una versión primitiva del kernell de Unix:</h3>
+<p><img src="https://mendezmariano.github.io/images/kernel/kernel_simple.jpg" alt="Kernel" title="Kernel" /></p>
+
+<h3 id="una-versión-moderna-del-kernel-de-unix">Una versión moderna del Kernel de Unix:</h3>
+<p><img src="https://mendezmariano.github.io/images/kernel/kernel_complex.jpg" alt="Kernel" title="Kernel" /></p>
+
+<h3 id="alguna-funcionalidad-que-provee-el-kernel-en-el-sistema-operativo-unix">Alguna Funcionalidad que provee el Kernel en el sistema operativo UNIX:</h3>
+
+<ul>
+  <li>
+    <p>Los procesos de Usuario explícitamente requieren servicios al Kernel a través del uso de las <strong>System Call</strong>, que es el componente central del API (Application Programming Interface) de UNIX. El Kernel ejecuta los pedidos en nombre de los procesos que utilizan las <a href="https://mendezmariano.github.io/images/kernel/syscallStub.jpg" title="System Call">System Calls</a>, en forma más esquemática ver <a href="https://mendezmariano.github.io/images/kernel/syscallStub.jpg" title="System Call">Figura</a>.</p>
+  </li>
+  <li>
+    <p>Algunos comportamientos inusuales, que algunas acciones de los procesos pueden llegar a ocasionar (como por ejemplo intentar dividir por cero, causar overflow al execution stack), causan excepciones en el hardware. Las excepciones de hardware requieren la atención del Kernel. Éste las maneja en nombre del proceso en el cual se generó/raron la/s excepción/nes.</p>
+  </li>
+</ul>
+
+<h3 id="qué-sucede-cuando-el-kernel-falla">¿Qué sucede cuando el Kernel falla?</h3>
+<p><img src="https://mendezmariano.github.io/images/kernel/panic.jpg" alt="panic" title="panic" width="512px" /></p>
+
+<h3 id="system-calls">System Calls</h3>
+<p>Una <strong>System Call</strong> no es más que una <strong>ilusión</strong> de hacer creer que <strong>el kernel del S.O. es una biblioteca de rutinas</strong> que pueden ser utilizadas por los proceso.</p>
+
+<p>Para los procesos, el Kernel provee un conjunto de rutinas con sus argumentos que pueden ser utilizadas por cualquier otra rutina. La implementación de dichas System Calls es totalmente <strong>transparente</strong> y se utilizan como <strong>caja negra</strong>.</p>
+
+<h3 id="unix-system-calls">Unix System Calls</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>GENERAL CLASS</th>
+      <th>SPECIFIC CLASS</th>
+      <th>SYSTEM CALL</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>File Structure</td>
+      <td>Creating a Channel</td>
+      <td>creat()</td>
+    </tr>
+    <tr>
+      <td>Related Calls</td>
+      <td> </td>
+      <td>open()</td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td>close()</td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td>Input/Output</td>
+      <td>read()</td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td>write()</td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td>Random Access</td>
+      <td>lseek()</td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td>Channel Duplication</td>
+      <td>dup()</td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td>Aliasing and Removing</td>
+      <td>link()</td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td>Files</td>
+      <td>unlink()</td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td>File Status</td>
+      <td>stat()</td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td>fstat()</td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td>Access Control</td>
+      <td>access()</td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td>chmod()</td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td>chown()</td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td>umask()</td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td>Device Control</td>
+      <td>ioctl()</td>
+    </tr>
+  </tbody>
+  <tbody>
+    <tr>
+      <td>Process Related</td>
+      <td>Process Creation and</td>
+      <td>exec()</td>
+    </tr>
+    <tr>
+      <td>Calls</td>
+      <td>Termination</td>
+      <td>fork()</td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td>wait()</td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td>exit()</td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td>Process Owner and Group</td>
+      <td>getuid()</td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td>geteuid()</td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td>getgid()</td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td>getegid()</td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td>Process Identity</td>
+      <td>getpid()</td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td>getppid()</td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td>Process Control</td>
+      <td>signal()</td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td>kill()</td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td>alarm()</td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td>Change Working Directory</td>
+      <td>chdir()</td>
+    </tr>
+  </tbody>
+  <tbody>
+    <tr>
+      <td>Interprocess</td>
+      <td>Pipelines</td>
+      <td>pipe()</td>
+    </tr>
+    <tr>
+      <td>Communication</td>
+      <td>Messages</td>
+      <td>msgget()</td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td>msgsnd()</td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td>msgrcv()</td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td>msgctl()</td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td>Semaphores</td>
+      <td>semget()</td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td>semop()</td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td>Shared Memory</td>
+      <td>shmget()</td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td>shmat()</td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td> </td>
+      <td>shmdt()</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="modo-dual-de-operaciones">Modo Dual de Operaciones</h2>
+
+<p>El modo de operacion dual, es un mecanismo que proveen todas las computadoras modernas.<br />
+En un mundo Ideal …. el esquema básico de un microprocesador podría ser el siguiente:</p>
+
+<p><img src="https://mendezmariano.github.io/images/kernel/pc1.png" alt="sin modo Dual" width="512px" /></p>
+
+<p>Intel 8088 no tenía bit de modo - no tenía dual mode - esa es la historia detrás de MSDOS.</p>
+
+<p>La realidad:</p>
+
+<p><img src="../images/kernel/pc2.png" alt="con Modo Dual" width="512px" /></p>
+
+<h2 id="modos">Modos</h2>
+<p>En el caso de la arquitectura x86 la misma provee 4 modos de operaciones via el hardware. Estos modos están numerados entre 0 y 3.<br />
+Los modos más utilizados por los sistemas operativos son el modo 0 (modo supervisor o modo Kernel) y el modo 3, llamado modo “Usuario” o “User Mode” dado que este mecanismo es proveído por el hardware cada instrucción a ser ejecutada el mismo chequea en que modo de operación se encuentra.</p>
+
+<p>Existen dos modos operacionales utilizados de la CPU :</p>
+<ul>
+  <li><strong>Modo Usuario o User Mode</strong>: que ejecuta instrucciones en nombre del usuario</li>
+  <li><strong>Modo Supervisor o Kernel o Monitor</strong>: ejecuta instrucciones en nombre del Kernel del S.O. y estas son instrucciones privilegiadas.</li>
+</ul>
+
+<p><img src="https://mendezmariano.github.io/images/kernel/dualmode.jpg" alt="mmu" title="dual mode" width="512px" /></p>
+
+<p>Esta diferencia entre los modos operacionales de un procesador equivale a un bit en el registro de control del procesador.</p>
+
+<h1 id="la-primer-abstraccion-el-proceso">La Primer Abstraccion: El Proceso</h1>
+
+<p>Una vez que se edita un programa en cualquier lenguaje de programación se debe realizar el proceso de compilacion para poder obtener un programa ejecutable.</p>
+
+<pre><code class="language-C">
+#include &lt;stdio.h&gt;
+
+int main() {
+    printf("hello, world\n");
+}
+</code></pre>
+
+<p>Este proceso que en la actualidad suele condiderarse como un unico proceso, esta separado en varias etapas en las cuales se utilizan distintas herramientas y se obtienen distintos archivos en distintos formatos hasta alcanzar el formato ejecutable. Sin este proceso el programa se limita a ser:</p>
+
+<p><img src="https://mendezmariano.github.io/images/kernel/holamundo.jpg" alt="sin modo Dual" width="512px" /></p>
+
+<p>Las partes del proceso de compilacion son 4 fases, que utilizan 4 herramientas para llevar a cabo cada una de estas fases. Estas herramientas son:</p>
+<ul>
+  <li>el preprocesador.</li>
+  <li>el complidor</li>
+  <li>el ensamblador</li>
+  <li>el link editor o linker.</li>
+</ul>
+
+<p>Estas en conjunto son conocidas como un sistema de compilacion.</p>
+
+<h2 id="la-compilación">La Compilación</h2>
+<ul>
+  <li>
+    <p><strong><em>La fase de procesamiento</em></strong>. El preprocesador (cpp) modifica el codigo de fuente original de un programa escrito en C de acuerdo a las directivas que comienzan con un caracter(#). El resultado de este proceso es otro programa en C con la extencion .i</p>
+  </li>
+  <li>
+    <p><strong><em>La fase de compilacion</em></strong>. El compilador (cc) traduce el programa .i a un archivo de texto .s que contiene un programa en lenguaje assembly.</p>
+  </li>
+  <li>
+    <p><strong><em>La fase de ensablaje</em></strong>. A continuación el ensamblador (as) traduce el archivo .s en instrucciones de lenguaje de máquina empaquetándolas en un formato conocido como <strong>programa objeto realocable</strong>. Este es almacenado en un archivo con extensión .o</p>
+  </li>
+  <li>
+    <p><strong><em>La fase de link edicion</em></strong>. Generalmente los programas escritos en lenguaje C hacen uso de funciones que forman parte de la <strong>biblioteca estandar de C</strong> que es provista por cualquier complilador de ese lenguaje. Por ejemplo la funcion printf(), la misma se encuentra en un archivo objeto precompilado que tiene que ser mezclado con el programa que se esta compilando, para ello el linker realiza esta tarea teniendo como resultado un archivo objeto ejecutable.</p>
+  </li>
+</ul>
+
+<p><img src="https://mendezmariano.github.io/images/kernel/compilation.jpg" alt="compilacion" width="700px" /></p>
+
+<ol>
+  <li>Programador edita código fuente</li>
+  <li>El compilador compila el source code en una secuencia de instrucciones de máquina y datos llamada <a href="https://greek0.net/elf.html"><strong>Programa</strong></a></li>
+  <li>El compilador genera esa secuencia y posteriormente se guarda en disco: programa ejecutable</li>
+</ol>
+
+<p>En este punto se tiene un programa capaz de ser ejecutado por una computadora, es función del sistema operativo hacer que este se ejecute, para ello existe el concepto de proceso.</p>
+
+<p>El <strong>Sistema Operativo</strong> más precisamente el <strong>Kernel</strong> se encarga de:</p>
+<ol>
+  <li>Cargar instrucciones y Datos de un programa ejecutable en memoria.</li>
+  <li>Crear el Stack y el Heap <sup id="fnref:2"><a href="index.html#fn:2" class="footnote">1</a></sup></li>
+  <li>Transferir el Control al programa</li>
+  <li>Proteger al SO y al Programa</li>
+</ol>
+
+<p>Un <strong>programa es algo <em>sin vida</em></strong>, un conjunto de instrucciones y datos que esperan en algún lugar del disco para saltar a la acción!!!</p>
+<ul>
+  <li>Y el Sistema Operativo es quien toma ese puñado de bytes y es el SO que transforma ese programa en algo útil, mediante el <strong>Kernel</strong>.</li>
+  <li>Uno nunca tiene que ser consciente si la CPU está disponible, etc. sólo ejecuta el programa.</li>
+</ul>
+
+<h2 id="un-proceso">Un Proceso</h2>
+
+<blockquote>
+  <p>“Un proceso es la ejecución de un programa de aplicación con derechos restringidos; el proceso es la abstracción que provee el Kernel del sistema operativo para la ejecución protegida”-  <em>Dahlin</em></p>
+</blockquote>
+
+<blockquote>
+  <p>“Es simplemente un programa que se está ejecutando en un instante dado” - <em>Arpaci</em></p>
+</blockquote>
+
+<blockquote>
+  <p>“Un Proceso es la instancia de un programa en ejecución” - <em>Vahalia</em></p>
+</blockquote>
+
+<p>Por ahora quedémonos con estas definiciones…</p>
+
+<p>Un <strong>proceso</strong> necesita que el <strong>kernel del sitema operativo</strong> le <strong>otorgue permisos</strong> para:</p>
+<ul>
+  <li>una escritura o una lectura en un disco.</li>
+  <li>hacer algún cambio en la configuración del harware</li>
+  <li>intentar acceder a algun área de memoria de otro proceso.</li>
+</ul>
+
+<p>Particularmente el concepto de proceso es el más importante de todos los conceptos que se ven en sistemas operativos.</p>
+
+<h2 id="entonces">Entonces:</h2>
+
+<blockquote>
+  <p>“un proceso es basicamente una abstraccion de un programa en ejecucion.”</p>
+</blockquote>
+
+<p>Un proceso esta formado, entre otras cosas, por 4 secciones llamadas: <strong>.code, .data, .heap, .stak</strong>.</p>
+
+<p><img src="https://mendezmariano.github.io/images/process/process.jpg" alt="Proceso" title="Proceso" width="640px" /></p>
+
+<p>Todas estas secciones pertenecientes a un proceso se denominan <strong>espacio de direcciones</strong> del proceso.</p>
+
+<p>Para ejecutar un programa el sistema operativo copia las instrucciones en la sección .code y los datos en la sección .data, desde el programa ejecutable residente en disco hacia la memoria física, ademas el sistema operativo setea una region de memoria llamada <strong>execution stack (.stack)</strong>, que mantiene el estado de las variables locales durante las llamadas a los procedimientos. EL sistema operativo tambien setea una region de memoria llamada <strong>heap</strong>, destinada a alojar cualquier estructura de datos alocada en forma dinamica que el programa pueda necesitar.</p>
+
+<p><img src="https://mendezmariano.github.io/images/process/ProcesoIntern.png" alt="Proceso" title="Proceso" width="256px" /></p>
+
+<p>Se ha de tener en cuenta que el Kernel en si mismo tambien es un proceso y que la abstraccion del proceso provee ejecucion, aislamiento y proteccion. Estos tres conceptos pueden merecer varios capitulos de un libro. El sistema operativo lleva la contabilidad de todos los procesos que se estan ejecutando en la computadora mediante la utilizacin de una estrucutura llamada Process Control Block o PCB. La PCB almacena toda la informacion que un sistema operativo debe conocer sobre un proceso en particular:</p>
+
+<ul>
+  <li>Donde se encuentra almacenado en memoria.</li>
+  <li>Donde la imagen ejecutable esta en el disco.</li>
+  <li>Que usuario solicito su ejecucion.</li>
+  <li>Que privilegios tiene ese proceso.</li>
+</ul>
+
+<h3 id="la-virtualización">La virtualización</h3>
+
+<p>La <strong>virtualización de proceso</strong> es la forma de virtualización más primitiva, consiste en dar la <strong>ilusión</strong> de la existencia de un único procesador para cualquier programa que requiera de su uso. De esta forma, se provee:</p>
+
+<p><strong>Simplicidad en la programación</strong></p>
+<ul>
+  <li>Cada proceso cree que tiene toda la memoria/CPU.</li>
+  <li>Cada proceso cree que todos los dispositivos le pertenecen.</li>
+  <li>Distintos dispositivos parecen tener el mismo nivel de interfaces.</li>
+  <li>Las interfaces con los dispositivos son más potentes que el bare metal.</li>
+</ul>
+
+<p><strong>Aislamiento frente a Fallas</strong>:</p>
+<ul>
+  <li>Los procesos no pueden directamente afectar a otros procesos.</li>
+  <li>Los errores no colapsan toda la máquina.</li>
+</ul>
+
+<p>¿Cómo se provee la ilusión de tener varios CPUs?</p>
+
+<p>El SO crea esta <strong>ilusión</strong> mediante la <strong>virtualización</strong> de la CPU a través del kernel.</p>
+
+<p><img src="https://mendezmariano.github.io/images/process/virtualizacionCpu.jpg" alt="Proceso" title="Proceso" width="512px" /></p>
+
+<p>Viéndolo desde el punto de vista de la abstracción y virtualización:</p>
+
+<p><img src="https://mendezmariano.github.io/images/process/cpuvirtualizacion.jpg" alt="Proceso" title="Proceso" width="512px" /></p>
+
+<ul>
+  <li>Un ejemplo sencillo <a href="../sisop_kernel/virtualizacion/index.html">virtualización de proceso</a> nos muestra que si bien la computadora está ejecutando mas de un proceso <strong>todos</strong> creen que la <em>CPU</em> (Unidad Central de Procesamiento) está disponible en forma <strong>exclusiva</strong> para ese único proceso.</li>
+</ul>
+
+<h1 id="el-proceso-por-dentro">El Proceso: por dentro</h1>
+<p>El concepto de proceso es la más bella de las abstracciones que los constructores de sistemas operativos han creado. La idea general detrás de la abstracción es la de cómo <strong>virtualizar una CPU</strong> o <strong>procesamiento</strong>, es decir cómo hacer para que un único procesador actúe como tal para varios programas que requieren ser ejecutados utilizando el mismo hardware, en este caso un microprocesador.</p>
+
+<p>«««&lt; HEAD
+El proceso es la abstracción que provee el Kernel del sistema operativo para la ejecución protegida de un programa. 
+=======
+En aquella ilusión <sup id="fnref:1"><a href="index.html#fn:1" class="footnote">2</a></sup> entra en juego el <strong>KERNEL</strong>. Pero… ¿Qué es el Kernel?</p>
+<blockquote>
+  <blockquote>
+    <blockquote>
+      <blockquote>
+        <blockquote>
+          <blockquote>
+            <blockquote>
+              <p>860fec761f2897c0d1558c954a43e2e772049f0d</p>
+            </blockquote>
+          </blockquote>
+        </blockquote>
+      </blockquote>
+    </blockquote>
+  </blockquote>
+</blockquote>
+
+<p>Un <strong>Proceso</strong> necesita permisos del <strong>Kernel</strong> del SO para:</p>
+<ul>
+  <li>Acceder a memoria perteneciente a otro proceso.</li>
+  <li>Antes de escribir o leer en el disco.</li>
+  <li>Antes de cambiar algún seteo del hardware del equipo.</li>
+  <li>Antes de enviar información a otro proceso.</li>
+</ul>
+
+<p>Pero además el S.O. crea la ilusión de la existencia de varios cientos o miles de procesadores, cuando en realidad tiene uno solo, mediante la virtualización de la CPU …. ¿Cómo?  Con el concepto de <strong>Proceso</strong> que es la ilusión creada para la virtualización de la CPU. El Kernel del S.O. provee esa abstracción.</p>
+
+<h2 id="volvemos-al-modo-dual-de-operaciones">Volvemos al Modo Dual de Operaciones</h2>
+
+<h3 id="arquitectura-de-von-newman-instruction-fetch">Arquitectura de Von Newman: Instruction Fetch</h3>
+<p><img src="https://mendezmariano.github.io/images/kernel/super_abacus.jpg" alt="Super Abacuas" title="Super Abacus" width="640px" /></p>
+
+<p>El <strong>ciclo</strong> de una instrucción en una arquitectura de Von Newman:</p>
+<ol>
+  <li>Obtener la instrucción (Fetch)</li>
+  <li>Decodificar la instrucción (Decode)</li>
+  <li>Ejecutar la instrucción (Execute)</li>
+  <li>CP = Próxima Instrucción</li>
+</ol>
+
+<p><img src="https://mendezmariano.github.io/images/kernel/fetch.jpg" alt="Super Abacuas" title="Super Abacus" width="640px" /></p>
+
+<p>«««&lt; HEAD
+Para poder proveer un mecanismo que combine <strong>ejecucion protegida y aislamiento</strong> el Kernel del sistema operativo debe ser provisto de 3 mecanismos por el Hardware:
+=======</p>
+<h1 id="el-proceso-por-dentro-1">El Proceso: por dentro</h1>
+<p>El concepto de proceso es la más bella de las abstracciones que los constructores de sistemas operativos han creado. La idea general detrás de la abstracción es la de cómo <strong>virtualizar una CPU</strong> o <strong>procesamiento</strong>, es decir, cómo hacer para que un único procesador actúe como tal para varios programas que requieren ser ejecutados utilizando el mismo hardware, en este caso un microprocesador.</p>
+<blockquote>
+  <blockquote>
+    <blockquote>
+      <blockquote>
+        <blockquote>
+          <blockquote>
+            <blockquote>
+              <p>860fec761f2897c0d1558c954a43e2e772049f0d</p>
+            </blockquote>
+          </blockquote>
+        </blockquote>
+      </blockquote>
+    </blockquote>
+  </blockquote>
+</blockquote>
+
+<ul>
+  <li>
+    <p><strong><em>Instrucciones Privilegiadas</em></strong>: Cualquier instruccion potencilmente no segura esta prohibida en el modo usuario.</p>
+  </li>
+  <li>
+    <p><strong><em>Proteccion de memoria</em></strong>: Todos los accesos a memoria fuera de la region de memoria del proceso estan prohibidos cuando se esta ejecutando en el modo usuario.</p>
+  </li>
+  <li>
+    <p><strong><em>Interrupciones temporales</em></strong>: Teniendo en cuenta lo que hace cada proceso el Kernel tiene que tener una forma periodica de retomar el control desde el proceso que se esta ejecutando.</p>
+  </li>
+</ul>
+
+<h3 id="instrucciones-privilegiadas">Instrucciones Privilegiadas</h3>
+
+<p>El <strong>aislamiento de los procesos</strong> es posible solamente si existe una forma de limitar a los programas que estan corriendo en modo usuario de que cambien su propio nivel de privilegio.</p>
+
+<p>Para ello existen dos tipos de instrucciones, las <strong>intrucciones privilegiadas</strong> que son aquellas que <strong>solo el Kernel del sistema operativo puede ejecutar</strong>, y las otras instrucciones que pueden ser ejecutadas en modo usuario.</p>
+
+<p>Por eso el Kernel del sistema operativo puede ejecutar el set comnpleto de instrucciones de Hardware, mientras que las aplicaciones ejecutandose en modo usuario solo pueden utilizar un subconjunto de las instrucciones que provee el Hardware.</p>
+
+<p><strong>LGDT</strong> 					Loads an address of a GDT into GDTR<br />
+<strong>LLDT</strong>					Loads an address of a LDT into LDTR<br />
+<strong>LTR</strong>						Loads a Task Register into TR<br />
+<strong>MOV (Control Register)</strong>	Copy data and store in Control Registers<br />
+<strong>LMSW</strong>					Load a new Machine Status WORD<br />
+<strong>CLTS</strong> 					Clear Task Switch Flag in Control Register CR0<br />
+<strong>MOV (Debug Register)</strong>  	Copy data and store in debug registers<br />
+<strong>INVD</strong> 					Invalidate Cache without writeback<br />
+<strong>INVLPG</strong> 					Invalidate TLB Entry<br />
+<strong>WBINVD</strong> 					Invalidate Cache with writeback<br />
+<strong>HLT</strong> 					Halt Processor<br />
+<strong>RDMSR</strong> 					Read Model Specific Registers (MSR)<br />
+<strong>WRMSR</strong>					Write Model Specific Registers (MSR)<br />
+<strong>RDPMC</strong>					Read Performance Monitoring Counter<br />
+<strong>RDTS</strong>					Read time Stamp Counter</p>
+
+<p>Que pasa si una aplicación en modo usuario intenta realizar operaciones que solo estan permitidas en modo Kernel? El resultado es que tal acción causará una <strong>excepción de procesador</strong>.</p>
+
+<h3 id="proteccion-de-memoria">Proteccion de Memoria</h3>
+
+<p>Para que un proceso se ejecute tiene que estar residente en memoria, pero a su vez el sistema operativo tiene que estar residente en memoria.</p>
+
+<ul>
+  <li>El <strong>proceso</strong> tiene que estar en memoria para poder ejecutarse.</li>
+</ul>
+
+<p>Mientras que:</p>
+
+<ul>
+  <li>El <strong>sistema operativo</strong> tiene que estar ahí para:</li>
+  <li>iniciar la ejecucion del programa</li>
+  <li>manejar las interrupciones</li>
+  <li>y/o atender las systems call.</li>
+</ul>
+
+<p>Es más, otros procesos podrían estar simultaneamente en memoria para poder compartir la memoria de forma segura, para ello el sistema operativo tiene que poder configurar el hardwre de forma tal que cada proceso pueda leer y escribir solo su propia memoria (No la memoria del sistema operativo tampoco la de otros procesos. Ya que sino el proceso en cuestión podría incluso modificar al Kernel del sistema operativo. Para ello el Hardware debe proveer un mecanismo de proteccion de memoria, (que se veran detalladamente mas adelante).</p>
+
+<p><img src="https://mendezmariano.github.io/images/kernel/virtualizacion_memoria_2.jpg" alt="mmu" title="Virtualización de Memoria" width="512px" /></p>
+
+<p>Uno de estos mecanismos es denominado <strong>Memoria Virtual</strong>, la memoria virtual es una <strong>asbtracción</strong> por al cual la <strong>memoria física</strong> puede ser compartida por diversos procesos.</p>
+
+<p>Un componente clave de la memoria virtual son las <strong>direcciones virtuales</strong>, con las direcciones virtuales, para cada proceso su memoria inicia en el mismo lugar, la direccion 0.</p>
+
+<p>Cada proceso piensa que tiene toda la memoria de la computadora para si mismo, si bien obviamente esto en la realidad no sucede. El hardware traduce la direccion virtual a una direccion fisica de memoria.</p>
+
+<h3 id="traducción-de-direcciones">Traducción de Direcciones:</h3>
+<p>Se traduce una <strong>Dirección Virtual</strong> (emitida por la CPU) en una <strong>Dirección Física</strong> (la memoria). Este mapeo se realiza por hardware, más especificamente por <strong>Memory Management Unit (MMU)</strong>.</p>
+
+<p><img src="https://mendezmariano.github.io/images/kernel/mmu.jpg" alt="mmu" title="Virtualización de Memoria" width="640px" /></p>
+
+<h3 id="virtualización-de-memoria-">Virtualización de Memoria <sup id="fnref:3"><a href="index.html#fn:3" class="footnote">3</a></sup></h3>
+
+<p><img src="https://mendezmariano.github.io/images/kernel/virtualizacion_memoria.jpg" alt="mmu" title="Virtualización de Memoria" width="640px" /></p>
+
+<p>###Interrupciones de tiempo
+El <strong>aislamiento de procesos</strong> también hace que se requiera un <strong>mecanismo de hardware</strong> para que el Kernel del sistema operativo pueda <strong>periodicamente retomar el control</strong> que está teniendo un proceso.</p>
+
+<p>Cuando el sistema operativo inicia un programa en modo usuario el proceso es libre de ejecutar cualquier instrucción o cualquier función dentro de la región de la memoria del proceso.</p>
+
+<p>El proceso cree que tiene el completo control del hardware dentro de los límites de <strong>su region de memoria</strong>. Esto es una <strong><em>ilusión</em></strong>, si por ejemplo, el proceso entra en un ciclo infinito, el sistema operativo tiene que ser capaz de retomar el control.</p>
+
+<p>Para ello todas las computadoras incluyen un dispositivo llamado <strong>hardware timer</strong> que puede ser seteado para interrumpir al procesador después de un periodo de tiempo, cada procesador tiene un <strong>timer interrupt</strong>. Cuando el timer interrupt sucede, el hardware trasnfiere el control desde el proceso del usuario al kernel corriendo en modo Kernel, existen varios tipos de interrupciones, por ejemplo, las de entrada y salida.</p>
+
+<p>Que haya una <strong>interrupcion de tiempo</strong> o de otras caracteristicas <strong>no implica</strong> que haya opcurrido un <strong>error</strong>; en la mayoría de los casos una vez que se dió la interrupcion se vuelve  a setear el tiempo para la proxima interrupcion y el sistem operativo continua con la ejecucion del proceso:</p>
+
+<ul>
+  <li>seteando el <strong>modo</strong></li>
+  <li>el <strong>program counter</strong></li>
+  <li>los <strong>registros con los valores que tenian inmediatamente antes que la interrupcion ocurriera</strong>.</li>
+</ul>
+
+<p>Todos los procesadores poseen un dispositivo de hardware llamado <strong>Interrupciones de Tiempo</strong>. Una Interrupción de Tiempo permite que el procesador sea interrumpido después de un determinado lapso de tiempo. Cada procesador tiene su propio contador de tiempo. Si el procesador es multicore cada core tiene sus propio contador de tiempo individual.</p>
+
+<p>El reseteo del timer es una instrucción privilegiada que puede ser utilizada en modo kernel.</p>
+
+<p>$ cat /proc/timer_list</p>
+
+<h2 id="de-tipos-modo-de-transferencia">De Tipos modo de transferencia</h2>
+
+<p>Es necesario saber como se trasiciona de <strong>user mode</strong> a <strong>kernel mode</strong> a viceversa. Este tipo de trasnsición no son eventos raros y por ende deben tener un mecanismo que sea seguro y rápido y que además no de lugar para programas maliciosos o con errores que pueden intencinalmente ser inseridos y corropmper el Kernel.</p>
+
+<h3 id="pasar-de-user-mode-a-kernel-mode">Pasar de User Mode a Kernel Mode</h3>
+
+<p>Hay 3 razones por la cual el Kernel retomaria el control del proceso que se esta ejecutando: <strong>interrupciones</strong>, <strong>excepciones del procesador</strong> y <strong>system calls</strong>. Las primeras ocurren de forma asincrónica, las otras 2 ocurren de forma sincrónica.</p>
+
+<ul>
+  <li><strong><em>Interrupiones</em></strong>. Una interrupción es una <strong>señal asincronica</strong> que le avisa al procesador que algún evento externo ha ocurrido y requiere su atención.</li>
+</ul>
+
+<p>Mientras el procesador se encuentra ejecutando instrucciones también chequea la ocurrencia de interrupciones, si una de ellas sucede:</p>
+
+<ol>
+  <li>el procesador suspende cualquier instruccion que esta en proceso</li>
+  <li>almacena todos los estados actuales de ejecución</li>
+  <li>comienza a ejecutar un manjeador de instrucciones que esta especialmente designado para el tipo de interrupcion que sucedio en el Kernel.</li>
+</ol>
+
+<p>Cada tipo diferente de <strong>interrupción</strong> necesita su <strong>propio manejador</strong>.</p>
+
+<ul>
+  <li>
+    <p><strong><em>Excepciones del procesador</em></strong>. Una excepción del procesador es un <strong>evento de Hardware</strong> causado por un programa ejecutandose en modo usuario cuyo comportamiento causa la trasnferencia del control al Kernel por ejemplo una excepcion de procesador ocurre cada vez que un proceso quiere ejecutar una instruccion privilegiada o acceder fuera de su propio espacio de memoria. Otra por ejemplo podria ser cuando se divide un numero entero por cero.</p>
+  </li>
+  <li>
+    <p><strong><em>System Calls</em></strong>. Los procesos corriendo en modo usuario tambien pueden pasar a modo Kernel voluntariamente requiriendo o peticionando al Kernel para que realice una operacion en nombre del usuario. Una System Call es cualquier procedimiento provisto por el Kernel que puede ser llamada por el usuario.</p>
+  </li>
+</ul>
+
+<h3 id="pasar-de-kernel-mode-a-user-mode">Pasar de Kernel Mode a User Mode.</h3>
+
+<p>Asi como hay varias formas de pasar de modo Usuario a modo Kernel tambien hay varias formas de pasar de <strong>modo kernel</strong> a <strong>modo usuario</strong>:</p>
+
+<ul>
+  <li>
+    <p>Un <strong><em>nuevo proceso</em></strong>. Cuando se inicia un nuevo proceso el Kernel copia el programa en la memoria, setea el contador de programa apuntando a la primera instruccion del proceso setea el stack pointer a la base del stack de usuario y switchea a modo usuario.</p>
+  </li>
+  <li>
+    <p><strong><em>Continuar despues de una interrupcion una excepcion del procesador o de un system call</em></strong>. Una vez que el Kernel termino de manejar el pedido, este continua con la ejecucion de proceso interrupiodo mediante la restauracion de todos los registros y cambiando el modo a nivel usuario.</p>
+  </li>
+  <li>
+    <p><strong><em>Cambio entre diferentes procesos</em></strong>. En algunos casos puede pasar que el Kernel decida ejecutar otro proceso que no sea el que se estaba ejecutando, en este caso el Kernel carga el estado del proceso nuevo a travez de la PCB y cambia a modo usuario.</p>
+  </li>
+</ul>
+
+<h1 id="el-proceso-en-detalle">El Proceso: En Detalle</h1>
+
+<p>La definición informal de proceso es: que es <strong>un programa en ejecución</strong>.</p>
+
+<p>¿Cuál es el problema a resolver? dado que la mayoría de las computadoras tienen un único procesador o conjunto reducido de procesadores, cómo se provee la <strong>ilusión</strong> de que hay muchos. Cuando se dice muchos se refiere a una cantidad casi inagotable de procesadores.</p>
+
+<p>Para ello se crea la ilusion de la virtualización de la CPU, que consiste ir ejecutando un proceso a la vez, en un lapso de tiempo muy reducido, dando así la sensación de que muchas CPU virtuales están ejecutando un proceso a la vez cuando en realidad una sola CPU física o un conjunto pequeño de CPUs estan realmente haciendo todo el trabajo. Este mecanismo se denomina <strong><em>time sharing</em></strong>.</p>
+
+<p>Para tener una mejor idea de lo que es un proceso y que lo compone, hay que saber que partes del estado de la computadora debe conocer:</p>
+
+<ol>
+  <li>Su memoria: las intrucciones, los datos que el programa escribe o lee y el espacio de memoria que puede direccionar ( llamado <strong>address space</strong>) toodo está en la memoria de la máquina.</li>
+  <li>Otra parte son los registros de la CPU:
+    <ul>
+      <li><strong>Program Counter</strong>: indica la intrucción que se está ejecutando.</li>
+      <li><strong>Stack Pointer</strong> y  <strong>Frame Pointer</strong>: para manejar el stack de ejecución.</li>
+      <li><strong>Informacion de Entrada/ Salida</strong>.</li>
+      <li><strong>Meta información sobre el proceso</strong>: número de proceso, proceso padre, etc.</li>
+    </ul>
+  </li>
+</ol>
+
+<h2 id="el-api-de-procesos">El API de Procesos:</h2>
+
+<p>Que debe incluir cualquier interfaz de un SO:</p>
+
+<ol>
+  <li>
+    <p><strong>Creación (Create)</strong> <sup id="fnref:3:1"><a href="index.html#fn:3" class="footnote">3</a></sup>: todo sistema operativo debe incluir una forma de <strong>crear un nuevo proceso</strong>.</p>
+  </li>
+  <li>
+    <p><strong>Destrucción(Destroy)</strong> <sup id="fnref:4"><a href="index.html#fn:4" class="footnote">4</a></sup>: así como existe una interface para crear un proceso debe existir una interface para <strong>destruirlo por la fuerza</strong>.</p>
+  </li>
+  <li>
+    <p><strong>Espera (wait)</strong>: A veces es útil esperar a que un proceso termine su ejecución por ende algún tipo de interface de espera debe ser provista.</p>
+  </li>
+  <li>
+    <p><strong>Control Vario (Miscellaneous Control)</strong>: Además de esperar o matar a un proceso <strong>otros tipos de operaciones</strong> deben poder realizarse. Por ejemplo, suspender su ejecución por un tiempo y luego reanudarla.</p>
+  </li>
+  <li>
+    <p><strong>Estado (Status)</strong> : Tiene que existir una forma de saber sobre la situación del proceso y su <strong>estado</strong>. Cuánto hace que se está ejecutando, en que estado se encuentra, etc.</p>
+  </li>
+</ol>
+
+<p>Estas son las acciones básicas que todo SO debe proveer sobre la abstracción de la CPU.</p>
+
+<h2 id="la-metamorfosis">La Metamorfosis</h2>
+
+<ol>
+  <li>El SO debe cargar el programa, su código y cualquier dato estático en la memoria. Los programas residen en disco en algún formato ejecutable, en Linux este formato es elf.
+    <ul>
+      <li>En los SO antiguos esto se realizaba de forma <strong>abrupta (eagerly)</strong> instrucciones y datos.</li>
+      <li>En los SO  modernos se realiza de forma <strong>perezosa (lazily)</strong>, cargando lo que se necesite según se necesite.</li>
+    </ul>
+  </li>
+  <li>
+    <p>Se crea la pila de ejecución (Execution Stack) en base a reservar cierta cantidad de memoria, la misma se inicializa por ejemplo si usamos C con argv y argc del main().</p>
+  </li>
+  <li>
+    <p>Se crea el Heap en base a reservar otra cierta cantidad de memoria,  el Heap sirve para la alocación de memoria dinámica, en C se crea y se destruyen estructuras  memoria dinámica con malloc() y free().</p>
+  </li>
+  <li>Por último el SO realizará otras operaciones. Varias de ellas relacionadas con operaciones de Entrada y Salida de Datos.
+    <ul>
+      <li>Por ejemplo, en los SO Unix-like cada proceso posee por defecto 3 descriptores de archivos abiertos:</li>
+      <li>Standard Input</li>
+      <li>Standard Output</li>
+      <li>Standard Error</li>
+    </ul>
+  </li>
+  <li>Una vez que todo lo anterior sucedió, un última cosa sucede, se setea el punto de entrada (entry point) de ejecución de las instrucciones del programa en el main().</li>
+</ol>
+
+<h2 id="estados-de-un-proceso">Estados de un Proceso</h2>
+<p>En una visión simplificada un proceso puede encontrarse en los siguientes estados:</p>
+<ul>
+  <li><strong>Corriendo (Running)</strong>: el proceso se encuentra corriendo en un procesador. Está ejecutando instrucciones.</li>
+  <li><strong>Listo (Ready)</strong>: en este estado el proceso está listo para correr pero por algún motivo el SO ha decidido no ejecutarlo por el momento.</li>
+  <li><strong>Bloqueado (Blocked)</strong>: en este estado el proceso ha ejecutado algún tipo de operación que hace que éste no esté listo para ejecutarse hasta que algún evento suceda.</li>
+</ul>
+
+<p><img src="https://mendezmariano.github.io/images/process/estados_simplificado.jpg" alt="Proceso" title="Proceso" width="512px" /></p>
+
+<h3 id="dos-procesos-solo-con-cómputo-uso-de-cpu">Dos Procesos solo con Cómputo, uso de CPU</h3>
+
+<p><img src="https://mendezmariano.github.io/images/process/estados_dos_procesos_solo_computo.jpg" alt="Proceso" title="Proceso" width="512px" /></p>
+
+<h3 id="dos-procesos-con-cómputo-y-entrada-y-salida-uso-de-cpu">Dos Procesos con Cómputo y Entrada y Salida, uso de CPU</h3>
+
+<p><img src="https://mendezmariano.github.io/images/process/estados_dos_procesos_con_io.jpg" alt="Proceso" title="Proceso" width="512px" /></p>
+
+<h2 id="en-la-realidad-unix-like-9-estados">En la realidad Unix-like, 9 estados:</h2>
+
+<ol>
+  <li><strong>Corriendo User Mode(Running User Mode)</strong>: El proceso se encuentra corriendo en un procesador. Está ejecutando instrucciones.</li>
+  <li><strong>Corriendo kernel Mode(Running Kernel Mode)</strong>: d</li>
+  <li><strong>Listo para Corre en Memoria (Ready to Run on Memory)</strong>: En este estado el proceso está listo para correr pero por algún motivo el SO ha decidido no ejecutarlo por el momento.</li>
+  <li><strong>Durmiendo en Memoria (Asleep In Memory)</strong> :  El proceso está bloqueado  en memoria.</li>
+  <li><strong>Listo para Correr pero Swapeado (Ready to Run but wapped)</strong>: El proceso está bloqueado en memoria secundaria.</li>
+  <li><strong>Durmiendo en Memoria Secundaria (Asleep Swapped)</strong>: El proceso se encuentra bloqueado en memoria secundaria.</li>
+  <li><strong>Preempt(Preempt)</strong>: Es igual a 1 pero un proceso que pasó antes por Kernel mode solo puede pasar a preentive.</li>
+  <li><strong>Creado (Created)</strong>: El proceso está recién creado y en un estado de transición.</li>
+  <li><strong>Zombie (Zombie)</strong>: El proceso ejecutó la S.C. exit(), ya no existe más, lo único que queda es el exit state.</li>
+</ol>
+
+<p><img src="https://mendezmariano.github.io/images/process/estados_completo.jpg" alt="Proceso" title="Proceso" width="640px" /></p>
+
+<h1 id="el-api-de-procesos-de-unix-like-system-calls">El API de Procesos de Unix-like, System Calls:</h1>
+
+<h2 id="el-api-resumida">El API resumida:</h2>
+
+<ol>
+  <li><strong>fork()</strong>: Crea un proceso y devuelve su id.</li>
+  <li><strong>exit()</strong>: Termina el proceso actual.</li>
+  <li><strong>wait()</strong>: Espera por un proceso hijo.</li>
+  <li><strong>kill(pid)</strong>: Termina el proceso cuyo pid es el parametro.</li>
+  <li><strong>getpid()</strong>: Devuelve el pid del proceso actual.</li>
+  <li><strong>exec(filename, *argv)</strong>: Carga un archivo y lo ejecuta.</li>
+  <li><strong>sbrk(n)</strong>: Crece la memoria del proceso en n bytes.</li>
+</ol>
+
+<h2 id="la-estructura-de-un-proceso-unix-like">La estructura de un proceso Unix-like:</h2>
+
+<pre><code class="language-C">// the registers xv6 will save and restore
+// to stop and subsequently restart a process
+ 
+struct context 
+{
+    int eip;
+    int esp;
+    int ebx;
+    int ecx;
+    int edx;
+    int esi;
+    int edi;
+    int ebp;
+ };
+ 
+ // the different states a process can be in
+ enum proc_state { UNUSED, EMBRYO, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
+</code></pre>
+
+<pre><code class="language-C">// the information xv6 tracks about each process
+// including its register context and state
+struct proc {
+    char *mem;                  // Start of process memory  
+    uint sz;                    // Size of process memory
+    char *kstack;               // Bottom of kernel stack
+                                // for this process
+    enum proc_state state;      // Process state
+    int pid;                    // Process ID
+    struct proc *parent;        // Parent process
+    void *chan;                 // If non-zero, sleeping on chan
+    int killed;                 // If non-zero, have been killed
+    struct file *ofile[NOFILE]; // Open files
+    struct inode *cwd;          // Current directory
+    struct context context;     // Switch here to run process
+    struct trapframe *tf;       // Trap frame for the
+                                // current interrupt
+                                                                                                                                                                      };
+</code></pre>
+
+<h2 id="system-call-fork2">System Call fork(2)</h2>
+
+<p>La system call <strong>fork()</strong> es la encargada de proveer el servicio provisto por el O.S. para la  creación de nuenvos procesos. ¿Que hace fork?:</p>
+<ol>
+  <li>Crea y asigna una nueva entrada en la <strong>Process Table</strong> para el nuevo proceso.</li>
+  <li>Asigna un número de ID <strong>único</strong> al proceso hijo.</li>
+  <li>Crea una copia lógica del contecto del proceso padre.</li>
+  <li>Realiza ciertas operaciones de I/O.</li>
+  <li>Devuelve el número de ID del hijo al proceso padre, y un 0 al proceso hijo</li>
+</ol>
+
+<p>Ejemplo del uso del fork() obtenido del [ARP]:</p>
+
+<pre><code class="language-C">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;unistd.h&gt;
+
+int main(int argc, char *argv[])
+{
+    printf("hello world (pid:%d)\n", (int) getpid());
+    int rc = fork();
+    if (rc &lt; 0) 
+    {                           // fork failed; exit
+                
+        fprintf(stderr, "fork failed\n");
+        exit(1);
+                                    
+    } else if (rc == 0) {
+        // child (new process)
+        printf("hello, I am child (pid:%d)\n", (int) getpid());
+                                                    
+    } 
+    else {                                
+
+        // parent goes down this path (main)                                                        
+        printf("hello, I am parent of %d (pid:%d)\n", rc, (int) getpid());
+                                                                        
+    }
+    return 0;
+}
+</code></pre>
+<p>Algunas Notas:</p>
+<ul>
+  <li>El proceso creado es casi un copia exacta del proceso padre.</li>
+  <li>Un punto destacable es que el nuevo proceso no comienza su ejecución en main(), sino justo despues de la ejecución de fork().</li>
+  <li>Si bien el nuevo proceso es exactamente igual al padre, la diferencia entre ambos el el valor de retorno de fork().</li>
+  <li>Por último, el output no es determinístico, entra en juego el <strong>planificador</strong>.</li>
+</ul>
+
+<h2 id="system-call-wait2">System Call wait(2)</h2>
+<p>En ciertos casos el proceso padre necesita esperar que el proceso hijo realice cierta tarea para continuar con su ejecución. Para ello existe la system call wait(2) que retrasa la ejecución del proceso padre hata que el proceso hijo termine su ejecución. Ejemplo de fork() y wait () obtenido del [ARP]</p>
+
+<pre><code class="language-C">#include&lt;stdio.h&gt;
+#include&lt;stdlib.h&gt;
+#include&lt;unistd.h&gt;
+#include&lt;sys/wait.h&gt;
+
+int
+main(int argc, char *argv[]){
+    printf("hello world (pid:%d)\n", (int) getpid());
+    int rc = fork();
+    if (rc &lt; 0){                                       
+      
+        // fork failed; exit
+        fprintf(stderr, "fork failed\n");
+        exit(1);
+
+    } else if (rc == 0) { 
+        
+        // child (new process)
+        printf("hello, I am child (pid:%d)\n", (int) getpid());
+    
+    } else {
+                    
+        // parent goes down this path (main)
+        int wc = wait(NULL);
+        printf("hello, I am parent of %d (wc:%d) (pid:%d)\n",rc, wc, (int) getpid());
+                                                                                                                                                                        }                                                                                                                                                                                                                                                                                                                           
+}
+</code></pre>
+<h2 id="system-call-exec2">System Call exec(2)</h2>
+<p>Hasta ahora se ha visto como crear un nuevo proceso, a partir de uno existente. Como hacer que el proceso padre espere la ejecución de un proceso hijo. Y a continuación se verá como hacer que el nuevo proceso creado no esté relacionado con el proceso padre.  Para ello se utiliza la system call excec(). 
+Existen 6 variantes de exec(): execl(), execle(), execlp(), execv() y execcvp().</p>
+
+<p>El ejemplo de a continuación puede verse en el [ARP], en el cual se usa fork(2), wait(2) y execvp(2):</p>
+
+<pre><code class="language-C">#include&lt;stdio.h&gt;
+#include&lt;stdlib.h&gt;
+#include&lt;unistd.h&gt;
+#include&lt;sys/wait.h&gt;
+
+int
+main(int argc, char *argv[]){
+    printf("hello world (pid:%d)\n", (int) getpid());
+    int rc = fork();
+    if (rc &lt; 0){                                       
+      
+        // fork failed; exit
+        fprintf(stderr, "fork failed\n");
+        exit(1);
+
+    } else if (rc == 0) { 
+        
+        // child (new process)
+        printf("hello, I am child (pid:%d)\n", (int) getpid());
+        char *myArgs[3];
+        myArgs[0]=strdup("wc");             // programa wc
+        myArgs[1]=strdup("proceso2.c");     // arg: programa a ser contado
+        myArgs[2]=NULL;                     // marca el fin del arreglo
+        execvp(myArgs[0],myArgs);
+        printf("Esto no deberia imprimirse pues es totalmente reemplazado");
+    
+    } else {
+                    
+        // parent goes down this path (main)
+        int wc = wait(NULL);
+        printf("hello, I am parent of %d (wc:%d) (pid:%d)\n",rc, wc, (int) getpid());
+                                                                                                                                                                        }                                                                                                                                                                                                                                                                                                                           
+}
+</code></pre>
+
+<p>TODO: poner ejemplo complejo. :-)</p>
+
+<script defer="" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+
+<script defer="" onload="$.bigfoot();" src="https://cdnjs.cloudflare.com/ajax/libs/bigfoot/2.1.4/bigfoot.min.js"></script>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bigfoot/2.1.4/bigfoot-number.min.css" />
+
+<div class="footnotes">
+  <ol>
+    <li id="fn:2">
+      <p>¿Qué se guarda en el heap y en el stack?&nbsp;<a href="index.html#fnref:2" class="reversefootnote">&#8617;</a></p>
+    </li>
+    <li id="fn:1">
+      <p>Algo estático, sin vida.&nbsp;<a href="index.html#fnref:1" class="reversefootnote">&#8617;</a></p>
+    </li>
+    <li id="fn:3">
+      <p>cuando se ejecuta un comando en el shell o se hace doble click en un icono de una aplicación este comando debe ser ejecutado&nbsp;<a href="index.html#fnref:3" class="reversefootnote">&#8617;</a>&nbsp;<a href="index.html#fnref:3:1" class="reversefootnote">&#8617;<sup>2</sup></a></p>
+    </li>
+    <li id="fn:4">
+      <p>Si bien la mayoria de los procesos se inician y se destruyen por sí mismo&nbsp;<a href="index.html#fnref:4" class="reversefootnote">&#8617;</a></p>
+    </li>
+  </ol>
+</div>
+
+  </div>
+
+</article>
+
+      </div>
+    </main>
+
+    
+
+  </body>
+
+</html>

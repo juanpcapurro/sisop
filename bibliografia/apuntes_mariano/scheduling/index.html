@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Scheduling</title>
+  <meta name="description" content="apuntes de sistemas operativos">
+
+  <link rel="stylesheet" href="../assets/main.css">
+  <link rel="canonical" href="index.html">
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/3.2.2/anchor.min.js"></script>
+</head>
+
+
+  <body>
+
+    <!-- TODO: fix site navigation later -->
+
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post">
+
+  <div class="post-content">
+    <h2 id="scheduling">Scheduling</h2>
+
+<p>Cuando hay múltiples cosas qué hacer ¿cómo se elige cuál de ellas hacer primero?</p>
+
+<p>Debe existir algún mecanismo que permita determinar cuanto tiempo de CPU le toca a cada proceso. Ese período de tiempo que el kernel le otorga a un proceso se denomina <strong>time slice</strong> o <strong>time quantum</strong>. Esto sucede en los sistemas operativos de tipo <a href="../sisop_scheduling/time_sharing/index.html"><em>Time Sharing</em></a>..</p>
+
+<p>Cuando un Sistema Operativo se dice que realiza multi-programación de varios procesos debe existir una entidad que se encargue de coordinar la forma en que estos se ejecutan, el momento en que estos se ejecutan y el momento en el cual paran de ejecutarse. En un sistema operativo esta tarea es realizada por el <em>*Planificador o Scheduler</em> que forma parte del <a href="../kernel_proceso/index.html">Kernel</a> del Sistema Operativo.</p>
+
+<h3 id="números-y-el-workload">Números y el Workload</h3>
+<p>El <strong>Workload</strong> es carga de trabajo de un proceso corriendo en el sistema.</p>
+
+<p>Determinar cómo se calcula el <strong>workload</strong> es fundamental para determinar partes de las políticas de planificación. Cuanto mejor es el cálculo, mejor es la política. Las suposiciones que se harán para el cálculo del workload son más que <strong>irreales</strong>.</p>
+
+<p>Los supuestos sobre los procesos o <strong>jobs</strong> que se encuentran en ejecución son:</p>
+
+<ol>
+  <li>Cada proceso se ejecuta la misma cantidad de tiempo.</li>
+  <li>Todos los jobs llegan al mismo tiempo para ser ejecutados.</li>
+  <li>Una vez que empieza un job sigue hasta completarse.</li>
+  <li>Todos los jobs usan <strong>únicamente cpu</strong>.</li>
+  <li>El tiempo de ejecución (run-time) de cada job es conocido.</li>
+</ol>
+
+<h4 id="métricas-de-planificación">Métricas de Planificación</h4>
+<p>Para poder hacer algún tipo de análisis se debe tener algún tipo de métrica estandarizada para comparar las distintas <strong>políticas de planificación o scheduling</strong>. Bajo estas premisas, por ahora, para que todo sea simple se utilizará una única métrica llamada <strong>turnaround time</strong>. Que se define como el tiempo en el cual el proceso se completa menos el tiempo de arribo al sistema:</p>
+
+<p>T<sub>turnaround</sub>= T<sub>completion</sub> - T<sub>arrival</sub></p>
+
+<p>Debido a 2 el T<sub>arrival</sub> =0</p>
+
+<p>Hay que notar que el turnaround time es una métrica que mide performance.</p>
+
+<h2 id="políticas-para-sistemas-mono-procesador">Políticas Para Sistemas Mono-procesador</h2>
+
+<p>Se estudiarán las políticas de planificación para un sistema que posea un solo procesador o CPU con un solo núcleo de procesamiento.</p>
+
+<h3 id="first-in-first-out--fifo">First In, First Out  (FIFO)</h3>
+<p>El algoritmo más básico para implementar como política de planificaciones es el <strong>First In First Out</strong> o <strong>Fist Come, First Served</strong>.
+Ventajas:</p>
+<ol>
+  <li>Es simple.</li>
+  <li>Por 1 es fácil de implementar.</li>
+  <li>Funciona bárbaro para las suposiciones iniciales.</li>
+</ol>
+
+<p>Por ejemplo se tiene tres procesos A, B y C con T<sub>arrival</sub> =0. Si bien llegan todos al mismo tiempo llegaron con un insignificante retraso de forma tal que llegó A, B y C. Si se asume que todos tardan 10 segundos en ejecutarse… ¿cuánto es el T<sub>turnaround</sub>?</p>
+
+<pre><code class="language-math">(10+20+30)/3 = 20
+</code></pre>
+<p>Esto puede apreciarse en la imagen :</p>
+
+<p><img src="../images/scheduling/fifo1.jpg" alt="fifo" /></p>
+
+<p>Ahora relajemos la suposición 1 y no se asume que todas las tareas duran el mismo tiempo. Ahora A dura 100 segundos. ¿Cúanto es el T<sub>turnaround</sub>=?</p>
+
+<pre><code class="language-math">(100+110+120)/3 = 110 
+</code></pre>
+<p><img src="../images/scheduling/fifo2.jpg" alt="fifo" /></p>
+
+<p>Segundos en promedio… un desastre esto se llama <strong>convoy effect</strong>.</p>
+
+<p><img src="../images/scheduling/efecto_convoy.jpg" alt="convoy" width="512px" /></p>
+
+<h3 id="shortest-job-first-sjf">Shortest Job First (SJF)</h3>
+<p>Para resolver el problema que se presenta en la política FIFO, se modifica la política para que se ejecute el proceso de duración mínima, una vez finalizado esto se ejecuta el proceso de duración mínima y así sucesivamente.</p>
+
+<p>En el mismo caso de arriba, se mejora el turnaround time con el sencillo hecho de ejecutar B, C y A en ese orden:</p>
+
+<pre><code class="language-math">(10+20+120)/3=50
+</code></pre>
+<p><img src="../images/scheduling/fifo3.jpg" alt="fifo" /></p>
+
+<p>Utilizando SJF se obtuvo una significativa mejora… pero con las suposiciones iniciales que son muy poco realistas. Si se relaja la suposición 2, en la cual no todos los procesos llegan al mismo tiempo, por ejemplo llega el proceso A y a los 10 segundos llegan el proceso B y el proceso C. ¿Cómo seria el cálculo, ahora? <em>t</em>=10 seg</p>
+
+<pre><code class="language-math">(100+110-10+120-10)/3=103.33
+</code></pre>
+
+<p><img src="../images/scheduling/fifo4.jpg" alt="fifo" /></p>
+
+<h3 id="shortest-time-to-completion-stcf">Shortest Time-to-Completion (STCF)</h3>
+
+<p>Para poder solucionar este problema se necesita relajar la suposición 3 (los procesos se tienen que terminar hasta el final). La idea es que el planificador o scheduler pueda adelantarse y determinar qué proceso debe ser ejecutado. Entonces cuando los procesos B y C llegan se puede desalojar (preempt <sup id="fnref:1"><a href="index.html#fn:1" class="footnote">1</a></sup>) al proceso A y decidir que otro proceso se ejecute y luego retomar la ejecución del proceso A.</p>
+
+<p>El caso anterior el de SFJ es una política <strong>non-preemptive</strong></p>
+
+<p><img src="../images/scheduling/fifo5.jpg" alt="fifo" /></p>
+
+<p>El cálculo para el <strong>turnaround time</strong> sería</p>
+
+<pre><code class="language-math">(120-0+20-10+30-10)/3=50
+</code></pre>
+
+<h3 id="una-nueva-métrica-tiempo-de-respuesta">Una nueva métrica: Tiempo de Respuesta</h3>
+
+<p>El tiempo de respuesta o response time surge con el advenimiento del <strong>time-sharing</strong> ya que los usuarios se sientan en una terminal de una computadora y pretenden una interacción con rapidez. Por eso nace el <strong>response time</strong> como métrica:</p>
+
+<p>T<sub>response</sub>= T<sub>firstrun</sub> - T<sub>arrival</sub></p>
+
+<p>para entender la definición véase el caso anterior:</p>
+
+<p><img src="../images/scheduling/fifo5.jpg" alt="fifo" /></p>
+
+<ul>
+  <li>El T<sub>response</sub> del proceso A es 0.</li>
+  <li>El T<sub>response</sub> del proceso B es… 0… llega en 10 pero tarda 10 (10-10)</li>
+  <li>El T<sub>response</sub> del proceso C es… 10… llega en 10 pero termina en 20 (20-10)</li>
+</ul>
+
+<p>En promedio el T<sub>response</sub> es de 3.33 seg. Entonces ¿cómo escribir un planificador que tenga noción del tiempo de respuesta?</p>
+
+<h3 id="round-robin-rr">Round Robin (RR)</h3>
+
+<p>La idea del algoritmo es bastante simple, se ejecuta un proceso por un período determinado de tiempo (slice) y transcurrido el período se pasa a otro proceso, y así sucesivamente cambiando de proceso en la cola de ejecución <a href="../sisop_readings/ANALYSIS&#32;OF&#32;A&#32;TIME-SHARED&#32;PROCESSOR.pdf">Round Robin Paper</a>.</p>
+
+<p>Los procesos A, B y C llegan a ajecutarse en el mismo instante y tardan 5 segundos, si se utiliza SJF:</p>
+
+<p><img src="../images/scheduling/fifo6.jpg" alt="fifo" /></p>
+
+<pre><code class="language-math">(0+5+10)/3=5
+</code></pre>
+<p>El <strong>tiempo de respuesta promedio</strong> sería 1 para RR con time slice de 1 seg:</p>
+
+<p><img src="../images/scheduling/fifo7.jpg" alt="fifo" /></p>
+
+<pre><code class="language-math">(0+1+2)/3=1
+</code></pre>
+<p>Lo importante de RR es la elección de un buen time slice, se dice que el time slice tiene que amortizar el cambio de contexto sin hacer que esto resulte en que el sistema no responda más.</p>
+
+<p>Por ejemplo, si el tiempo de cambio de contexto está seteado en 1 ms y el time slice está seteado en 10 ms, el 10% del tiempo se estará utilizando para cambio de contexto.</p>
+
+<p>Sin embargo, si el time slice se setea en 100 ms, solo el 1% del tiempo será dedicado al cambio de contexto. ¿Qué pasa si se trae a colación a la métrica del turnaround time ? Rpta:<sup id="fnref:2"><a href="index.html#fn:2" class="footnote">2</a></sup></p>
+
+<p>Que pasa cuando hay Entrada y salida de datos… Capitulo 7 del Arpachi y Capitulo 7 del Dahlin</p>
+
+<h3 id="la-planificación-en-la-vida-real">La Planificación en la vida real</h3>
+
+<ol>
+  <li>¿Qué debería proporcionar un marco de trabajo basico que permita pensar en políticas de planificaciones ?</li>
+  <li>¿Cuáles deberían ser las suposiciones a tener en cuenta?</li>
+  <li>¿Cuáles son las métricas importantes?</li>
+</ol>
+
+<h1 id="multi-level-feedback-queue-mlfq">Multi-Level Feedback Queue (MLFQ)</h1>
+
+<p>Esta técnica llamada <strong>Multi-Level Feedbak Queue</strong> de planificación fue descripta inicialmente en los años 60 en un sistema conocido como <strong>Compatible Time Sharinkg System CTSS</strong>. Este trabajo en conjunto con el realizado sobre multics llevó a que su creador ganara el <strong>Turing Award</strong>.</p>
+
+<p>Este planificador ha sido refinado con el paso del tiempo hasta llegar a las implementaciones que se encuentran hoy en un sistema moderno.</p>
+
+<h2 id="mlqf-intenta-atacar-principalmente-2-problemas">MLQF intenta atacar principalmente 2 problemas:</h2>
+
+<ol>
+  <li>
+    <p>Intenta optimizar el turnaround time, que se realiza mediante la ejecución de la tarea mas corta primero, desafortunadamente el sistema operativo nunca sabe a priori cuanto va a tardar en correr una tarea.</p>
+  </li>
+  <li>
+    <p>MLQF intenta que el planificador haga sentir al sistema con un tiempo de respuesta interactivo para los usuarios por ende minimizar el <strong><em>response time</em></strong>; desafortunadamente los algoritmos como round-robin reducen el <strong><em>response time</em></strong> pero tienen un terrible <strong><em>turnaround time</em></strong>.</p>
+  </li>
+</ol>
+
+<p>Entonces:</p>
+
+<ul>
+  <li>
+    <p>¿Cómo se hace para que un planificador pueda lograr estos dos objetivos si generalmente no se sabe nada sobre el proceso a priori?.</p>
+  </li>
+  <li>
+    <p>¿Cómo se planifica sin tener un conocimiento acabado?</p>
+  </li>
+  <li>
+    <p>¿Cómo se construye un planificador que minimice el tiempo de respuesta para las tareas interactivas y también minimice el <strong><em>timearound</em></strong> time sin un conocimiento a priori de cuanto dura la tarea?</p>
+  </li>
+</ul>
+
+<h1 id="mlqf-las-reglas-básicas">MLQF: Las reglas básicas</h1>
+
+<p>MLFQ tiene un <strong>conjunto de distintas colas</strong>, cada una de estas colas tiene asignado un nivel de prioridad.</p>
+
+<p><img src="../images/scheduling/mlfq.jpg" alt="fifo" /></p>
+
+<p>En un determinado tiempo, una tarea que esta lista para ser corrida esta en una única cola. MLFQ usa las prioridades para decidir que tarea debería correr en un determinado tiempo t0: la tarea con mayor prioridad o la tarea en la cola mas alta sera elegida para ser corrida.</p>
+
+<p>Dado el caso que existan mas de una tarea con la misma prioridad entonces se utilizara el algoritmo de <strong>Round Robin</strong> para planificar estas tareas entre ellas.</p>
+
+<p>Las 2 reglas básicas de MLFQ:</p>
+
+<ul>
+  <li><strong>REGLA 1</strong>: si la prioridad (A) <strong>es mayor</strong> que la prioridad de (B), (A) se ejecuta y (B) no.</li>
+  <li><strong>REGLA 2</strong>: si la prioridad de (A) <strong>es igual</strong> a la prioridad de (B), (A) y (B)se ejecutan en <em>Round-Robin</em>.</li>
+</ul>
+
+<p>La clave para la planificación MLFQ subyace entonces en cómo el planificador setea las prioridades. En vez de dar una prioridad fija a cada tarea, MLFQ varia la prioridad de la tarea basándose en su comportamiento observado.</p>
+
+<p><img src="../images/scheduling/mlfq.jpg" alt="fifo" /></p>
+
+<ul>
+  <li>
+    <p>Por ejemplo, si una determinada tarea repetidamente no utiliza la CPU mientras espera que un dato sea ingresado por el teclado, MLFQ va a mantener su prioridad alta, así es como un proceso interactivo debería comportarse.</p>
+  </li>
+  <li>
+    <p>Si por lo contrario, una tarea usa intensivamente por largos periodos de tiempo la CPU, MLFQ reducirá su prioridad. De esta forma MLFQ va a aprender mientras los procesos se ejecutan y entonces va a usar la historia de esa tarea para predecir su futuro comportamiento</p>
+  </li>
+</ul>
+
+<p>(Figura 181 ARPACI)</p>
+
+<p>Obviamente que una fotografía sobre MLFQ no va a dar una idea de como este trabaja lo que se necesita es entender como la prioridad de una tarea varia a travez del tiempo.</p>
+
+<p>##Primer intento: ¿Cómo cambiar la prioridad ?</p>
+
+<p>Se debe decidir como MLFQ va a cambiarle el nivel de prioridad a una tarea durante toda la vida de la misma (por ende en que cola esta va a residir). Para hacer esto hay que tener en cuenta nuestra carga de trabajo (workload): una mezcla de tareas interactivas que tienen un corto tiempo de ejecución y que pueden renunciar a la utilización de la CPU y algunas tareas de larga ejecución basadas en la CPU que necesitan tiempo de CPU , pero poco tiempo de respuesta. A continuación e muestra un  primer intento de algoritmo de ajuste de prioridades:</p>
+
+<ul>
+  <li><strong>REGLA 3</strong>: Cuando una tarea entra en el sistema se pone con la mas alta prioridad</li>
+  <li><strong>REGLA 4a</strong>: Si una tarea usa un time slice mientras se esta ejecutando su prioridad se reduce de una unidad (baja la cola una unidad menor)</li>
+  <li><strong>REGLA 4b</strong>: Si una tarea renuncia al uso de la CPU antes de un time slice completo se queda en el mismio nivel de prioridad.</li>
+</ul>
+
+<h3 id="ejemplo-1-una-única-tarea-con-ejecución-larga">Ejemplo 1: Una única tarea con ejecución larga.</h3>
+
+<p><img src="../images/scheduling/mlfq1.jpg" alt="fifo" /></p>
+
+<h3 id="ejemplo-2-llega-una-tarea-corta">Ejemplo 2: Llega una tarea corta.</h3>
+
+<p><img src="../images/scheduling/mlfq2.jpg" alt="fifo" /></p>
+
+<p>Existen 2 tareas, una de larga ejecución de CPU, A y B con una ejecución corta e interactiva. B tarda 20 milisengundos en ejecutarse. 
+D e este ejemplo se puede ver una de las metas del algoritmo dado que no sabe si la tarea va a ser de corta o larga duración de ejecución, inicialmente asume que va a ser corta, entonces le da la mayor prioridad. Si realmente es una tarea corta se va a ejecutar rápidamente y va a terminar, si no lo es se moverá lentamente hacia abajo en las colas de prioridad haciéndose que se parezca mas a un proceso BATCH .</p>
+
+<p>###Ejemplo 3: Que pasa con la entrada y salida.</p>
+
+<p><img src="../images/scheduling/mlfq3.jpg" alt="fifo" /></p>
+
+<p>Como se considera en la regla 4 si la tarea renuncia al uso del procesador antes de un time slice se mantiene en el mismo nivel de prioridad. EL objetivo de esta regla es simple: si una tarea es interactiva por ejemplo entrada de datos por teclado o movimiento del mouse esta no va a requerir uso de CPU antes de que su time slice se complete en ese caso no sera penalizada y mantendrá su mismo nivel de prioridad.</p>
+
+<h2 id="problema-con-este-approach-de-fmlq">PROBLEMA Con este Approach de FMLQ</h2>
+
+<ol>
+  <li>
+    <p>Starvation : SI hay demasiadas tareas interactivas en el sistema se van a combinar para consumir todo el tiempo del CPU y las tareas de larga duración nunca se van a ejecutar.</p>
+  </li>
+  <li>
+    <p>Un usuario inteligente podría reescribir sus programas para obtener mas tiempo de CPU por ejemplo: Antes de que termine el time slice se realiza una operación de entrada y salida entonces se va a relegar el uso de CPU haciendo esto se va a mantener la tarea en la misma cola de prioridad. Entonces la tarea puede monopolizar toda el tiempo de CPU.</p>
+  </li>
+</ol>
+
+<h2 id="segundo-approach">Segundo Approach</h2>
+
+<p>¿ Cómo mejorar la prioridad?</p>
+
+<p>Para cambiar el problema del starvation y permitir que las tareas con larga utilización de CPU puedan progresar lo que se hace es aplicar una idea simple, se mejora la prioridad de todas las tareas en el sistema. Se agrega una nueva regla:</p>
+
+<ul>
+  <li><strong>Regla 5</strong>: Después de cierto periodo de tiempo <strong>S</strong>, se mueven las tareas a la cola con mas prioridad.</li>
+</ul>
+
+<p>Haciendo esto se matan 2 pájaros de 1 tiro:</p>
+
+<ol>
+  <li>
+    <p>Se garantiza que los procesos no se van a starve: Al ubicarse en la cola tope con las otras tareas de alta prioridad estos se van a ejecutar utilizando <strong>round-robin</strong> y por ende en algún momento recibirá atención.</p>
+  </li>
+  <li>
+    <p>si un proceso que consume CPU se transforma en interactivo el planificador lo tratara como tal una vez que haya recibido el boost de prioridad.</p>
+  </li>
+</ol>
+
+<p><img src="../images/scheduling/mlfq_boost.jpg" alt="fifo" /></p>
+
+<p>Obviamente el agregado del periodo de tiempo <strong><em>S</em></strong> va a desembocar en la pregunta obvia: Cuanto debería ser el valor del tiempo S. Algunos investigadores suelen llamar a este tipo de valores dentro de un sistema <strong>VOO-DOO CONSTANTs</strong> porque parece que requieren cierta magia negra para ser determinados correctamente.</p>
+
+<p>Este es el caso de <strong><em>S</em></strong>, si el valor es demasiado <strong>alto</strong>,los procesos que requieren mucha ejecución van a caer en starvation; si se setea a <strong><em>S</em></strong> con valores <strong>muy pequeños</strong> las tareas interactivas no van a poder compartir adecuadamente la CPU.</p>
+
+<h2 id="intento-3--llevar-mejor-la-contabilidad">INTENTO 3 : Llevar mejor la contabilidad</h2>
+
+<p>Se debe solucionar otro problema: Como prevenir que ventajeen (gaming) al planificador.</p>
+
+<p>La solución es llevar una mejor <strong>contabilidad del tiempo de uso de la CPU</strong> en todos los niveles del MLFQ.</p>
+
+<p>En lugar de que el planificador se olvide de cuanto time slice un determinado proceso utiliza en un determinado nivel el planificador debe seguir la pista desde que un proceso ha sido asignado a una cola hasta que es trasladado a una cola de distinta prioridad. Ya sea si usa su time slice de una o en pequeños trocitos, esto no importa por ende se reescriben las reglas 4a y 4b en una única regla:</p>
+
+<ul>
+  <li><strong>Regla 4</strong>: Una vez que una tarea usa su asignación de tiempo en un nivel dado (independientemente de cuantas veces haya renunciado al uso de la CPU) su prioridad se reduce: ( Por ejemplo baja un nivel en la cola de prioridad)</li>
+</ul>
+
+<p><img src="../images/scheduling/mlfq_gamming.jpg" alt="fifo" /></p>
+
+<h2 id="resumen">Resumen:</h2>
+
+<p>Se vio la técnica de planificación conocida como multi-level feed back qeeue (MLFQ). Se puede ver porque es llamado así, tiene un conjunto de colas de multiniveles y utiliza feed back para determinar la prioridad de una tarea dada. La historia es su guía: Poner atención como las tareas se comportas a través del tiempo y tratarlas de acuerdo a ello. Las reglas que se utilizan son:</p>
+
+<ul>
+  <li><strong>REGLA 1</strong>: si la prioridad (A) <strong>es mayor</strong> que la prioridad de (B), (A) se ejecuta y (B) no.</li>
+  <li><strong>REGLA 2</strong>: si la prioridad de (A) <strong>es igual</strong> a la prioridad de (B), (A) y (B)se ejecutan en <em>Round-Robin</em>.</li>
+  <li><strong>REGLA 3</strong>: Cuando una tarea entra en el sistema se pone con la mas alta prioridad</li>
+  <li><strong>Regla 4</strong>: Una vez que una tarea usa su asignación de tiempo en un nivel dado (independientemente de cuantas veces haya renunciado al uso de la CPU) su prioridad se reduce: ( Por ejemplo baja un nivel en la cola de prioridad).</li>
+  <li><strong>Regla 5</strong>: Después de cierto periodo de tiempo <strong>S</strong>, se mueven las tareas a la cola con mas prioridad.</li>
+</ul>
+
+<h1 id="planificación-proportional-share">Planificación: Proportional Share</h1>
+
+<p>Existen otros tipos de algoritmos de planificación que utilizan diferentes mecanismos para realizar esta tarea. Por ejemplo el mecanismo de llamado Proportional-Share, algunas veces también conocido como fair-share. Este se basa en un concepto muy simple: En vez de optimizar el turnaround o el response time el planificador en su lugar intentara garantizar que cada tarea obtenga cierto porcentaje de tiempo de CPU.</p>
+
+<p>El concepto también es conocido como planificación por lotería la idea básica es muy sencilla: cada tanto se realiza un sorteo para determinar que proceso tiene que ejecutarse a continuación, por ende los procesos que deban ejecutarse con mas frecuencia tiene que tener mas posibilidades de ganar la lotería.</p>
+
+<h2 id="el-concepto">El concepto:</h2>
+
+<p>El concepto que subyace en el algoritmo de planificación por lotería es muy básico: los boletos, son utilizados para representar cuanto se comparte de un determinado recurso para un determinado proceso. El porcentaje de los boletos que un proceso tiene es el porcentaje de cuanto va a compartir el recurso en cuestión.</p>
+
+<p>Por ejemplo:</p>
+
+<p>Suponiendo que existen dos procesos A y B y que un boleto ganador esta entre 0 y 99 podría suponerse que el proceso A tiene el 75 % de posibilidades de recibir el recurso y el proceso B tiene el 25 % restante.</p>
+
+<p>En términos de boletos de la lotería el proceso A tendría los boletos del 0 al 74 y el proceso B tendría los boletos del 75 al 99. UN boleto ganador determina si A o B son ejecutados, entonces el planificador. Entonces por ejemplo de boletos ganadores de la lotería podrían ser:</p>
+
+<p>63 85 70 39 76 17 29 41 36 39 10 99 68 83 63 62 43 0 49 49</p>
+
+<p>Entonces el resultado de la planificación seria:</p>
+
+<p>A   A A   A A A A A  A  A A A A A A<br />
+  B     B           B  B</p>
+
+<p>Utilizar la aleatoriedad lleva a una correcta visión desde el punto de vista probabilistico pero no garantiza que esa proporcion deseada se lleve a cabo. De hecho en el ejemplo anterior no sucede que se ejecute 25 75.
+##El mecanismo de los boletos como si estuviéramos en Argentina en un sistema operativo hay ciertos mecanismos para manipular los boletos de la loteria de forma diferente y con cierta utilidad.</p>
+
+<ul>
+  <li><strong>Ticket Currency</strong>: Existen como en la realidad distintos tipos de moneda y las tareas pueden tener los tickets comprados con distintos valores de moneda; el sistema automáticamente los transforma en un tipo global de moneda</li>
+</ul>
+
+<p>User A -&gt; 500(A ś currensy) to A1 -&gt;  50 ( global currency)
+       -&gt; 500(A ś currensy) to A2 -&gt;  50 ( global currency)
+User B -&gt;  10(B ś currensy) to B1 -&gt; 100 ( global currency)</p>
+
+<ul>
+  <li>
+    <p><strong>Transferencia de boletos</strong>: Este mecanismo permite que un proceso temporalmente trasnfiera sus boletos a otro proceso. Este mecanismo es util cuando se esta utilizando la arquitectura cliente/servidor.</p>
+  </li>
+  <li>
+    <p><strong>Inflación</strong>: En argentina estamos acostumbrados a este mecanismo y es casi inútil explicarlo pero por las dudas lo esclareceremos. Con la inflación un proceso puede aumentar o disminuir la cantidad de boletos que posee esto lo puede hacer de forma temporal.  Este proceso obviamente no puede realizarse en un sistema en el cual las tareas compiten entre ellas,  ya que una tarea muy avara podría captar todos los boletos. Sin embargo, este método puede ser utilizado en un ambiente en el cual los procesos confían entre ellos.</p>
+  </li>
+</ul>
+
+<h2 id="la-implementación">La Implementación</h2>
+
+<p>Probablemente lo mas interesante de este método es su facilidad para implementar. Todo lo que se necesita es un buen generador de numeros aleatorios que determine cual es el numero de la lotería ganador, una estructura de datos para mantener la informacion de los procesos del sistema y finalmente un numero total de tickets.</p>
+
+<p>En definitiva para tomar una decisión de planificación, se debe sortear un boleto; cuando se tiene el numero ganador se recorre la lista de procesos en busca del proceso que tenga ese numero.</p>
+
+<pre><code class="language-C">// counter: used to track if we’ve found the winner yet
+int counter = 0;
+ 
+// winner: use some call to a random number generator to
+ 
+get a value, between 0 and the total # of tickets
+int winner = getrandom(0, totaltickets);
+ 
+// current: use this to walk through the list of jobs
+node_t *current = head;
+ 
+// loop until the sum of ticket values is &gt; the winner
+ while (current) {
+     counter = counter + current-&gt;tickets;
+     if (counter &gt; winner)
+     break; // found the winner
+     current = current-&gt;next;
+ }
+ // ’current’ is the winner: schedule it...
+</code></pre>
+
+<h1 id="planificación-avanzada-planificación-multiprocesador">Planificación Avanzada: Planificación multiprocesador</h1>
+
+<p>En los últimos años los sistemas multi-procesadores han ido creciendo en los lugares comunes de la informática como por ejemplo en las computadores desktop, laptops y dispositivos móviles. El advenimiento de los procesadores multi-núcleo, en los cuales múltiples núcleos de CPU están empaquetados en un único chip, en nuestros días esa arquitectura esta en plena proliferación. Este tipo de arquitectura de procesadores se volvió popular debido a que es complicado construir CPU cada vez mas rápidas y que a su vez las mismas no se fundan por el calor producido por la potencia que consumen.</p>
+
+<p>Por supuesto que tener muchos procesadores en un único chip conlleva un conjunto de dificultades:</p>
+
+<ol>
+  <li>Una aplicación típica por ejemplo un programa escrito en C usa únicamente una CPU:
+    <ul>
+      <li>por lo cual agregar mas CPU no implica que la aplicación corra de forma mas rápida. El remedio a este problema es la necesidad de escribir aplicaciones que corran en paralelo, por ejemplo usando <strong>threads</strong>.</li>
+    </ul>
+  </li>
+</ol>
+
+<ul>
+  <li>Las aplicaciones <strong>multithreads</strong> pueden diseminar el trabajo a lo largo de múltiples CPUs y por ende correr mas rápido cuantas mas CPU hayan.</li>
+</ul>
+
+<p>Mas allá de las aplicaciones sale a la luz una nueva problemática que es la planificación en multiprocesadores.</p>
+
+<h2 id="la-arquitectura-multiprocesador">La arquitectura multiprocesador.</h2>
+
+<p>Para poder entender cuales son los problemas que atañan a la planificación multiprocesador en primer lugar hay que entender cual es la diferencia fundamental entre hardware monoprocesador y hardware multi-procesador.</p>
+
+<p><img src="../images/scheduling/Nehalem_Die_2.jpg" alt="fifo" width="550px" /></p>
+
+<p>La diferencia se centra básicamente alrededor de un tipo de hardware llamado cache,y de que forma exactamente los datos en la cache son compartidos a través de los multiprocesadores.</p>
+
+<p>En un sistema con único CPU hay una jerarquía de el hardware de cache que generalmente ayuda al procesador a correr los programas mas rápidamente. Las <strong>cache</strong> son pequeñas y rápidas memorias que (generalmente) mantienen copias de datos que son comúnmente utilizados que se encuentran en la memoria principal del sistema.</p>
+
+<p><img src="../images/scheduling/cache.png" alt="fifo" /></p>
+
+<p>La <strong>memoria principal</strong>, por el contrario mantienen todos los datos del sistema pero el acceso a los mismos es lento. A través de mantener los datos que son frecuentemente utilizados en la cache, el sistema puede hacer que una memoria larga y lenta parezca una memoria rápida.</p>
+
+<p><img src="../images/scheduling/Nehalem_Die.jpg" alt="fifo" /></p>
+
+<p>Como ejemplo, se puede considerar un programa que le diga implícitamente a una instrucción e ir a buscar un determinado valor de la memoria,  si se tiene un sistema con una única CPU, con un pequeño cache de 64 Kb y una memoria principal muy larga:</p>
+
+<ol>
+  <li>
+    <p>La primera vez que se realice la carga, los datos estarán reduciendo en la memoria principal, y esto por lo tanto llevara un largo tiempo de fetch ( probablemente unos días nanosegundos o incluso unos cientos de nano segundos).</p>
+  </li>
+  <li>
+    <p>EL procesador, anticipando que esos datos podrían ser reutilizados, pone una copia de los datos cargados en el cache de la CPU.</p>
+  </li>
+  <li>
+    <p>Si el programa requiere el mismo conjunto de datos otra vez, la CPU en primer lugar los va a ir a buscar al cache; si los encuentra ahí los datos son llevados a la CPU mucho mas rápidamente( probablemente en unos pocos nanosegundos), entonces el programa parecerá ejecutarse mas rápidamente.</p>
+  </li>
+</ol>
+
+<p><a href="../images/scheduling/cache2.jpg">Esquema del funcionamiento de la cache.</a></p>
+
+<p>Entonces las cache se basan en la noción de <strong>localidad</strong>, de la cual hay dos tipos: <strong>localidad temporal</strong> y <strong>localidad espacial</strong>.</p>
+
+<ul>
+  <li>
+    <p>La idea detrás de la <strong>localidad temporal</strong> es que cuando cierta cantidad de datos son accedidos, es muy probable que sean accedidos otra vez ne un futuro cercano; imaginar por ejemplo variables o instrucciones que se ejecutan una y otra vez en un ciclo.</p>
+  </li>
+  <li>
+    <p>La idea detrás de la <strong>localidad espacial</strong> se basa en que un programa que accede a una dirección X es muy probable que necesite volver a acceder cerca de X. Acá podría pensarse en un programa sobre un arreglo. Teniendo en cuenta que este tipo de localidad existe en la mayoría de los programas los sistemas de hardware pueden hacer buen uso de las cache.</p>
+  </li>
+  <li>
+    <p>El codigo fuente escrito por los humanos tiene ambos tipos de localidades:</p>
+  </li>
+</ul>
+
+<pre><code class="language-C">for(i = 0; i &lt; 20; i++)
+    for(j = 0; j &lt; 10; j++)
+        a[i] = a[i]*j;
+</code></pre>
+
+<p>La <em>localidad temporal</em> se refiere a cuando la misma posición de memoria es referenciada por muchas veces en un lapso de tiempo muy corto. Por ejemplo, en el código de arriba a[i] es referenciada frecuentemente en el ámbito del ciclo en a[i] = a[i] * 2 o a[i] = a[i] * 3. Dentro del mismo ámbito, se puede decir que i y j tiene localidad temporal.</p>
+
+<p>La <em>localidad espacial</em> tiene que ver con la referencia de variables que están en posiciones contiguas de memoria a[0] y a[1] por ejemplo.</p>
+
+<p>¿Que sucede cuando múltiples procesadores en un único sistema tiene que compartir una única memoria principal?</p>
+
+<p>Como se verá el cacheo con múltiples CPU es mucho mas complicado. Imaginarse, por ejemplo, que un programa que se esta ejecutando en la CPU1 lee un dato cuyo valor es D en la dirección de memoria A:</p>
+
+<ul>
+  <li>Debido a su este dato no esta cacheado en la CPU1, el sistema lo trae de la memoria principal y toma este valor D.</li>
+  <li>El programa entonces modifica el valor en la dirección A, esto se realiza actualizando su valor D1; dado que escribir los datos directamente en la memoria principal es muy lento, el sistema habitualmente lo deja para mas tarde.</li>
+  <li>Entonces se asume que el OS decide parar de ejecutar un programa y mover este programa a la CPU 2.</li>
+  <li>EL programa entonces vuelve a ejecutarse en la CPU 2 y relee el valor en la dirección A;
+porque no existe tal valor en la cache de la CPU2, entonces el sistema trae el valor de memoria desde la memoria principal y obtiene el viejo valor D rn vez del correcto valor D prima. OOPS!.</li>
+</ul>
+
+<p>Este problema es generalmente llamado <strong>coherencia del cache</strong>, existe muchísima bibliográfica que describe las diferentes sutilezas en solucionar este tipo de problemas que en este curso no se verán.</p>
+
+<p>La solución básica que el hardware provee es mediante la monitorizacion de los accesos a memoria, el harware se asegura básicamente que las cosas pasen bien y que la vista de una única memoria compartida sea preservada. Una forma de hacer esto en un sistema basa en Bus, usando una vieja técnica llamada <strong>Bus Snooping</strong>:</p>
+
+<ul>
+  <li>Cada cache pone atención en las actualizaciones de memoria mediante la observación del bus que esta conectado a ellos y a la memoria principal. Cuando una CPU entonces ve que se actualizo un dato que esta mantenido en  su propio cache esta se va a dar cuenta de tal cambio y va a invalidar su copia (por ejemplo sacándola de su propio cache) o lo actualiza (por ejemplo poniendo el nuevo valor en su cache)</li>
+</ul>
+
+<p>Existen otros métodos mas complicados de hacer esto.</p>
+
+<p>Dado que la cache hace todo el trabajo para mantener la coherencia del sistema, tienen que los programas preocuparse de algo cuando acceden a memoria compartida? La respuesta es desafortunadamente si y se vera en el capitulo de concurrencia.</p>
+
+<h2 id="un-último-tema-afinidad-de-cache">Un último tema: Afinidad de Cache.</h2>
+
+<p>El último tema a tener en cuenta cuando se arma un planificador con multiprocesadores con cache, es conocida como la <strong>afinidad de cache o cache affinity</strong>.</p>
+
+<p>El concepto es basico:</p>
+
+<ul>
+  <li>Cuando un proceso corre sobre una CPU en particular va construyendo un cachito del estado de si mismo en las cache de esa CPU</li>
+  <li>Entonces la próxima vez que el proceso se ejecute seria bastante interesante que se ejecutara en la misma CPU, ya que se va a ejecutar mas rápido si parte de su estado esta en esa CPU.</li>
+  <li>Si, en cambio se ejecuta el proceso en una CPU diferente cada vez, el rendimiento del proceso va a ser peor, ya que tendrá que volver a cargar su estado o parte del mismo cada vez que se ejecute.</li>
+</ul>
+
+<p>Por ende un planificador multiprocesador debería considerar la afinidad de cache cuando toma sus decisiones de planificación, tal vez prefiriendo mantener a un proceso en un determinado CPU si es posible.</p>
+
+<h2 id="planificación-de-cola-única">Planificación de cola única</h2>
+
+<p>La forma mas fácil para tener un planificador para un sistema multiprocesador es la de reutilizar el marco de trabajo básico para un planificador de monoprocesador.</p>
+
+<p>Entonces se ponen todos los trabajos que tienen que ser planificados en una <strong>única cola</strong>, que se llamara <strong><em>SINGLE QUEUE MULTIPROCESSOR SCHEDULING</em></strong> o SQMS.</p>
+
+<p>Esta forma de plantear la planificación tiene la ventaja de la simplicidad ya que no requiere mucho trabajo tomar la política existente que agarra la mejor tarea y la pone a ejecutar y adaptarla para que trabaje con mas de una CPU.
+sin embargo, SQMS tiene sus limitaciones:</p>
+
+<ol>
+  <li>
+    <p>No es escalable</p>
+  </li>
+  <li>
+    <p>Para asegurarse que la planificación trabaje correctamente en una arquitectura de múltiple CPU los desarrolladores tienen que insertar algún tipo de bloqueo en su código fuente. Es decir el bloqueo tiene que asegurar que cuando SQMS accede a una única cola (como para encontrar la próxima tarea a ejecutar), un resultado correcto se ha obtenido.  EL bloqueo desafortunadamente va a reducir en mucho la performance particularmente a medida que el numero de CPU del sistema empiece a crecer. Téngase en cuenta que con un único bloqueo, el sistema pierde mas tiempo sobrecargándose en el bloqueo y menos tiempo en lo que debería estar haciendo.</p>
+  </li>
+  <li>
+    <p>Otro gran problema de SQMS es la afinidad del cache. Por ejemplo, si se asume que se tienen 5 tareas ( A, B, C, D )y 4 procesadores entonces la cola de planificación se vería de esta forma:</p>
+  </li>
+</ol>
+
+<p><img src="../images/scheduling/sqms.jpg" alt="fifo" /></p>
+
+<p>A lo largo del tiempo, asumiendo que cada trabajo se ejecuta en un determina <strong>time slice</strong> otro trabajo es elegido para ser ejecutado y entonces un posible esquema de planificación a través de la CPU podría ser:</p>
+
+<p><img src="../images/scheduling/sqms-1.jpg" alt="fifo" /></p>
+
+<p>Teniendo en cuenta que cada CPU va a agarrar el próximo trabajo a ser ejecutado de la cola global compartida, cada tarea va a terminar saltando de CPU en CPU, haciendo exactamente lo opuesto de lo que recomienda la afinidad de cache mas bien que los procesos continúen ejecutándose en la misma CPU si es posible. EN algunos casos se podría proveer a ciertas tareas con cierta afinidad y a otras dejarlas cambiando de CPU para balancear la carga por ejemplo mirar:</p>
+
+<p><img src="../images/scheduling/sqms-2.jpg" alt="fifo" /></p>
+
+<h2 id="multi-queue-planificacion">Multi-Queue Planificacion</h2>
+
+<p>Debido a los problemas que tiene single queue scheduler varia gente opto por crear un planificador multi queue que se llama MULTI-QUEUE MULTIPROCESSOR SHCHEDULING en MQMS.</p>
+
+<ul>
+  <li>El esquema básico de la planificación consiste en múltiples colas. Cada cola va a seguir una determinada disciplina de planificación, por ejemplo, round robin, cuando una tarea entra en el sistema ésta se coloca exactamente en una única cola de planificación, de acuerdo con alguna heuristica. Esto implica que es esencialmente planificada en forma independiente.</li>
+</ul>
+
+<p>Por ejemplo, Si se asume que se está trbajando con un sistema de dos procesadores ( CPU0 y CPU1) y una determinada cantidad de tareas ingresan al sistema ( A, B, C y D , por ejemplo). Dado que cada CPU tiene exactamente 2 colas, el planificador podria decidir distribuir las tareas de la siguiente forma:</p>
+
+<p><img src="../images/scheduling/mqms.jpg" alt="fifo" /></p>
+
+<p>Dependiendo de la política de planificación por ejemplo Round Robin, la planificación a lo largo del tiempo podría verse así :</p>
+
+<p><img src="../images/scheduling/mqms-1.jpg" alt="fifo" /></p>
+
+<ul>
+  <li>
+    <p>MQMS tiene la ventaja sobre SQMS debido a que es enteramente <strong>escalable</strong>. A medida que las CPU van creciendo también lo hacen las colas, lo que conlleva a que los lock y las cache no sean ya un problema.</p>
+  </li>
+  <li>
+    <p>MQMS intrisecamente prvee afinidad de cache, es decir las tareas intentan mantenerse en la CPU en la que fueron planificadas.</p>
+  </li>
+</ul>
+
+<p>El único problema de MQSM es el <strong>load imbalance</strong>. El load imbalance se dá cuando una CPU queda osciosa frente a las demas que estan sobrecargadas. por ejemplo, si se asume que se esta en el mismo ecenario que en el ejemplo anterior 2 CPUs 4 tareas, pero una de las tareas, por ejemplo la C termina :</p>
+
+<p><img src="../images/scheduling/mqms-2.jpg" alt="fifo" /></p>
+
+<p>la politica de Round Robin resultaria :</p>
+
+<p><img src="../images/scheduling/mqms-3.jpg" alt="fifo" /></p>
+
+<p>Como puede verse en el diagrama , A tendria el doble de uso de CPU que B y D.</p>
+
+<p><img src="../images/scheduling/mqms-4.jpg" alt="fifo" /></p>
+
+<p>Un caso que sería aún pero es que también A termine, lo que conllevaría a que la CPU0 estuviera osciosa</p>
+
+<p><img src="../images/scheduling/mqms-.jpg" alt="fifo" /></p>
+
+<p>La pregunta que se plantea es ¿Cómo se resuelve el problema del <strong>load imbalance</strong>?</p>
+
+<p>La respuesta más obvia es aquella de mover las tareas de un lado a otro, esta técnica se conoce como <strong>migración</strong> o <strong>migration</strong>. Mediante la migración de una tarea a otra cpu se puede conseguir un verdadero balance de carga.</p>
+
+<p>Otra vez se considera la situación donde una CPU esta ociosa y la otra tiene algunas tareas:</p>
+
+<p><img src="../images/scheduling/mqms-5.jpg" alt="fifo" /></p>
+
+<p>En este caso la migración deseada es fácil de comprender: se debería mover la tarea B o D a la CPU0. con un resultado win-win.</p>
+
+<p>Una situación un poco más complicada seria en el caso en que A fue dejada sola en la CPU0. Para esta situación la migración de una sola tarea no serviría de nada. La idea es que las tres tareas migren por las dos CPUs quedado un esquema como el siguiente:</p>
+
+<p><img src="../images/scheduling/mqms-6.jpg" alt="fifo" /></p>
+
+<p><img src="../images/scheduling/mqms-7.jpg" alt="fifo" /></p>
+
+<script defer="" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+
+<script defer="" onload="$.bigfoot();" src="https://cdnjs.cloudflare.com/ajax/libs/bigfoot/2.1.4/bigfoot.min.js"></script>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bigfoot/2.1.4/bigfoot-number.min.css" />
+
+<div class="footnotes">
+  <ol>
+    <li id="fn:1">
+      <p>to do or say something before someone else does, especially to prevent them doing or saying what they had planned or to prevent their action being effective: The group raised its offer in an attempt to pre-empt a possible counterbid from a rival.&nbsp;<a href="index.html#fnref:1" class="reversefootnote">&#8617;</a></p>
+    </li>
+    <li id="fn:2">
+      <p>A termina en 13, B termina en 14 y C termina en 15 turnaround time promedio 14.&nbsp;<a href="index.html#fnref:2" class="reversefootnote">&#8617;</a></p>
+    </li>
+  </ol>
+</div>
+
+  </div>
+
+</article>
+
+      </div>
+    </main>
+
+    
+
+  </body>
+
+</html>

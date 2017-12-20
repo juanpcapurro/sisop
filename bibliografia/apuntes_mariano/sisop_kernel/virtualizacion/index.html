@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>apuntes</title>
+  <meta name="description" content="apuntes de sistemas operativos">
+
+  <link rel="stylesheet" href="../../assets/main.css">
+  <link rel="canonical" href="index.html">
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/3.2.2/anchor.min.js"></script>
+</head>
+
+
+  <body>
+
+    <!-- TODO: fix site navigation later -->
+
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post">
+
+  <div class="post-content">
+    <p>Este sencillo programa, escrito en C, lo único que hace es ejecutar en forma infinita la impresión por pantalla del string que se le pasa como primer argumento. Al ejecutarlo, lo único que realizará será esa tarea en forma infinita… total… tiene toda la Unidad Central de Procesamiento para él.</p>
+
+<pre><code class="language-C">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include "../common.h"
+
+int main(int argc, char *argv[])
+{
+    if (argc != 2) {
+	fprintf(stderr, "usage: cpu &lt;string&gt;\n");
+	exit(1);
+    }
+    char *str = argv[1];
+
+    while (1) {
+	printf("%s\n", str);
+	Spin(1);
+    }
+    return 0;
+}
+
+</code></pre>
+
+  </div>
+
+</article>
+
+      </div>
+    </main>
+
+    
+
+  </body>
+
+</html>

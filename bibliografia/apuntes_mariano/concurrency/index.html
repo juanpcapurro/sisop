@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Concurrencia</title>
+  <meta name="description" content="apuntes de sistemas operativos">
+
+  <link rel="stylesheet" href="../assets/main.css">
+  <link rel="canonical" href="index.html">
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/3.2.2/anchor.min.js"></script>
+</head>
+
+
+  <body>
+
+    <!-- TODO: fix site navigation later -->
+
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post">
+
+  <div class="post-content">
+    <h2 id="concurrencia">Concurrencia</h2>
+
+<blockquote>
+  <p>Existen <strong>dos</strong> cosas muy difíciles de hacer en Ciencias de la Computación:</p>
+
+  <ol>
+    <li>Poner Nombres a las cosas.</li>
+    <li>La Concurrencia.</li>
+    <li>Errarle por uno.</li>
+  </ol>
+</blockquote>
+
+<p>Imaginarse, por ejemplo, la escena de un hombre leyendo un libro en uno de los clásicos bares porteños. Seguramente el mismo tendrá su café, el matutino de su preferencia, su  celular encima de la mesa y hasta tal vez comparta esa mesa con un amigo.</p>
+
+<p>Hasta ahora se ha descripto la imagen en forma estática, pero si a esa imagen se le comienza a dar velocidad y ver lo que transcurre mientras esta persona lee el diario, si uno agudiza la vista, podrá notar que este sujeto no está llevando una sola operación a la vez.</p>
+
+<p>Lee el libro, toma un sorbo de su café, un poco de agua, come un poco de su medialuna, mira la pantalla de su celular, intercambia unas palabras con su compañero de mesa y continua así por un rato.</p>
+
+<p><img src="../images/concurrency/cafe.jpg" alt="cafe" width="512px" /></p>
+
+<p>Esta podría ser una buena metáfora para describir el concepto de <strong>Concurrencia</strong>.</p>
+
+<p>Un detalle muy importante que hay que notar es que el individuo no está realizando todo en forma <strong>paralela</strong>, es decir lee, toma, charla, mira en el mismo tiempo infinitesimal <strong>t<sub>i</sub></strong>, sino que las operaciones se están llevando a cabo <strong>a la vez</strong>. Esta sutil diferencia es la que hay que tener en cuenta respecto de la diferencia entre concurrencia y  <a href="../images/concurrency/orquesta.jpg">paralelismo</a>.</p>
+
+<blockquote>
+  <p>El mundo de la concurrencia se refiere a un conjunto de actividades que pueden suceder en el mismo tiempo. Anderson-Dahlin pag. 129.</p>
+</blockquote>
+
+<p>El correcto manejo de la concurrencia es una de las claves en el desarrollo de los Sistemas Operativos Modernos. En este tema se verá cual es la abstracción que maneja y disminuye la complejidad del problema de la Concurrencia.</p>
+
+<p>Uno de los aspectos más interesantes al enfrentarse con la Concurrencia, es la manera en que nuestra mente es capaz de atacar un problema:</p>
+
+<ol>
+  <li>
+    <p>En el caso de la mayoría de los programadores la forma más común de construir programas es la llamada forma secuencial: ejecutar una acción detrás de la otra. Estos es lo que la mayoría de los programadores realizan cotidianamente.</p>
+  </li>
+  <li>
+    <p>Pensar en atacar un problema en el cual decenas de eventos pueden desencadenarse al mismo tiempo es aún muy complejo…</p>
+  </li>
+</ol>
+
+<p>Además, un problema de los seres humanos se encuentra en nuestra limitación para manejar distinta información al mismo tiempo <a href="https://mendezmariano.github.io/apuntes_fisop/concurrency/sisop_readings/Miller&#32;GA&#32;Magical&#32;Seven&#32;Psych&#32;Review&#32;1955.pdf">Miller GA Magical Seven Psych Review 1955</a>, según este artículo de Miller de 1955 los seres humanos podemos manejar 7+-2 <strong>chunks of data</strong> .</p>
+
+<blockquote>
+  <p>And finally, what about the magical number seven? What about the seven wonders of the world, the
+seven seas, the seven deadly sins, the seven daughters of Atlas in the Pleiades, the seven ages of man, the
+seven levels of hell, the seven primary colors, the seven notes of the musical scale, and the seven days of
+the week? What about the seven-point rating scale, the seven categories for absolute judgment, the seven
+objects in the span of attention, and the seven digits in the span of immediate memory?</p>
+</blockquote>
+
+<p>El concepto clave es escribir un programa concurrente como una secuencia de <strong>streams de ejecución</strong> o <strong>threads</strong> que interactúan y comparten datos en una manera muy precisa. El concepto básico es el siguiente:</p>
+
+<p><img src="../images/concurrency/threads_abstraction.jpg" alt="threads abstraction" width="512px" /></p>
+
+<h2 id="la-abstracción">La abstracción</h2>
+
+<blockquote>
+  <p>Un <em>thread</em> es una <strong>secuencia de ejecución atómica</strong> que representa una <strong>tarea planificable de ejecución</strong></p>
+</blockquote>
+
+<p>*. <strong>Secuencia de ejecución atómica</strong>: Cada thread ejecuta una secuencia de instrucciones como lo hace un bloque de código en el modelo de programación secuencial.</p>
+
+<p>*. <strong>tarea planificable de ejecución</strong>: El sistema operativo tiene injerencia sobre el mismo en cualquier momento y puede ejecutarlo, suspenderlo y continuarlo cuando él desee.</p>
+
+<p><img src="../images/concurrency/threads1.jpg" alt="threads abstraction" width="512px" /></p>
+
+<h3 id="threads-vs-procesos">Threads vs procesos</h3>
+
+<p><strong>Proceso</strong>: un programa en ejecución con derechos restringidos.</p>
+
+<p><strong>thread</strong>: una secuencia independiente de instrucciones ejecutándose dentro de un programa.</p>
+
+<ol>
+  <li>
+    <p><strong>One thread per process</strong>: un proceso con una única secuencia de instrucciones ejecutándose de inicio a fin. Para los que vieron Pascal o C sería el equivalente a un bloque de intrucciones delimitado por begin-end o { }. Lo que todos los programadores de modelo secuencial conocemos.</p>
+  </li>
+  <li>
+    <p><strong>Many thread per process</strong>: un programa es visto como threads ejecutándose dentro de un proceso  con derechos restringidos. En dado un <strong>t<sub>i</sub></strong> algunos threads pueden estar corriendo y otros estar suspendidos. Cuando se detecta por ejemplo una operación de I/O por alguna interrupción, el kernel desaloja (preempt) a algunos de los threads que están corriendo, atiende la interrupción, y al terminar de manejar la interrupción vuelve a correr el thread nuevamente.</p>
+  </li>
+  <li>
+    <p><strong>Many single-threaded processes</strong>: limitación de algunos sistemas operativos que permitían varios procesos, pero cada uno con un único thread, lo que implica que puede haber varios threads ejecutándose en kernel model.</p>
+  </li>
+  <li>
+    <p><strong>many kernel threads</strong>: para aprovechar recursos, también el kernel puede ejecutar varios threads en kernel mode.</p>
+  </li>
+</ol>
+
+<h3 id="thread-scheduler">Thread Scheduler</h3>
+<p>¿Cómo hace el S.O. para crear la ilusión de muchos threads con un número fijo de procesadores?</p>
+
+<p>Obviamente es necesario un planificador de thread o threads scheduler, ya que el S.O. podría estar trabajando con un único procesador. El cambio entre threads es <strong>transparente</strong>, es decir que el programador debe preocuparse de la secuencia de instrucciones y no el cuando éste debe ser suspendido o no.</p>
+
+<p>Por ende los Threads proveen un modelo de ejecución en el cual <strong>cada thread corre en un procesador virtual dedicado (exclusivo) con una velocidad variable e impredecible</strong> Anderson-Dahlin, pag 138.</p>
+
+<p>Esto quiere decir que desde el punto de vista del thread cada instrucción se ejecuta inmediatamente una detrás de otra. Pero el que decide cuando se ejecuta es el planificador de threads o thread scheduler. Por ejemplo:</p>
+
+<pre><code class="language-C">    ...
+    ...
+    x = x + 1;
+    y = x + y;
+    z = x + 5y; 
+    ...
+    ...
+</code></pre>
+<p>Entonces en base a lo antedicho, se pueden encontrar los siguientes escenarios de ejecución:</p>
+
+<p><img src="../images/concurrency/threads2.jpg" alt="threads abstraction" width="512px" /></p>
+
+<p>Y los siguientes interleaves pueden suceder, con estos distintos threads:</p>
+
+<p><img src="../images/concurrency/threads3.jpg" alt="threads abstraction" width="512px" /></p>
+
+<p>En la actualidad hay dos formas de que los threads se relacionene entre sí:</p>
+
+<ol>
+  <li>Multi-threading Cooperativo: no hay interrupción a menos que se solicite. –&gt; ¿Problemas?</li>
+  <li>Multi-threading Preemptivo: Es el más usado en la actualidad. Consiste en que un threads en estado de <em>running</em> puede ser movido en cualquier momento.</li>
+</ol>
+
+<h2 id="el-api-de-threads">El API de Threads</h2>
+
+<p>Para la programación utilizando threads se utilizará la biblioteca pthread donde la p es de POSIX Threads. El API de pthreads es muy completa y la iremos viendo a medida que se la necesite.</p>
+
+<ol>
+  <li>Creación de un Thtread</li>
+</ol>
+
+<pre><code class="language-C">#include&lt;pthread.h&gt;
+int pthread_create(pthread_t * thread, const pthread_att_t * att,
+                   void * (start_routine) (void *), void * arg)
+</code></pre>
+
+<p>Esta función tiene cuatro argumentos:</p>
+<ol>
+  <li><strong>thread</strong>: Es un puntero a la estructura de tipo pthread_t, que se utiliza para interactuar con el threads.</li>
+  <li><strong>attr</strong>: Se utiliza para especificar los ciertos atributos que el thread deberia tener, por ejemplo, el tamaño del stack, o la prioridad de scheduling del thread. En la mayoria de los casos es NULL.</li>
+  <li><strong>start_routine</strong>: Sea tal vez el argumento más complejo, pero no es más que un puntero a una función, en este caso que devuelve void.</li>
+  <li><strong>arg</strong>: Es un puntero a void que debe apuntar a los argumentos de la función.</li>
+</ol>
+
+<p>devuelve 0 si se ha creado el thread con éxito, si hubo error devuelve otro valor.</p>
+
+<p>Ejemplo básico de creación de un thread:</p>
+<pre><code class="language-C">#include &lt;pthread.h&gt;
+typedef struct __myarg_t {
+    int a;
+    int b;
+} myarg_t;
+
+void *mythread(void *arg) {
+    myarg_t *m = (myarg_t *) arg;
+    printf("%d %d\n", m-&gt;a, m-&gt;b);
+    return NULL;
+}
+
+int
+main(int argc, char *argv[]) {
+    pthread_t p;
+    int rc;
+
+    myarg_t args;
+    args.a = 10;
+    args.b = 20;
+    rc = pthread_create(&amp;p, NULL, mythread, &amp;args);
+}
+</code></pre>
+
+<ol>
+  <li>Terminación de un thread: Muchas veces es necesario esperar a que un determinado thread finalice su ejecución, para ello se utiliza la funcion pthread_join(), que toma dos argumentos:</li>
+</ol>
+
+<pre><code class="language-C">int pthread_join(pthread_t thread, void **value_ptr )
+</code></pre>
+
+<ol>
+  <li><strong>thread</strong> es el thread por el que hay que esperar y es de tipo pthread_t.</li>
+  <li><strong>value_ptr</strong> es el puntero al valor esperado de retorno.</li>
+</ol>
+
+<pre><code class="language-C">
+#include &lt;&lt;stdio.h&gt;
+#include&lt;pthread.h&gt;
+#include&lt;assert.h&gt;
+#include&lt;stdlib.h&gt;
+
+
+typedef struct __myarg_t {
+    int a;
+    int b;
+} myarg_t;
+
+
+typedef struct __myret_t {
+    int x;
+    int y;
+} myret_t;
+
+void *mythread(void *arg) {
+    myarg_t *m = (myarg_t *) arg;
+    printf("%d %d\n", m-&gt;a, m-&gt;b);
+    myret_t *r = Malloc(sizeof(myret_t));
+    r-&gt;x = 1;
+    r-&gt;y = 2;
+    return (void *) r;
+}
+
+int
+main(int argc, char *argv[]) {
+    int rc;
+    pthread_t p;
+    myret_t *m;
+    myarg_t args;
+    
+    args.a = 10;
+    args.b = 20;
+    Pthread_create(&amp;p, NULL, mythread, &amp;args);
+    Pthread_join(p, (void **) &amp;m);
+    printf("returned %d %d\n", m-&gt;x, m-&gt;y);
+    return 0;
+}
+</code></pre>
+
+<p>Algunas cosas:</p>
+
+<ul>
+  <li>Si no la función no devuelve nada NULL.</li>
+  <li>Si solo devuelve un valor no hay que hacer el empaquetado de los punteros.</li>
+  <li>
+    <p>Nunca devolver nada que se encuentre allocated dentro del thread.</p>
+  </li>
+  <li>pthread_exit(status)</li>
+  <li>phtread_cancel(thread)</li>
+  <li>pthread_detach (threadid)</li>
+</ul>
+
+<p>Aqui hay un ejemplo de <a href="https://mendezmariano.github.io/sisop_concurrency/thread_create.md">creacion</a> y un ejemplo de <a href="https://mendezmariano.github.io/sisop_concurrency/thread_create_join.md">creacion y join</a></p>
+
+<h2 id="estructura-y-ciclo-de-vida-de-un-thread">Estructura y Ciclo de Vida de un Thread</h2>
+<p>Como se ha visto, cada thread es la representación de una secuencia de ejecución de un conjunto de intrucciones. El S.O. provee la ilusión de que cada uno de estos threads se ejecutan en su propio procesador, haciendo de forma transparente que se ejecuten o paren su ejecución.</p>
+
+<p>Para que la ilusión sea creíble, el sistema operativo debe guardar y cargar el estado de cada thread. Como cualquier thread puede correr en el procesador o en el kernel, también debe haber estados compartidos, que no deberían cambiar entre los modos.</p>
+
+<p>Para poder entender la abstración hay que comprender que existen dos estados:</p>
+
+<ol>
+  <li>
+    <p>El estado <strong>per thread</strong>.</p>
+  </li>
+  <li>
+    <p>El estado <strong>compartido</strong> entre varios threads.</p>
+  </li>
+</ol>
+
+<h3 id="el-estado-per-thread-y-threads-control-block-tcb">El Estado Per-thread y Threads Control Block (TCB)</h3>
+
+<p>Cada thread debe tener una estructura que represente su estado. Esta estructura se denomina <strong>Thread Control Block (TCB)</strong>, se crea una por cada thread. La TCB almacena el estado per-thread de un thread:</p>
+
+<h4 id="el-estado-del-cómputo-que-debe-ser-realizado-por-el-thread">El estado del Cómputo que debe ser realizado por el thread.</h4>
+<p>Para poder crear múltiples threads y pararlos y rearrancarlos, el S.O. debe poder almacenar en la TCB el estado actual del bloque de ejecucion:</p>
+
+<ol>
+  <li>
+    <p>El puntero al stack del thread.</p>
+  </li>
+  <li>
+    <p>Una copia de sus registros en el procesador.</p>
+  </li>
+</ol>
+
+<h4 id="metadata-referente-al-thread-que-es-utilizada-para-su-administración">Metadata referente al thread que es utilizada para su administración.</h4>
+<p>Por cada thread se debe guardar determinada informacion sobre el mismo:</p>
+
+<ul>
+  <li>ID</li>
+  <li>Prioridad de scheduling</li>
+  <li>Status</li>
+</ul>
+
+<p><img src="../images/concurrency/threads4.jpg" alt="threads abstraction" width="512px" /></p>
+
+<h3 id="shared-state-o-estado-compartido">Shared State o Estado Compartido</h3>
+
+<p>De forma contraria al per-thread state se debe guardar cierta información que es compartida por varios Threads:</p>
+
+<ul>
+  <li>El Código</li>
+  <li>Variables Globales</li>
+  <li>Variables del Heap</li>
+</ul>
+
+<h3 id="estados-de-un-thread">Estados de un Thread</h3>
+<p>Los estados de un Thread son:</p>
+
+<ul>
+  <li>
+    <p><strong>Init</strong>: Un thread se encuentra en estado <strong>INIT</strong> mientras se está inicializando el estado per-thread y se está reservando el espacio de memoria necesario para estas estructuras. Una vez que esto se ha realizado el estado del thread se setea en <strong>READY</strong>. Además se lo pone en una lista llamada <em>ready list</em> en la cual están esperando todos los thread listos para ser ejecutados en el procesador.</p>
+  </li>
+  <li>
+    <p><strong>Ready</strong>: Un thread en este estado está listo para ser ejecutado pero no está siendo ejecutado en ese instante. La TCB esta en la <strong>ready list</strong> y los valores de los registros está en la TCB. En cualquier momento el <strong>thread scheduler</strong> puede transicionarlo al estado <strong>RUNNING</strong>.</p>
+  </li>
+  <li><strong>Running</strong>: Un thread en este estado está siendo ejecutado en este mismo instante por el procesador. En este mismo instante los valores de los registros están en el procesador. En este estado un <strong>RUNNING THREAD</strong> puede pasar a <strong>READY</strong> de dos formas:
+    <ol>
+      <li>El <strong>scheduler</strong> puede pasar un thread de su estado <strong>RUNNING</strong>  a <strong>READY</strong> mediante el desalojo o <strong>preemption</strong> del mismo mediante el guardado de los valores de los registros y cambiando el thread que se está ejecutando por el próximo de la lista.</li>
+      <li>Voluntariamente un thread puede solicitar abandonar la ejecución mediante la utilización de thread_yield, por ejemplo.</li>
+    </ol>
+  </li>
+  <li>
+    <p><strong>Waiting</strong>: En este estado el Thread está esperando que algún determinado evento suceda. Dado que un thread en <strong>WAITING</strong> no puede pasar a <strong>RUNNING</strong> directamente, estos thread se almacenan en la lista llamada <em>waiting list</em>. Una vez que el evento ocurre el scheduler se encarga de pasar el thread del estado <strong>WAITING</strong> a <strong>RUNNING</strong>, moviendo la TCB desde el waiting list a la ready list.</p>
+  </li>
+  <li>Finished: Un thread que se encuentra en estado <strong>FINISHED</strong> nunca más podrá volver a ser ejecutado. Existe una lista llamada <em>finnished list</em> en la que se encuentran las TCB de los threads que han terminado.</li>
+</ul>
+
+<p><img src="../images/concurrency/threads5.jpg" alt="threads abstraction" width="512px" /></p>
+
+<h2 id="sincronización">Sincronización</h2>
+
+<p>La programación multihilo exiende el modelo secuencial de programación de un único hilo de ejecución. En este modelo se pueden encontrar dos escenarios posibles:</p>
+
+<ol>
+  <li>
+    <p>Un programa está compuesto por un conjunto de <em>threads independientes</em> que operan sobre un conjunto de datos que están completamente separados entre sí y son independientes.</p>
+  </li>
+  <li>
+    <p>Un programa está compuesto por un conjunto de <em>threads</em> que trabajan en forma cooperativa sobre un set de memoria y datos que son compartidos.</p>
+  </li>
+</ol>
+
+<p>Ambos escenarios son completamente distintos y tienen distintas formas de tratamiento. El segundo caso, en el cual existe datos que son compartidos entre los distintos threads merece una atención en particular. Este tipo de programa es mucho mas complejo de construir que los programas del modelo o caso 1.</p>
+
+<p>En un programa que utiliza un modelo de programación de threads cooperativo, la forma de pensar secuencial no sirve:</p>
+
+<ol>
+  <li>La ejecución del programa depende de la forma en que los threads se intercalan en su ejecución, esto influye en los accesos a la memoria de recursos compartidos.</li>
+  <li>La ejecución de un programa puede no ser determinística. Diferentes corridas pueden producir distintos resultados, por ejemplo debido a decisiones del scheduler. Qué pasa con el debugging?</li>
+  <li>Los compiladores y el procesador físico pueden reordenar las intrucciones. Los compiladores modernos pueden reordenar las instrucciones para mejorar la performance del programa que se está ejecutando, este reordenamiento es generalmente invisible a los ojos de un solo thread …</li>
+</ol>
+
+<p>Teniendo en cuenta lo anterior, la programación multithreading puede incorporar bugs que se caracterizan por ser:</p>
+
+<ul>
+  <li>sutiles</li>
+  <li>no determinísticos</li>
+  <li>no reproducibles</li>
+</ul>
+
+<p>El approach a seguir en estos casos es: (1) estructurar el programa para que resulte fácil el razonamiento concurrente y (2) utilizar un conjunto de primitivas estándares para sincronizar el acceso a los recursos compartidos.</p>
+
+<h2 id="desafios">Desafios</h2>
+
+<h3 id="race-conditions">Race Conditions</h3>
+<p>Una <strong>race condition</strong> se da cuando el resultado de un programa depende en como se intercalaron las operaciones de los threads que se ejecutan dentro de ese proceso. De hecho los threads juegan una carrera entre cuando se ejecutan sus operaciones , y el resultado del programa depende de quién gane.</p>
+
+<ul>
+  <li>Ejemplo 1:</li>
+</ul>
+
+<p>Thread A      Thread B</p>
+
+<p>x=1;               x=2;</p>
+
+<p>¿Cual será el valor de x? Eso depende de quien pierde y quien gana.</p>
+
+<ul>
+  <li>Ejemplo 2:</li>
+</ul>
+
+<p>Sea y=12, ¿Cual será el valor de las variables?</p>
+
+<p>Thread A      Thread B</p>
+
+<p>x=y+1;           y= y * 2;</p>
+
+<p>Si gana A, entonce x vale 13 y si gana B entonces x=25</p>
+
+<ul>
+  <li>Ejemplo 3:
+Sea x=0, ¿Cual será el valor de las variables?</li>
+</ul>
+
+<p>Thread A      Thread B</p>
+
+<p>x = x + 1;       x = x +  2;</p>
+
+<p>Un resultado posible es que x=3 con lo cual el interleave debe haber sido :</p>
+
+<pre><code class="language-ASSEMBLY">load    x,r1
+add     r2,r1,1
+store   x,r2
+                 load r1,x
+		 add  r2,r1,2
+		 store x,r2
+
+</code></pre>
+<p>En este caso tenemos que x=3</p>
+
+<p>Pero si la intercalación se dió de otra forma ….</p>
+<pre><code class="language-ASSEMBLY">load r1,x
+		load r1,x
+add r2,r1,1	
+		add r2,r1,2
+store x,r2
+		store x,r2
+</code></pre>
+<p>En ese caso el valor de X eeeeeee…….. 2</p>
+
+<p>Pero si la intercalación se dió de otra forma ….</p>
+<pre><code class="language-ASSEMBLY">load r1,x
+		load r1,x
+add r2,r1,1	
+		add r2,r1,2
+		store x,r2
+store x,r2
+</code></pre>
+<p>En ese caso el valor de X eeeeeee……..1</p>
+
+<p>Aunque el programa sea de dos líneas el análisis de las race condition y el intercalado de ejecución es <strong>COMPLEJO</strong></p>
+
+<h3 id="operaciones-atómicas">Operaciones Atómicas</h3>
+
+<p>En el ejemplo anterior se desensambló y se ejecuto el programa en assembler con <em>operaciones atómicas</em>, este tipo de operaciones no pueden dividirse en otras y se garantiza la ejecución de la misma sin tener que intercalar ejecucion.</p>
+
+<p>Ojo en una arquitectura de 32 bit load y store de una palabra son atómicas, en otras arquitecturas eso no sucede por ejemplo en 64 bits</p>
+
+<h3 id="el-problema-de-la-heladera-llena">El problema de la Heladera Llena</h3>
+<p>¿Es posible coordinar el acceso a los recursos compartidos? A continuación se plantea un problema simplificado. Imaginarse que dos personas comparten su departamento y tienen una única heladera. Como son amigos ambos compañeros verifican que nunca falte leche en la heladera. Con esa responsabilidad un escenario posible seria:</p>
+
+<p>poner imagen dahling 5.1.3</p>
+
+<p>La idea es modelizar a cada compañero con un thread y al número de botellas en la heladera con una variable en memoria. Si se supone que los loads y stores son operaciones atómicas. Existe una solución para este problema que garantice:</p>
+<ol>
+  <li>Seguridad o safety (<strong>nada malo va a pasar</strong>): el programa nunca termina en un estado incorrecto –&gt; <strong>nunca más de una persona compra leche</strong></li>
+  <li>Liveness (<strong>si algo va a pasar tiene que ser bueno</strong>): el programa eventualmente siempre está en un estado correto –&gt; <strong>si se necesita leche, eventualmente alguien irá a comprarla</strong></li>
+</ol>
+
+<p>Nota: para simplificar se supone que no hay reorganizacion de codigo por parte del compilador.</p>
+
+<p>La idea principal es que cada compañero deje una nota antes de irse a comprar. La forma más sencilla para hacer esto usando threads es utilizando una variable compartida entre ambos threads.</p>
+
+<h4 id="solución-1">Solución 1</h4>
+<pre><code class="language-C">if ( leche ==0 ) {          //si no hay leche
+	if (nota==0) {      //si no hay nota 
+		nota=1;	    //dejar nota	
+		HayLeche++; //comprar leche
+		nota=0;     //sacar nota
+	}
+}
+
+</code></pre>
+<p>Esta parece ser la solución ideal. 
+Supongamos que el intercalado de ejecución cae así:</p>
+<pre><code class="language-C">if ( leche ==0 ) {       
+			
+			if ( leche ==0 ) {      
+				if (nota==0) {       
+					nota=1;	    	
+					leche++; 
+					nota=0;     
+				}
+					}
+	
+	if (nota==0) {   
+		nota=1;	    	
+		leche++; 
+		nota=0;  
+	}
+}
+
+</code></pre>
+
+<p>En el caso anterior se obtendrá 2 botellas de leche. Esta solución es aún peor. Se ha creado una <strong>Heisenbug</strong> es un error no determinístico que sucede solo cuando se alinean ciertos planeta, el nombre se puso en honor al físico Heisenberg. Este tipo de error desaparece cuando uno quiere debuggearlo ya que depende de condiciones como el del intercalado del scheduler. En contraste estan los bugs detterminísticos llamados Bohr Bugs, en honor a Niels Bohr …</p>
+
+<h4 id="solución-2">Solución 2</h4>
+
+<p>A buscar otra solución. En la solución propuesta anteriormente, el compañero de habitación verifica la nota antes de dejarla. Esto deja abierta la posibilidad que el otro compañero haya ya tomado la decisión de comprar lecha antes de notificar a su amigo esta decisión. ¿Entonces? Si se prueba usar dos notas …</p>
+
+<p>Camino A					                                 Camino B</p>
+
+<pre><code class="language-C">notaA=1;		// dejar nota	     	        notaB=1;	       // dejar nota
+if(notaB==0){  	        //esperar hasta nota A2         if(notaA==0){          // si no hay nota   B1
+    if(leche==0 ){      //si no hay leche A3                 if(leche==0) {    //si no hay leche   B2                
+       leche++;         //                                      leche++;       //comprar leche     B3
+    }					     	                             } //                  B4
+ }                                                       }                     //                  B5
+notaA=0;                //Sacar la nota de A            notaB=0;               //sacar nota de b		
+</code></pre>
+
+<p>Test a realizar:</p>
+<ol>
+  <li>¿Es la solución segura?
+Para realizar este tipo de chequeo se hace lo mismo que para demostrar si un numero es primo o no. En este caso se supone que la solución <strong>no es segura</strong> entonces ambos compañeros A y B compran leche. Considerar el estado de las dos variables (NotaB y milk) cuando el thread A está en la linea A1 , en el preciso momento en que el atomic load de notaB desde la memoria compartida al registro A existen 3 posibles escenarios:</li>
+</ol>
+
+<ul>
+  <li>Caso 1: (notaB=1, leche=cualquier valor): esto contradice la suposición de que el thread A compra leche y llega a A3.</li>
+  <li>Caso 2: (notaB=0, leche&gt;0): En este programa  leche&gt;0 es una propiedad estable ya que si llega a 1 está siempre queda en 1. Entonces si  leche &gt;0 cuando A llega a A1 el teset de A2 va a fallar, nadie compra leche contradiciendo las suposiciones.</li>
+  <li>Caso 3: (notaB=0; lecha = 0 ): en este caso sabemos –&gt; no se ejecutan B1-B5; además nota A = 1  y leche &gt;0 esto quiere decir que B no va a comprar leche.</li>
+</ul>
+
+<p>Partiendo de la suposición que ambos compran leche, los ejemplos anteriores contradicen esta suposición por ende el algoritmo es seguro (El programa nunca termina en un estado incorrecto).
+Ahora es tiempo de chequear si es liveness:
+Lamentablemente no cumple con este requerimiento, ya que es posible para ambos threads pueden setear sus propia notas, y ademas cada thread puede chequear el estado del otro y decidir que nadie compra leche.</p>
+
+<h4 id="solución-3">Solución 3</h4>
+<p>La solución anterior era safe, es decir, siempre un thread estaba en un estado correcto. Pero no era liveness, si algo iba a pasar tenía que ser bien, y se ve como el resultado de la ejecución puede caer en que nadie compra leche. A continuación se intentará subsanar esto, en esta solución cada thread determina si el otro thread compró o no leche:</p>
+
+<pre><code class="language-C">notaA=1;		      // dejar nota	     	   notaB=1;		  // dejar nota
+while(notaB==1){  	      //esperar hasta nota A2     if(notaA==0){    	  // si no hay nota   B1
+      ;                                                     if(leche==0) {        //si no hay leche   B2
+}    							       leche++;           //comprar leche     B3
+if(leche==0 ){                //si no hay leche                 }
+   leche++;                   //comprar leche             }
+}                                                         notaB=0;                //sacar nota de b                        
+notaA=0;                      //Sacar la nota de A    		
+</code></pre>
+
+<p>Esta version es <em>safe</em> por los mismos motivos que la solución anterior. Para mostrar que es liveness notar que el codigo de B no tiene loop y ademas si notaB== 0 será por toda la ejecución.</p>
+
+<h4 id="discución">Discución</h4>
+
+<ol>
+  <li>
+    <p>Con los supuestos que se utilizaron el último algoritmo garantiza que la solución sea <strong>safe</strong> y <strong>life</strong></p>
+  </li>
+  <li>
+    <p>La solución solo anda para dos compañeros, la versión generalizada se denomina <a href="https://goo.gl/EIPLqc">algoritmo de Peterson</a>:</p>
+
+    <blockquote>
+      <p>El algoritmo de Peterson, también conocido como solución de Peterson, es un algoritmo de programación concurrente 
+para exclusión mutua, que permite a dos o más procesos o hilos de ejecución compartir un recurso sin conflictos, 
+utilizando sólo memoria compartida para la comunicación.</p>
+    </blockquote>
+  </li>
+  <li>
+    <p>La solución es compleja.</p>
+  </li>
+  <li>
+    <p>La solución es ineficiente ya que se está usando la técnica llamada <em>busy-waiting</em>, en general debe ser evitada porque consume mucho tiempo de sin estar haciendo nada. Por lo tanto en los sistemas operativos actuales donde existe el concepto de <strong>preemption</strong>, el thread vueltero va a estar haciendo que otros threads sean re-planificados.</p>
+  </li>
+  <li>
+    <p>Si el compilador reordena instrucciones no anda tampoco.</p>
+  </li>
+</ol>
+
+<h2 id="locks">Locks</h2>
+
+<p>Un forma menos compleja de alcanzar una solución para el problema de la heladera es mediante la utilización de <strong>locks</strong>. Un lock es una variable que permite la sincronización mediante la <strong>exclusión mutua</strong>, cuando un thread tiene el candado o lock ningún otro puede tenerlo.</p>
+
+<p>La idea principal es que un proceso asocia un lock a determinados estados o partes de código y requiere que el thread posea el lock para entrar en ese estado. Con esto se logra que sólo un thread acceda a un recurso compartido a la vez.</p>
+
+<p>Esto permite la <em>exclusión mutua</em>, todo lo que se ejecuta en la región de código en la cual un thread tiene un lock, garantiza la atomicidad de las operaciones.</p>
+
+<h3 id="api-de-locks">API de locks</h3>
+
+<p>La idea sobre la utilización de un lock es la siguiente: el lock debe proporcionar un área en la cual cualquier conjunto de intrucciones que se ejecutan en ese área debe garantizar la atomicidad. Operaciones:</p>
+
+<ul>
+  <li>
+    <p>Un lock tiene dos estados: <strong>BUSY</strong> o <strong>FREE</strong></p>
+  </li>
+  <li>
+    <p>Un lock inicialmente siempre inicia en estado <strong>FREE</strong></p>
+  </li>
+  <li>Un lock utiliza la primitiva <strong>obtener()</strong> para pedir acceso al lock o dicho de otra forma a la región de exclusión mutua.
+    <ol>
+      <li>Si el estado del lock es FREE entonces automáticamente el estado del lock pasa a BUSY.</li>
+      <li>Chequear y setear el estado del lock son <strong>operaciones atómicas</strong> .</li>
+      <li>Si un thread adquiere acceso a la región compartida mediante el lock, todos los demás thread chequean si el lock queda libre y esperan a que esto suceda.</li>
+    </ol>
+  </li>
+  <li>Un lock utiliza la primitiva <strong>dejar()</strong>, la cual pone en estado FREE al lock y si hubiera otro thread esperando para entrar en la zona de exclusión mutua lo deja entrar. Ejemplo en una especie de pseudo-código:</li>
+</ul>
+
+<pre><code class="language-C">obtener(lock);
+
+if ( leche ==0 ) {     
+	leche++;
+}
+
+dejar(lock);
+
+</code></pre>
+
+<h3 id="locks-y-pthreads">Locks y Pthreads</h3>
+<p>Probablemente despues de la creación y terminación de threads, las funciones más útiles son las que se refieren a la creación de un área de exclusión mutua de la sección crítica a través del uso de locks.</p>
+
+<pre><code class="language-C">int pthread_mutex_lock (pthread_mutex_t * mutex);
+int pthread_mutex_unlock (pthread_mutex_t *mutex);  
+</code></pre>
+
+<p>Las rutinas son bastantes intuitivas, donde uno se imagina que puede haber una sección crítica, y por ende debe ser protegida, se utilizan los locks para ello. Por ejemplo:</p>
+
+<pre><code class="language-C">pthread_mutex_t lock;
+rc=pthread_mutex_init(&amp;lock,NULL); 
+assert(rc==0); 
+
+pthread_mutex_lock(&amp;lock);
+x=x+1;
+pthread_mutex_unlock(&amp;lock);
+</code></pre>
+
+<p>Existen otras dos funciones interesantes sobre los locks que son :</p>
+<pre><code class="language-C">int pthread_mutex_trylock(pthread_mutex_t * mutex);
+</code></pre>
+<p>trylock devuelve error si el lock solicitado está todavia captado.</p>
+
+<pre><code class="language-C">int pthread_mutex_timedlock(pthread_mutex_t * mutex, struct timespec *abb_timeout);
+</code></pre>
+<p>timedout adquiere el lock devuelve despues de un timeout o en forma normal, lo que ocurra antes.</p>
+
+<h3 id="algunas-propiedades-formales">Algunas Propiedades Formales</h3>
+<p>Un lock debe asegurar :</p>
+
+<ol>
+  <li>
+    <p><strong>Exclusión mutua</strong>: como mucho un solo Threads posee el lock a la vez.</p>
+  </li>
+  <li>
+    <p><strong>Progress</strong>: Si nadie posee el lock, y alguien lo quiere … alguno debe poder obtenerlo.</p>
+  </li>
+  <li>
+    <p><strong>Bounded waiting</strong>: Si T quiere acceder al lock y existen varios threads en la misma situación, los demas tienen una cantidad finita de posible accesos antes que T lo haga.</p>
+  </li>
+</ol>
+
+<p>La <strong>Sección Crítica</strong> es aquella sección del código fuente que se necesita que se ejecute en forma atómica. Para ello esta sección se encierra dentro de un lock.</p>
+
+<p>Es muy importantre notar que en la actualidad los procesadores están fabricados de forma tal que varios <strong>Núcleos o Cores</strong> comparten ciertos recursos como por ejemplo memoria cache.</p>
+
+<p><img src="../images/concurrency/diemap.jpg" alt="die map" /></p>
+
+<h3 id="condition-variables-o-monitores">Condition Variables o monitores</h3>
+
+<p>En ciertas ocasiones puede ser necesario que un thread espere que cierta condición o estado se de para que este continue su ejecución, por ejemplo un servidor web necesita esperar a que alguien le avise que hay una nueva petición web. Ahora mandarlo a esperar girando ( spinning) en su propio lugar no es eficiente.</p>
+
+<p>Las <strong>variable condition</strong> permiten a un Threads esperar a por otro Threads para tomar una acción. Son un objeto sincronizado que permiten de forma eficiente esperar por un cambio para compartir algún estado que está protegido por un lock. Tiene tres métodos:</p>
+
+<ol>
+  <li>
+    <p><strong>wait( Lock *lock)</strong>: esta llamada suelta el lock en forma atómica y suspende la ejecución del Thread que lo llama poniendo al Thread llamador en la lista de la condition variable. Una vez que el que el thread llamador es despertado, este obtiene el lock antes de volver del wait.</p>
+  </li>
+  <li>
+    <p><strong>signal()</strong>: toma a un thread de la lista de espera de la condition variable y lo marca como potencialmente seleccionable para correr, lo pone en la ready list.</p>
+  </li>
+  <li>
+    <p><strong>broadcast</strong>: este toma a todos los threads de la lista y los marca como seleccionables para correr.</p>
+  </li>
+</ol>
+
+<p>Ojo no confundir signal y wait con UNIX.</p>
+
+<p>Una condition variable se utiliza cuando algún tipo de señal tiene que suceder entre los threads, por ejemplo esperar por un cambio en un estado compartido o variable compartida, por ende un lock siempre debe proteger la actualización de dicho estado. Las <strong>condition variables</strong>  o también llamados <strong>monitores</strong> están diseñadas para trabajar en concordancia con los lock.</p>
+
+<p>Los monitores están pensados para ser usados en entornos multiproceso o multihilo, y por lo tanto muchos procesos o threads pueden llamar a la vez a un procedimiento del monitor.</p>
+
+<p>Los monitores garantizan que en cualquier momento, a lo sumo un thread puede estar ejecutando dentro de un monitor. Ejecutar dentro de un monitor significa que sólo un thread estará en estado de ejecución mientras dura la llamada a un procedimiento del monitor. El problema de que dos threads ejecuten un mismo procedimiento dentro del monitor es que se pueden dar condiciones de carrera, perjudicando el resultado de los cálculos.</p>
+
+<p>Existen dos rutinas principales:</p>
+
+<pre><code class="language-C">int pthread_cond_wait(pthread_con_t * cond, pthread_mutex_t *mutex);
+
+</code></pre>
+<p>Esta rutina pone al thread a dormir, y entonces espera una señal de algún otro thread :</p>
+<pre><code class="language-C">   pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+   pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
+   
+   pthread_mutex_lock(&amp;lock);
+   while (ready == 0)
+      Pthread_cond_wait(&amp;cond, &amp;lock);
+   Pthread_mutex_unlock(&amp;lock);
+</code></pre>
+
+<p>En este caso el thread chequea si la variable ready tiene un determinado valor, si no es así el thread llama a pthread_cond_wait y se ira a dormir hasta que alguien cambie ese valor:</p>
+
+<pre><code class="language-C">Pthread_mutex_lock(&amp;lock);
+ready = 1;
+Pthread_cond_signal(&amp;cond);
+Pthread_mutex_unlock(&amp;lock);
+
+</code></pre>
+
+<p>Para evitar esto y garantizar la integridad de los datos privados, el monitor hace cumplir la exclusión mutua implícitamente, de modo que sólo un procedimiento esté siendo ejecutado a la vez. De esta forma, si un thread llama a un procedimiento mientras otro thread está dentro del monitor, se bloqueará y esperará en la cola de entrada hasta que el monitor quede nuevamente libre. Aunque se la llama cola de entrada, no debería suponerse ninguna política de encolado.</p>
+
+<p>Suponer que se tienen dos threads, en el cual puede decirse que existe una relación padre-hijo, es decir el padre necesita esperar que el hijo termine para seguir ejecutándose. La primer solución que puede tenerse en cuenta es la siguiente :</p>
+
+<pre><code class="language-C">void *child(void *arg) {
+   printf("child\n");
+   // XXX how to indicate we are done?
+   return NULL;
+}
+
+
+int main(int argc, char *argv[]) {
+    printf("parent: begin\n");
+    pthread_t c;
+    pthread_create(&amp;c, NULL, child, NULL); // create child
+    // XXX how to wait for child?
+    printf("parent: end\n");
+    return 0;
+}
+
+</code></pre>
+<p>Inicialmente lo que puede plantearse es la utilización de un flag para indicar cuando se realizó o alcanzó cierto estado del lado del “hijo” y del lado del “padre” ponerlo a dormir o a esperar haciendo <strong>nada</strong>.</p>
+
+<pre><code class="language-C">volatile int done = 0;
+
+void *child(void *arg) {
+    int i,j=0;
+    
+    printf("child\n");
+    for(i = 0; i &lt; 1e9; i++ ) j++;
+
+    printf("child done! \n");
+    done = 1;
+    return NULL;
+}
+
+
+
+int main(int argc, char *argv[]) {
+    printf("parent: begin\n");
+    pthread_t c;
+    Pthread_create(&amp;c, NULL, child, NULL); // create child
+    while (done == 0)
+        ; // spin
+    printf("parent: end\n");
+    return 0;
+}
+
+</code></pre>
+
+<p>En todos los lenguajes existe una operacion llamada <strong>hacer nada</strong> en x86 es:</p>
+
+<table>
+  <tbody>
+    <tr>
+      <td>8086/88</td>
+      <td>NOP</td>
+      <td>0x90</td>
+      <td>No operation</td>
+      <td>No operación</td>
+      <td>opcode (0x90) equivalente a XCHG AX, A</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>La intrucción XCHG equivale a Exchange Data, y en este caso es entre el mismo registro:</p>
+
+<blockquote>
+  <p>Performs a bitwise NOT operation (each 1 is set to 0, and each 0 is set to 1) on the destination operand and stores
+the result in the destination operand location. The destination operand can be a register or a memory location.
+This instruction can be used with a LOCK prefix to allow the instruction to be executed atomically.</p>
+</blockquote>
+
+<p>Esto quiere decir que gasta su tiempo.</p>
+
+<p>La versión que debería ser la óptima sería aquella que eliminen el spin mediante la utilización de <strong>Condition Variables</strong>:</p>
+
+<pre><code class="language-C">int done = 0;
+pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t c = PTHREAD_COND_INITIALIZER;
+
+
+
+void thr_exit() {
+    Pthread_mutex_lock(&amp;m);
+    done = 1;
+    Pthread_cond_signal(&amp;c);
+    Pthread_mutex_unlock(&amp;m);
+}
+
+void *child(void *arg) {
+    printf("child\n");
+    thr_exit();
+    return NULL;
+}
+
+
+void thr_join() {
+    Pthread_mutex_lock(&amp;m);
+    while (done == 0)
+        Pthread_cond_wait(&amp;c, &amp;m);
+    Pthread_mutex_unlock(&amp;m);
+}
+
+int main(int argc, char *argv[]) {
+    printf("parent: begin\n");
+    pthread_t p;
+    Pthread_create(&amp;p, NULL, child, NULL);
+    thr_join();
+    printf("parent: end\n");
+    return 0;
+}
+</code></pre>
+
+<ul>
+  <li>Mostrar pruebas de código. usar-&gt; glances</li>
+</ul>
+
+<p>Para que resulten útiles en un entorno de concurrencia, los monitores deben incluir algún tipo de forma de sincronización. Por ejemplo, supóngase un thread que está dentro del monitor y necesita que se cumpla una condición para poder continuar la ejecución. En ese caso, se debe contar con un mecanismo de bloqueo del thread, a la vez que se debe liberar el monitor para ser usado por otro hilo. Más tarde, cuando la condición permita al thread bloqueado continuar ejecutando, debe poder ingresar en el monitor en el mismo lugar donde fue suspendido. Para esto los monitores poseen variables de condición que son accesibles sólo desde adentro.</p>
+
+<p>Las variables de condición indican eventos, y no poseen ningún valor. Si un thread tiene que esperar que ocurra un evento, se dice espera por (o en) la variable de condición correspondiente. Si otro thread provoca un evento, simplemente utiliza la función cond_signal con esa condición como parámetro. De este modo, cada variable de condición tiene una cola asociada para los threads que están esperando que ocurra el evento correspondiente. Las colas se ubican en el sector de datos privados visto anteriormente.</p>
+
+<p>La política de inserción de procesos en las colas de las variables condición es la FIFO, ya que asegura que ningún proceso caiga en la espera indefinida, cosa que sí ocurre con la política LIFO (puede que los procesos de la base de la pila nunca sean despertados) o con una política en la que se desbloquea a un proceso aleatorio.</p>
+
+<h2 id="tipos-de-datos-sincronizados">Tipos de Datos Sincronizados</h2>
+
+<p>Estos tipos de datos son de extremada necesidad cuando se trabaja en un entorno concurrente. A continuación se verá un simple ejemplo extraido del libro de arpaci-Dusseau: Contador concurrente.</p>
+
+<h3 id="contador">Contador</h3>
+<pre><code class="language-C">typedef struct __counter_t {
+    int value;
+} counter_t;
+
+void init(counter_t *c) {
+    c-&gt;value = 0;
+}
+
+void increment(counter_t *c) {
+    c-&gt;value++;
+}
+
+void decrement(counter_t *c) {
+    c-&gt;value--;
+}
+
+int get(counter_t *c) {
+    return c-&gt;value;
+}
+</code></pre>
+<p>Vesion concurrente implementada en el Arpaci:</p>
+
+<pre><code class="language-C">typedef struct __counter_t {
+    int value;
+    pthread_mutex_t lock;
+} counter_t;
+
+void init(counter_t *c) {
+   c-&gt;value = 0;
+   Pthread_mutex_init(&amp;c-&gt;lock, NULL);
+}
+
+
+void increment(counter_t *c) {
+   Pthread_mutex_lock(&amp;c-&gt;lock);
+   c-&gt;value++;
+   Pthread_mutex_unlock(&amp;c-&gt;lock);
+}
+
+void decrement(counter_t *c) {
+   Pthread_mutex_lock(&amp;c-&gt;lock);
+   c-&gt;value--;
+   Pthread_mutex_unlock(&amp;c-&gt;lock);
+}
+
+int get(counter_t *c) {
+   Pthread_mutex_lock(&amp;c-&gt;lock);
+   int rc = c-&gt;value;
+   Pthread_mutex_unlock(&amp;c-&gt;lock);
+   return rc;
+}
+</code></pre>
+<h3 id="ejecución-con-varios-threads">Ejecución con varios Threads</h3>
+<p>Lo interesante de esto es ver andando el código en ejemplos. Contador sincronizado en ejecución.</p>
+
+<p>main: begin</p>
+
+<p>one: begin<br />
+Thread: A  tiempo: 0.053998<br />
+one: end</p>
+
+<p>two threads: begin<br />
+Thread: B  tiempo: 0.08146<br />
+Thread: A  tiempo: 0.08192<br />
+two: end</p>
+
+<p>four threads: begin<br />
+Thread: B  tiempo: 0.188230<br />
+Thread: C  tiempo: 0.194137<br />
+Thread: A  tiempo: 0.195386<br />
+Thread: D  tiempo: 0.191596<br />
+four: end</p>
+
+<p>main: end</p>
+
+<h3 id="ejecución-con-10-threads">Ejecución con 10 Threads</h3>
+
+<p>main: begin<br />
+many: begin<br />
+trhead:0       valor:1000000      tiempo:0.907249<br />
+trhead:1       valor:1000000      tiempo:0.908199<br />
+trhead:2       valor:1000000	     tiempo:0.889099<br />
+trhead:3       valor:1000000      tiempo:0.862051<br />
+trhead:4       valor:1000000      tiempo:0.848064<br />
+trhead:5       valor:1000000      tiempo:0.479268<br />
+trhead:6       valor:1000000      tiempo:0.822782<br />
+trhead:7       valor:1000000      tiempo:0.963887<br />
+trhead:8       valor:1000000      tiempo:0.912914<br />
+trhead:9       valor:1000000      tiempo:0.889592<br />
+trhead:10     valor:1000000      tiempo:0.913679<br />
+trhead:11     valor:1000000      tiempo:0.903589<br />
+trhead:12     valor:1000000      tiempo:0.885815<br />
+trhead:13     valor:1000000      tiempo:0.763798<br />
+trhead:14     valor:1000000      tiempo:0.758133<br />
+trhead:15     valor:1000000      tiempo:0.798242<br />
+trhead:16     valor:1000000      tiempo:0.794308<br />
+trhead:17     valor:1000000      tiempo:0.809781<br />
+trhead:18     valor:1000000      tiempo:0.792817<br />
+trhead:19     valor:1000000      tiempo:0.652983<br />
+many: end<br />
+main: end</p>
+
+<h3 id="ejecución-de-10-threads-lanzados-con-delay-random">Ejecución de 10 threads lanzados con delay random</h3>
+
+<p>main: begin<br />
+many: begin<br />
+trhead:0       valor:1000000      tiempo:0.919642<br />
+trhead:1       valor:1000000      tiempo:0.929590<br />
+trhead:2       valor:1000000      tiempo:0.894692<br />
+trhead:3       valor:1000000      tiempo:0.910276<br />
+trhead:4       valor:1000000      tiempo:0.834632<br />
+trhead:5       valor:1000000      tiempo:0.957582<br />
+trhead:6       valor:1000000      tiempo:0.936412<br />
+trhead:7       valor:1000000      tiempo:0.900315<br />
+trhead:8       valor:1000000      tiempo:0.882874<br />
+trhead:9       valor:1000000      tiempo:0.868671<br />
+trhead:10     valor:1000000      tiempo:0.932273<br />
+trhead:11     valor:1000000      tiempo:0.895924<br />
+trhead:12     valor:1000000      tiempo:0.770965<br />
+trhead:13     valor:1000000      tiempo:0.886907<br />
+trhead:14     valor:1000000      tiempo:0.839873<br />
+trhead:15     valor:1000000      tiempo:0.926874<br />
+trhead:16     valor:1000000      tiempo:0.931862<br />
+trhead:17     valor:1000000      tiempo:0.888590<br />
+trhead:18     valor:1000000      tiempo:0.955091<br />
+trhead:19     valor:1000000      tiempo:0.879105<br />
+many: end</p>
+
+<h2 id="errores-comunes-de-concurrencia">Errores comunes de concurrencia</h2>
+
+<p>Caracterizar errores en programación concurrente es complejo, exite un trabajo escrito por los autores: Shan Lu, Soyeon Park, Eunsoo Seo, and Yuanyuan Zhou, publicado en el año 2008, llamado: <strong>Learning from mistakes: a comprehensive study on real world concurrency bug characteristics</strong> en el cual se estudiaron los errores mas comunes encontrados en software Open-Source que hacen uso intensivo de programación concurrente.</p>
+
+<p>En este estudio se definen dos tipos de errores:</p>
+
+<ol>
+  <li><strong>Non-deadlock Bugs</strong></li>
+  <li><strong>Deadlock Bugs</strong></li>
+</ol>
+
+<h3 id="non-deadlock-bugs">Non-Deadlock Bugs</h3>
+<p>Existen dos marcados errores que no están relacionados con deadlock:</p>
+
+<ol>
+  <li>
+    <p><strong>Atomicity violation</strong>: “el deseo de la serialización entre múltiples accesos a memoria es violado” Lu et al.</p>
+
+    <p><img src="../images/concurrency/atomicy_violation.jpg" alt="atomicity" /></p>
+  </li>
+  <li>
+    <p><strong>Order Violation</strong>: “El orden deseado entre accesos a memoria se ha cambiado” Lu et al.</p>
+
+    <p><img src="../images/concurrency/order_violation.jpg" alt="atomicity" /></p>
+
+    <p><img src="../images/concurrency/order_violation_2.jpg" alt="atomicity" /></p>
+
+    <p><img src="../images/concurrency/write_write_order_violation.jpg" alt="atomicity" /></p>
+  </li>
+</ol>
+
+<h3 id="deadlock-bugs">DeadLock Bugs</h3>
+<p>¿Qué es un deadlock? En concurrencia el concepto de dead lock aparece cuando entre dos o más threads uno obtiene el lock y por algún motivo nunca libera el mismo haciendo que sus compañeros  se bloqueen.</p>
+
+<p>Thread 1:<br />
+pthread_mutex_lock(L1);<br />
+pthread_mutex_lock(L2);</p>
+
+<p>Thread 2:<br />
+pthread_mutex_lock(L2);<br />
+pthread_mutex_lock(L1);</p>
+
+<p>El código anterior puede generar un deadlock. ¿Por qué puede? Porque depende del entrelazado de ejecución … cuando eso ocurre hay un deadlock.</p>
+
+<h4 id="condiciones-para-que-se-de-un-deadlock">Condiciones para que se de un DeadLock</h4>
+<p>Según Coffman, E. G., Elphick, M., &amp; Shoshani, A. (1971). System deadlocks. ACM Computing Surveys (CSUR), 3(2), 67-78. existen cuatro condiciones para que se de un deadlock:</p>
+
+<ul>
+  <li><strong>Exclusión mutua</strong>: los thread reclama control exclusivo sobre un recurso compartido que necesitan.</li>
+  <li><strong>Hold-and-Wait</strong>: un thread mantiene un recurso reservado para sí mismo mientras espera que se de alguna condición.</li>
+  <li><strong>No preemption</strong>: los recursos adquiridos no pueden ser desalojados (preempted) por la fuerza.</li>
+  <li><strong>Circular wait</strong>: existe una conjunto de threads que de forma circular cada uno reserva uno o mas recursos que son requeridos por el siguiente en la cadena.</li>
+</ul>
+
+<h5 id="cómo-prevenir">Cómo Prevenir</h5>
+<ul>
+  <li>Circular Wait: se previene escribiendo codigo que nunca induzca a esperas circulares, por ejemplo con el establecimiento de un <strong>orden total</strong>, este orden asegurará que no se caiga en espera circular.</li>
+  <li>Holds-and-wait: la forma de prevenir el hold and wait es haciendo que los lock se tomen en forma atómica:
+    <pre><code class="language-C">pthread_mutex_lock(prevention);
+// begin lock acquistion
+pthread_mutex_lock(L1);
+pthread_mutex_lock(L2);
+...
+pthread_mutex_unlock(prevention); // end
+</code></pre>
+  </li>
+  <li>Evitar la exclusión mutua…</li>
+</ul>
+
+  </div>
+
+</article>
+
+      </div>
+    </main>
+
+    
+
+  </body>
+
+</html>

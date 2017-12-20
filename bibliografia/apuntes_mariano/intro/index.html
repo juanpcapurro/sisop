@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title> </title>
+  <meta name="description" content="apuntes de sistemas operativos">
+
+  <link rel="stylesheet" href="../assets/main.css">
+  <link rel="canonical" href="index.html">
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/3.2.2/anchor.min.js"></script>
+</head>
+
+
+  <body>
+
+    <!-- TODO: fix site navigation later -->
+
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post">
+
+  <div class="post-content">
+    <p>Primero, es lo primero … lo administrativo las <a href="../sisop_introduccion/correlativas/index.html">Materias Correlativas</a> y la <a href="../sisop_introduccion/bibliografia/index.html">bibliografía</a> y los medios de <a href="../sisop_introduccion/comunicacion/index.html">comunicación</a>.</p>
+
+<h1 id="sistemas-operativos">Sistemas Operativos</h1>
+<p>Conceptualmente en el seno de las Ciencias de la Computación lo Sistemas Operativos ocupan un lugar destacado.</p>
+
+<p>Por un lado, porque los <strong>conceptos</strong> que se manejan en el <strong>ámbito de un sistema operativo</strong> estan categorizados cómo algunos de los <strong>más complejos</strong> en la informática.</p>
+
+<p>Para tener una idea, un <strong>Sistema Operativo</strong> moderno está compuesto por unas 50 millones de lineas de código fuente.</p>
+
+<p><img src="../images/introduccion/linesOfCodeOperatingSystem.jpg" alt="Lines Of Code" width="650px" /></p>
+
+<p>Alguien en este momento está escribiendo algunas lineas de código para algún sistema operativo que necesariamente no tiene que ser para una PC.</p>
+
+<p>Por otro lado, los conceptos manejados en los sitemas operativos están dentro de la gama de los más utilizados en las Ciencias de la Computación y de hecho, muchos de elllos les van a parecer familiares y de la vida cotidiana:</p>
+
+<ul>
+  <li>Tratar de hacer dos cosas al mismo tiempo.</li>
+  <li>Haberse equivocado de cola en el supermenrcado.</li>
+  <li>Tratar de que tu hermano, con el cual compartis la habitacion, no se meta con tus cosas.</li>
+</ul>
+
+<p>entre otras.</p>
+
+<h2 id="una-computadora">Una Computadora</h2>
+<p>Puede parecer casi trivial pero para poder dominar los conceptos que se manejan en sistemas operativos se debe terner bien en claro:¿ Qué es una Computadora? y además, Cuales son sus partes:</p>
+
+<p><img src="../images/introduccion/computer.jpg" alt="computer" width="512px" /></p>
+
+<p>Las partes esenciales como todos sabemos …. son :</p>
+
+<ul>
+  <li>CPU: Central Process Unit.</li>
+  <li>Main Memory: Memoria Principal.</li>
+  <li>Devices: Dispositivos de Entrada o Salida.</li>
+  <li>Buses: conexiones.</li>
+</ul>
+
+<p>(ver: BRY Chap:1 pag:8)</p>
+
+<h1 id="qué-es-un-sistema-operativo">¿Qué es un Sistema Operativo?</h1>
+
+<blockquote>
+  <p>Un <strong>Sistema Operativo (OS)</strong> es la <strong>capa de software</strong> que <strong>maneja</strong> los <strong>recursos de una computadora</strong> para sus <strong>usuarios</strong> y sus <strong>aplicaciones</strong>. [DAH]</p>
+</blockquote>
+
+<p><img src="../images/introduccion/simpleSysOp.jpg" alt="computer" width="512px" /></p>
+
+<p>otra definición dada por [STV] :</p>
+
+<blockquote>
+  <p>Un Sistema Operativo puede definirse como el <strong>software</strong> que <strong>controla</strong> los <strong>recursos de hardware</strong> de una <strong>computadora</strong> y <strong>provee</strong> un <strong>ambiente</strong> bajo el cual los** programas pueden ejecutarse**.</p>
+</blockquote>
+
+<p>Normalmente los sistemas oprativos son invisibles a los ojos de sus usuarios, por ejemplo alguien le prestó atención al sistema operativo de:</p>
+
+<ul>
+  <li>Una consola de videojuegos</li>
+  <li>Un teléfono</li>
+  <li>Un coche</li>
+  <li>Un avion</li>
+  <li>Una Heladera</li>
+  <li>Un karaoke</li>
+  <li>Una cámara de fotos</li>
+</ul>
+
+<p>De todas formas en este curso se estudiará a fondo a los sistema operativos de propósito general, muchos de uds. ya han interactuado con alguno como por ejemplo Linux, Mac OS o Windows.</p>
+
+<p>Hoy en día cualquier persona que utilice una computadora debe lidiar, aun inconscientemente, con un sistema operativo.</p>
+
+<blockquote>
+  <p>En un sistema operativo de proposito general, los los <strong>usuario</strong> interactuan con <strong>aplicaciones</strong>, estas aplicaciones se <strong>ejecutan</strong> en un <strong>ambiente</strong>nque es proporcionado por el <strong>sistema operativo</strong>. A su vez el sistema operativo <strong>hace de mediador</strong> para tener acceso al <strong>hardware</strong> del equipo.</p>
+</blockquote>
+
+<h2 id="cómo-hacen-los-sistemas-operativos-para-ejecutar-múltiples--aplicaciones">¿Cómo hacen los Sistemas Operativos para ejecutar múltiples  aplicaciones?</h2>
+<p>Esta es una pregunta que muchos estudiantes alguna vez se han planteado y es menester de este curso ofrecer la respuesta.</p>
+
+<p>Por lo pronto se puede decir que un sistema operativo juega simultaneamente tres roles según DAH:</p>
+
+<ul>
+  <li>
+    <p><strong>Referre</strong>: Un OS gestiona recursos compartidos compartidos entre diferentes aplicaciones, que se encuentran ejecutśndose en la misma máquina física. Por ejemplo, un OS puede frenar la ejecución de una aplicacion e iniciar la ejecución de otra. Los OS aislan a cada aplicación de las demás que se encuentran corriendo en la misma computadora. Por ende un OS tiene que protegerse a sí mismo y a las demas aplicaciones que se están ejecutando en la misma computadora. Y dado que todas estas aplicaciones comparten los <strong>mismos recursos físicos</strong> el OS decide que aplicación usa un determinado recurso y cuando.</p>
+  </li>
+  <li>
+    <p><strong>Ilucionista</strong>: Un OS debe proveer una abstracción del hardware para simplificar el diseño de aplicaciones. Imaginen lo complejo que sería escribir el clásico  hola mundo no se tiene que pensar en que lugar de la memoria fisica este se encuentra almacenado, ni como esta memoria se comparte con otros datos y aplicaciones. El sistema operativo provee la <strong>ilusión</strong> de que se dispone de toda la menoria para almacenar al programa, cuando realmente se sabe que la memoria ppal de la computadora es finita.</p>
+  </li>
+  <li>
+    <p><strong>Pegamento</strong>: Un OS debe proveer una serie de <strong>servivios comunes</strong> que faciliten un mecanismo que permita compartir, por ejemplo, informción entre las aplicaciones…. “Cut &amp; Paste” por ejemplo … este mecanismo es <strong>uniforme</strong> en todo el sistema. Otro ejemplo es el “look and feel” de la interfaz de usuario. Tal vez uno de los maás importantes sea el mecanismo de acceso a los dispositivos de entrada y salida del sistema, de forma tal que las aplicaciones puedan usarlos independientemente de la marca y modelo de los mismos.</p>
+  </li>
+</ul>
+
+<p><img src="../images/introduccion/SysOp.jpg" alt="computer" width="600px" /></p>
+
+<ul>
+  <li>
+    <p>En el <strong>más bajo nivel</strong> se encuentra el hardware o recursos de la máquina: CPU, memoria principla, dispositivos de res, dispositivos gráficos, dispositivos de almacenamiento, etc.<br />
+El hardware provee primitivas que el sistema operativo puede utilizar para aislar fallas y para sincronización.</p>
+  </li>
+  <li>
+    <p>El Sistema Operativo se ejecuta como <strong>la capa de software de más bajo nivel</strong>en la computadora. Este contiene por un lado una capa para la gestión de dispositivos específico y por otro una serie de servicios para la gestión de dispositivos agnosticos del hardware que son utilizados por las aplicaciones. Estas dos capas suelen ser conocidad como el <strong>kernel</strong> del sistema operativo. Cuando código fuente de esta capa es ejecutado la computadora pasa a un estado llamado <strong>Modo Supervisor</strong>.</p>
+  </li>
+  <li>
+    <p>Las aplicaciones se ejecutan en un contexto aislado, protejido y restrinjido y mediante el uso de funciones que se encuentran bibliotecas pueden utilizar los servicios de acceso al hardware o recursos que el kernel proporciona. El contexto de ejecución de las aplicaciones se denomina <strong>User Mode</strong> o modo usuario, mas restrictivo, aislado y controlado.</p>
+  </li>
+</ul>
+
+<h1 id="el-kernel">El Kernel</h1>
+
+<p>El Kernel es entonce <strong>la capa de software de más bajo nivel</strong>en la computadora. Este contiene por un lado una capa para la gestión de dispositivos específico y por otro una serie de servicios para la gestión de dispositivos agnosticos del hardware que son utilizados por las aplicaciones.</p>
+
+<p>Estas dos capas suelen ser conocidad como el <strong>kernel</strong> del sistema operativo. Cuando código fuente de esta capa es ejecutado la computadora pasa a un estado llamado <strong>Modo Supervisor</strong>.</p>
+
+<p>Un Sistema Operativo puede definirse como el software que controla los recursos de hardware de una computadora y provee un ambiente bajo el cual los programas pueden ejecutarse. Habitualmente a este software se lo llama el Kernel.</p>
+
+<p><img src="../images/introduccion/kernel1.jpg" alt="computer" width="512px" /></p>
+
+<p><img src="https://mendezmariano.github.io/images/introduccion/kernel.png" alt="computer" width="495px" /></p>
+
+<p>Otras veces se puede encontrar el termino Kernel utilizado cuando se hacer redferencia a todo el sistema operativo.</p>
+
+<p>El kernel se ocupa de :</p>
+<ul>
+  <li>Gestionar la Memoria</li>
+  <li>Planificar la ejecución de las aplicaciones</li>
+  <li>proveer un sistema de archivos</li>
+  <li>Creación y finalización de procesos</li>
+  <li>Acceder a los dispositivos</li>
+  <li>Comunicaciones</li>
+  <li>Proveer un API</li>
+</ul>
+
+<h1 id="iniciar-al-sistema-operativo-y-el-kernel">Iniciar al Sistema Operativo y el Kernel</h1>
+<p>El <strong>kernel</strong> es <strong>la capa de software de más bajo nivel</strong>en la computadora. Este contiene por un lado una <strong>capa para la gestión de dispositivos específicos</strong> y por otro una <strong>serie de servicios para la gestión de dispositivos agnosticos del hardware</strong> que son utilizados por las aplicaciones.</p>
+
+<p>Estas dos capas suelen ser conocidad como el <strong>kernel</strong> del sistema operativo. Cuando código fuente de esta capa es ejecutado la computadora pasa a un estado llamado <strong>Modo Supervisor</strong>.</p>
+
+<p>El proceso de inicio de una computadora se divide esencialmente en 3 partes:</p>
+
+<ol>
+  <li>
+    <p>Booteo: este proceso es denominado bootstrap, y generalmente depende del hardware de la computadora. En el se realizan los chequeos de hardware y se carga el <strong>bootloader</strong>, que es el programa encargado de cargar el Kernel del Sistema Operativo.</p>
+  </li>
+  <li>Carga del Kernel: el <strong>BootLoader</strong> por el momento de forma más o menos transparente es un programa que se encarga de :</li>
+  <li>Pasar a <strong>Modo Supervisor</strong>, esto es posible porque se realiza por hardware</li>
+  <li>Ir a buscar el <strong>kernel</strong> al dispositivo donde se encuentra almacenado, normalmente un disco (pero puede ser un pendrive,la red, un CD).</li>
+  <li>Lo carga en la memoria prcipal</li>
+  <li>Setear el registro de PI (Proxima Instruccion)</li>
+  <li>
+    <p>Ejecutar la primer intrucción del <strong>kernel</strong></p>
+  </li>
+  <li>Inicio de las Aplicaciones de usuarios: Una vez que el Kernel terminó de ejecutarse, las últimas operaciones que realiza son:</li>
+  <li>Cargar en memoria la aplicación que se debe ejecutar, normalmente este programa es el shell.</li>
+  <li>setear el PI en la primera instrucción de esta aplicación</li>
+  <li>Pasar a <strong>modo Usuario</strong> y dejar el control a la aplicación.</li>
+</ol>
+
+<p>En la realidad lo que sucede es:</p>
+
+<h3 id="fase-de-carga-del-kernel">Fase de carga del kernel</h3>
+
+<p>El kernel es cargado normalmente como un archivo imagen, comprimido dentro de otro con zlib como zImage o bzImage, esto quiere decir que no es un archivo ejecutable normal, se encuentra comprimido en ese formato.</p>
+
+<p>Contiene una cabecera de programa que hace una cantidad mínima de instalación del hardware, descomprime la imagen completamente en la memoria alta, teniendo en cuenta cualquier disco RAM si está configurado (/boot/initrd-2.6.14.2.img).</p>
+
+<p>A continuación, lleva a cabo su ejecución. Esto se realiza llamando la función startup del kernel (en los procesadores x86 a través de la función startup_32() del archivo /arch/i386/boot/head).</p>
+
+<h3 id="fase-de-inicio-del-kernel">Fase de inicio del kernel</h3>
+
+<p>La función de arranque para el kernel (también llamado intercambiador o proceso 0) establece la gestión de memoria (tablas de paginación y paginación de memoria), detecta el tipo de CPU y cualquier funcionalidad adicional como capacidades de punto flotante, y después cambia a las funcionalidades del kernel para arquitectura no específicas de Linux, a través de una llamada a la función start_kernel().</p>
+
+<p>start_kernel() ejecuta una amplia gama de funciones de inicialización:</p>
+<ol>
+  <li>Establece el manejo de interrupciones (IRQ)</li>
+  <li>configura memoria adicional</li>
+  <li>comienza el proceso de inicialización (procesa el espacio del primer usuario y luego comienza la tarea inactiva a través de cpu_idle().</li>
+</ol>
+
+<p>En particular, el proceso de inicio del kernel también monta el disco RAM inicial (“initrd”) que se ha cargado anteriormente como el sistema raíz temporal durante la fase de arranque.</p>
+
+<p>Esto permite que los módulos controladores se carguen sin depender de otros dispositivos físicos y drivers y mantiene el kernel más pequeño.</p>
+
+<p>El sistema de archivos raíz es cambiado más tarde a través de la llamada a pivot_root(), que desmonta el sistema de archivos temporal y lo reemplaza por el real una vez que éste sea accesible. La memoria utilizada por el sistema de archivos temporal es entonces recuperada.</p>
+
+<p>Por lo tanto, el núcleo inicializa los dispositivos, monta el sistema de archivos raíz especificado por el gestor de arranque como de sólo lectura, y se ejecuta Init (/sbin/init), que es designado como el <strong>primer proceso ejecutado</strong> por el sistema (PID=1). También puede ejecutar opcionalmente initrd para permitir instalar y cargar dispositivos relacionados (disco RAM o similar), para ser manipulados antes de que el sistema de archivos raíz está montado.</p>
+
+<p>En este punto, con las interrupciones habilitadas, el programador puede tomar el control de la gestión general del sistema, para proporcionar multitarea preventiva, e iniciar el proceso para continuar con la carga del entorno de usuario en el espacio de usuario.</p>
+
+<h3 id="el-proceso-de-inicio">El proceso de inicio</h3>
+
+<p>El trabajo de Init es <strong>“conseguir que todo funcione como debe ser”</strong> una vez que el kernel está totalmente en funcionamiento. En esencia, establece y opera todo el espacio de usuario. Esto incluye:</p>
+<ol>
+  <li>la comprobación y montaje de sistemas de archivos</li>
+  <li>la puesta en marcha los servicios de usuario necesarios y, en última instancia, cambiar al entorno de usuario cuando el inicio del sistema se ha completado.</li>
+</ol>
+
+<p>Es similar a los procesos Init de Unix y BSD, de la que deriva, pero en algunos casos se ha apartado o se hicieron a la medida.</p>
+
+<p>En un sistema Linux estándar, Init se ejecuta con un parámetro, conocido como nivel de ejecución, que tiene un valor entre 1 y 6, y que determina que subsistemas pueden ser operacionales. Cada nivel de ejecución tiene sus propios scripts que codifican los diferentes procesos involucrados en la creación o salida del nivel de ejecución determinado, y son estas secuencias de comandos los necesarios en el proceso de arranque. Los scripts de Init se localizan normalmente en directorios con nombres como “/etc/rc…”. El archivo de configuración de más alto nivel para Init es /etc/inittab.</p>
+
+<p>Durante el arranque del sistema, se verifica si existe un nivel de ejecución predeterminado en el archivo /etc/inittab, si no, se debe introducir por medio de la consola del sistema. Después se procede a ejecutar todos los scripts relativos al nivel de ejecución especificado.</p>
+
+<p>Después de que se han dado lugar todos los procesos especificados, Init se aletarga, y espera a que uno de estos tres eventos sucedan:</p>
+<ul>
+  <li>que procesos comenzados finalicen o mueran;</li>
+  <li>un fallo de la señal de potencia (energía);</li>
+  <li>o una petición a través de /sbin/telinit para cambiar el nivel de ejecución.</li>
+</ul>
+
+<p>Habitualmente en una instalacion descktop se ejecuta comunmente  /sbin/init</p>
+
+<h1 id="arquitectura-x386">Arquitectura x386</h1>
+<p>Hacia 1971 Intel lanza al mercado lo que fue posteriormente conocido como el primer microprocesador de la historia, el <strong>Intel 4004</strong>. El procesador, 
+un microcontrolador con un procesador programable de 4 bits, podía direccionar 4096 direcciones de memoria de 4 bits y tenía un set de 45 instrucciones. En ese año Intel marcó un hito en la era de las computadoras y de la electrónica en general. El 4004 se dejó de producir cuando Intel lanzó a la venta el Intel 4040, que operaba a una velocidad superior.</p>
+
+<p>Hacia fines de los años 70, Intel vio que su producto tenía futuro comercial, por ello lanzó el procesador denominado 8008 que era la versión de 8 bits del 4004. El procesador tenía más memoria (16 KB) y se le había ampliado el set de operaciones a 48.</p>
+
+<p>A fin de 1973, Intel lanza un procesador que se convirtiría en el más conocido de todos los tiempos (opinión del autor): el <strong>Intel 8080</strong>. A partir de allí, comienza la carrera de desarrollo de hardware más intensa e importante de la historia.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>CPU</th>
+      <th>Serie</th>
+      <th>Code Name</th>
+      <th>Production</th>
+      <th>Clock Speed</th>
+      <th>Socket</th>
+      <th>Litho</th>
+      <th>Cores</th>
+      <th>Bus</th>
+      <th>L1</th>
+      <th>L2</th>
+      <th>L3</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>4004</td>
+      <td> </td>
+      <td> </td>
+      <td>Nov. 15, 1971</td>
+      <td>108 kHz</td>
+      <td>DIP</td>
+      <td>10-micron</td>
+      <td>1</td>
+      <td>108 kHz</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>N/A</td>
+    </tr>
+  </tbody>
+  <tbody>
+    <tr>
+      <td>8080</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>April 1972</td>
+      <td>200 kHz</td>
+      <td>DIP</td>
+      <td>10-micron</td>
+      <td>1</td>
+      <td>200 kHz</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>N/A</td>
+    </tr>
+  </tbody>
+  <tbody>
+    <tr>
+      <td>8080</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>April 1974</td>
+      <td>2 MHz</td>
+      <td>DIP</td>
+      <td>6-micron</td>
+      <td>1</td>
+      <td>2 MHz</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>N/A</td>
+    </tr>
+    <tr>
+      <td>8085</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>March 1976</td>
+      <td>2 MHz</td>
+      <td>DIP</td>
+      <td>3-micron</td>
+      <td>1</td>
+      <td>2 MHz</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>N/A</td>
+    </tr>
+    <tr>
+      <td>8086</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>June 8, 1978</td>
+      <td>10 MHz, 8 MHz, 4.77 MHz</td>
+      <td>DIP</td>
+      <td>3-micron</td>
+      <td>1</td>
+      <td>10 MHz, 8 MHz, 4.77 MHz</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>N/A</td>
+    </tr>
+    <tr>
+      <td>8088</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>June 1979</td>
+      <td>8 MHz, 4.77 MHz</td>
+      <td>DIP</td>
+      <td>3-micron</td>
+      <td>1</td>
+      <td>8 MHz, 4.77 MHz</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>N/A</td>
+    </tr>
+    <tr>
+      <td>80286</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>Feb. 1982</td>
+      <td>12 MHz, 10 MHz, 6 MHz</td>
+      <td>DLPP</td>
+      <td>1.5-micron</td>
+      <td>1</td>
+      <td>12 MHz, 10 MHz, 6 MHz</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>N/A</td>
+    </tr>
+    <tr>
+      <td>i80386</td>
+      <td>DX, SX, SL</td>
+      <td>N/A</td>
+      <td>1985 - 1990</td>
+      <td>33 MHz,5 MHz,20 MHz,16 MHz</td>
+      <td>DLPP</td>
+      <td>1 - 1.5-micron</td>
+      <td>1</td>
+      <td>33 MHz, 25 MHz,20 MHz, 16 MHz</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>N/A</td>
+    </tr>
+    <tr>
+      <td>i80486</td>
+      <td>DX, SX, DX2, DX4, SL</td>
+      <td>N/A</td>
+      <td>1989 - 1992</td>
+      <td>25 MHz - 100 MHz</td>
+      <td>Socket 1, Socket 2, Socket 3</td>
+      <td>1 - 0.6-micron</td>
+      <td>1</td>
+      <td>25 MHz - 50 MHz</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>N/A</td>
+    </tr>
+    <tr>
+      <td>Intel Pentium</td>
+      <td>N/A</td>
+      <td>P5, P54C, P54CTB, P54CS</td>
+      <td>1993 - 1999</td>
+      <td>65 MHz - 250 MHz</td>
+      <td>Socket 2, Socket 3, Socket 4, Socket 5, Socket 7</td>
+      <td>800 nm - 350 nm</td>
+      <td>Unknown</td>
+      <td>1	50 MHz - 66 MHz</td>
+      <td>16 KiB</td>
+      <td>N/A</td>
+      <td>N/A</td>
+    </tr>
+  </tbody>
+</table>
+
+<h1 id="booteo">Booteo</h1>
+
+<script defer="" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+
+<script defer="" onload="$.bigfoot();" src="https://cdnjs.cloudflare.com/ajax/libs/bigfoot/2.1.4/bigfoot.min.js"></script>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bigfoot/2.1.4/bigfoot-number.min.css" />
+
+
+  </div>
+
+</article>
+
+      </div>
+    </main>
+
+    
+
+  </body>
+
+</html>

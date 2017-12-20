@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Time Sharing</title>
+  <meta name="description" content="apuntes de sistemas operativos">
+
+  <link rel="stylesheet" href="../../assets/main.css">
+  <link rel="canonical" href="index.html">
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/3.2.2/anchor.min.js"></script>
+</head>
+
+
+  <body>
+
+    <!-- TODO: fix site navigation later -->
+
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post">
+
+  <div class="post-content">
+    <h2 id="time-sharing">Time Sharing</h2>
+<p>Los Sistemas Operativos llamados <strong>time sharing</strong> surgen de la idea de los programadores de tener <strong>“toda una computadora para uno mismo”</strong>. Esta idea que en la actualidad puede parecer trivial, pero en la década de los 60’s era algo impensable.</p>
+
+<p>Inicialmente IBM fue la primera empresa en utilizar <strong>circuitos integrados</strong> para sus computadoras, la linea <a href="https://en.wikipedia.org/wiki/IBM_System/360_Model_20">IBM 360</a> , y su mayor fortaleza era la idea de tener una sola familia de computadoras.</p>
+
+<p>El sistema operativo que corría en estas máquinas es el conocido OS 360. Esta familia de computadoras introdujo varias técnicas innovadoras en el desarrollo de los sistemas operativos. Una de estas técnicas es la de <em>multiprogramación</em>.</p>
+
+<p><img src="https://mendezmariano.github.io/images/historia/ibm360_20.jpg" alt="IBM360" title="IBM360" width="512px" /></p>
+
+<p><img src="https://mendezmariano.github.io/images/historia/ibm360_50.jpg" alt="IBM360" title="IBM360" width="512px" /></p>
+
+<h3 id="multiprogramación">Multiprogramación</h3>
+<p>La idea básica de la multiprogramación es la siguiente: si un determinado programa que se estaba ejecutando debía realizar operaciones de entrada y salida de datos, debía interactuar con un dispositivo de entrada y salida.</p>
+
+<p>Esta interacción en términos de tiempos de ejecución de intrucciones del procesador podía parecer infinito. Además, con el agravante de que el tiempo de E/S solía ser en promedio de entre el 80% y 90% del tiempo total del programa, la CPU permanecía inactiva un gran período de tiempo.</p>
+
+<h3 id="utilización-de-la-cpu">Utilización de la CPU</h3>
+
+<p>Si se asume que el 20% del <strong>tiempo de ejecución</strong> de un programa es solo cómputo y el 80% son <strong>operaciones de entrada y salida</strong>, con tener 5 procesos en memoria se estaría utilizando el 100% de la CPU.</p>
+
+<p>Siendo un poco más realista se supone que las operaciones de E/S son <strong>bloqueantes</strong><sup id="fnref:1"><a href="index.html#fn:1" class="footnote">1</a></sup>, es decir, paran el procesamiento hasta que se haya realizado la operación de E/S.</p>
+
+<p>Entonces, el cálculo es más realista si se supone que un proceso gasta una <strong>fraccción p</strong>, bloqueado en E/S. De esta manera, si tenemos <strong>n procesos</strong> esperando para hacer operaciones de entrada y salida, la probabilidad de que los <strong>n procesos</strong> estén haciendo E/S es <strong>p<sup>n</sup></strong>.</p>
+
+<p>Por ende la probabilidad de que se esté ejecutando algún proceso es <strong>1-p<sup>n</sup></strong>, esta fórmula es conocida como <strong>utilización de CPU</strong>.</p>
+
+<p>Por ejemplo: si se tiene un solo proceso en memoria y este tarda un 80% del tiempo en operaciones de E/S el tiempo de utilización de CPU es 1-0.8 = 0.2 que es el 20%.</p>
+
+<p>Ahora bien, si se tienen 3 procesos con la misma propiedad, el grado de utilización de la cpu es 1-0.8<sup>3</sup>= 0.488  es decir el 48  de ocupación de la cpu.</p>
+
+<p>Si se supone que se tienen 10 procesos, entonces la fórmula cambia a 1-0.8<sup>10</sup>= 0.89 el 89% de utilización, aquí es donde se ve la <em>IMPORTANCIA</em> de la <strong>Multiprogramación</strong>.</p>
+
+<p>Hay que tener en cuenta que estos tiempos varían de proceso en proceso.</p>
+
+<h3 id="multiple-fixed-partitions">Multiple Fixed Partitions</h3>
+<p>1967 - IBM System /360 (OS/MFT)</p>
+
+<p><img src="https://mendezmariano.github.io/images/scheduling/mft.gif" alt="mft" title="MFT" />
+<strong>Multitasking with a Fixed number of Tasks <em>MFT</em></strong>: varias particiones de memoria, cada una de un tamaño fijo, se establecían cuando el sistema operativo se instalaba o podían ser redefinidas por el operador.</p>
+
+<p>Por ejemplo, podría haber una partición pequeña, dos particiones medianas y una partición grande.</p>
+
+<p>Si había dos programas grandes listos para funcionar, uno tendía que esperar hasta que el otro terminara y desocupara la partición grande.</p>
+
+<ol>
+  <li>Cada partición era monoprogramada, la multiprogramación ocurría entre las particiones.</li>
+  <li>Los límites de las particiones no eran móviles.</li>
+  <li>Las particiones eran de tamaño fijo.</li>
+  <li>La fragmentación era un problema.</li>
+  <li>No existía el concepto de memoria compartida.</li>
+</ol>
+
+<h3 id="multiple-variable-partitions">Multiple variable Partitions</h3>
+<p>IBM System /360 OS/MVT</p>
+
+<p><img src="https://mendezmariano.github.io/images/scheduling/mft.gif" alt="mvt" title="MVT" /></p>
+
+<p><strong>Multitasking with a Variable number of Tasks <em>MVT</em></strong> trataba a toda la memoria no utilizada por el sistema operativo como un único gran espacio desde el cual se podían asignar “regiones” contiguas tanto como lo requiriera un número ilimitado de aplicaciones y programas simultáneamente.</p>
+
+<ol>
+  <li>Cada tarea podía tener cualquier tamaño, la limitante era la memoria de la máquina.</li>
+  <li>Una única cola de procesos listo para correr.</li>
+  <li>La tarea podía ser movida.</li>
+  <li>Se elimina la fragmentación interna.</li>
+  <li>Introduce la fragmentación externa.</li>
+</ol>
+
+<h3 id="qué-pasa-si-">¿Qué pasa si ?</h3>
+
+<p>Imagínese que está en una oficina de correos en la cual solo hay una ventanilla atendiendo, y varias personas haciendo fila para ser atendidas. Solo una persona puede ser atendida a la vez. En el momento que uno es atendido se da cuenta de que no tiene los requisitos necesarios para despachar la carta, aún debe cerrar el sobre, y escribir la dirección del remitente.</p>
+
+<ol>
+  <li>Una opción válida es en ese momento cerrar el sobre y terminar de escribir la dirección del remitente, dejando a todas las personas de la fila esperando hasta que se hayan cumplido con lo requisitos y la carta pueda ser despachada. Una vez hecho esto, la próxima persona en la fila podrá despachar su correo.</li>
+</ol>
+
+<p><a href="https://mendezmariano.github.io/videos/postoffice1.mp4" width="512px">Ejemplo</a></p>
+
+<ol>
+  <li>Otra alternativa es apartarse de la fila, dejar pasar a las personas que cumplan los requisitos para enviar la carta y mientras tanto cerrar el sobre y completar la información del remitente, y una vez realizada esta operación acercarse a la ventanilla y despachar la carta.</li>
+</ol>
+
+<p><a href="https://mendezmariano.github.io/videos/postoffice2.mp4" width="512px">Ejemplo</a></p>
+
+<p>En esta última opción esta detrás la idea de multiprogramación. El concepto detrás de este ejemplo en el cual uno es un proceso, la ventanilla es la CPU y la carta representa procesamiento, se basa en cargar simultáneamente varios procesos en la memoria de una computadora y aunque solo uno pueda ser ejecutado a la vez, cuando éste deba interrumpir el procesamiento por algún motivo, por ejemplo operaciones de E/S, otro de los procesos cargados en la memoria de la computadora pueda ser ejecutado, mientras el primero espera por la finalización de la operación que lo detuvo.</p>
+
+<p>Si bien parece trivial el razonamiento, hay que tener en cuenta que una computadora debe poder cargar simultáneamente los programas en diversas partes de la memoria y debe proveer un mecanismo de protección para que los programas no interfieran unos con otros.</p>
+
+<h3 id="time-sharing-1">Time Sharing</h3>
+<p>Si bien la idea de multitarea agilizó el procesamiento de los procesos, aún las computadoras utilizaban su procesador para ejecutar un único programa a la vez. La noción de tener una computadora para un solo programador era un poco descabellada aún.</p>
+
+<p>A medida que los tiempos de respuesta entre procesos se fueron haciendo cada vez más pequeños, más procesos podían ser cargados en memoria para su ejecución.</p>
+
+<p>Una variante de la técnica de multiprogramación consistió en asignar una terminal a cada usuario en linea.</p>
+
+<p>Teniendo en cuenta que los seres humanos tienen un tiempo de respuesta lento (0.25 seg para estímulos visuales) en comparación a una computadora (operación en nanosegundos). Debido a esta diferencia de tiempos y a que no todos los usuarios necesitan de la cpu al mismo tiempo, este sistema daba la sensación de asignar toda la computadora a un usuario determinado Corbató y otros. Este concepto fue polularizado por MULTICS.</p>
+
+<script defer="" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+
+<script defer="" onload="$.bigfoot();" src="https://cdnjs.cloudflare.com/ajax/libs/bigfoot/2.1.4/bigfoot.min.js"></script>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bigfoot/2.1.4/bigfoot-number.min.css" />
+
+<div class="footnotes">
+  <ol>
+    <li id="fn:1">
+      <p>Una operación de lectura a disco tarda 10 miliseg. y una instrucción registro registro tarda 1-2 nanoseg.&nbsp;<a href="index.html#fnref:1" class="reversefootnote">&#8617;</a></p>
+    </li>
+  </ol>
+</div>
+
+  </div>
+
+</article>
+
+      </div>
+    </main>
+
+    
+
+  </body>
+
+</html>

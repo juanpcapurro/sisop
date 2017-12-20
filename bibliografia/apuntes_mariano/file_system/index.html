@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Sistema de Archivos (File System)</title>
+  <meta name="description" content="apuntes de sistemas operativos">
+
+  <link rel="stylesheet" href="../assets/main.css">
+  <link rel="canonical" href="index.html">
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/3.2.2/anchor.min.js"></script>
+</head>
+
+
+  <body>
+
+    <!-- TODO: fix site navigation later -->
+
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post">
+
+  <div class="post-content">
+    <h2 id="sistema-de-archivos-file-system">Sistema de Archivos (File System)</h2>
+
+<p>La mayoría de los usuarios de una computadora han tenido que lidiar con el concepto, de alto nivel, de lo que es un <strong>file system</strong>. Si bien el concepto puede parecer fácil de comprender, a muchos usuarios no expertos a veces se les complica entender el concepto.</p>
+
+<p>Un <strong>file system o sistema de archivos</strong> permite a los usuarios organizar sus datos para que se persistan a través de un largo período de tiempo.</p>
+
+<p>De hecho, organizar un sistema de archivos de forma que sea funcional a un usuario no es tarea sencilla. Existen varias convenciones de cómo poner nombres en un file system:</p>
+
+<p>Formalmente un <strong>file system</strong> es:</p>
+
+<blockquote>
+  <p>Una abstracción del sistema operativo que provee <strong>datos persistentes con un nombre</strong>.</p>
+</blockquote>
+
+<p>Datos persistentes son aquellos que se almacenan hasta que son explícitamente ( o accidentalmente :pensive: ) borrados, incluso si la computadora tiene un desperfecto con la alimentación electrica.</p>
+
+<p>El echo de que los datos tengan un nombre es con la intención de que un ser humano pueda acceder a ellos por un identificador que el sistema de archivos le asocia al archivo en cuestion.</p>
+
+<p>Además, esta posibilidad de identificacion permite que una vez que un programa termina de generar un  archivo otro lo pueda utilizar, permitiendo así compartir la informacion entre los mismos. Existen dos partes fundamentales de esta abstracción :</p>
+
+<ul>
+  <li>Los archivos, que están compuestos por un conjuntos de datos.</li>
+  <li>Los directorios, que definen nombres para los archivos.</li>
+</ul>
+
+<h3 id="archivos">Archivos</h3>
+<p>Un <strong>archivo</strong> es una colección de datos con un nombre específico. Por ejemplo /home/mariano/MisDatos.txt. Los archivos proveen una abstracción de más alto nivel que la que subyace en el dispositivo de almacenamiento; un archivo proporciona un nombre único y con significado para referirse a una cantidad arbitraria de datos.</p>
+
+<p>Por ejemplo, /home/mariano/MisDatos.txt podria estar guardada en el disco en los bloques 0x0A23D42F, 0xE3A2540F y en 0x5567Ae34; es evidente que es muchísimo más fácil recordar <strong>/home/mariano/MisDatos.txt</strong> que esa lista de bloques en los que se almacena el archivo los datos.</p>
+
+<p>Además, la información que se almacena en un archivo se divide en dos partes:</p>
+
+<ol>
+  <li>Metadata: información acerca del archivo que es comprendida por el Sistema Operativo, esta información es :
+    <ul>
+      <li>tamaño</li>
+      <li>fecha de modificación</li>
+      <li>propietario</li>
+      <li>información de seguridad (que se puede hacer con el archivo.</li>
+    </ul>
+  </li>
+</ol>
+
+<p>Para poder ver la metadata de un archivo existen varias opciones:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">ls</span> <span class="nt">-lisan</span> prueba
+28332376 4 <span class="nt">-rw-rw-r--</span> 1 1000 1000 1457 ene 13 20:48 prueba
+</code></pre></div></div>
+<p>o de una forma mas human-readable:</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>stat prueba  
+  Fichero: <span class="s1">'prueba'</span>
+  Tamaño: 1457      	Bloques: 8          Bloque E/S: 4096   fichero regular
+  Dispositivo: 803h/2051d	Nodo-i: 28332376    Enlaces: 1
+  Acceso: <span class="o">(</span>0664/-rw-rw-r--<span class="o">)</span>  Uid: <span class="o">(</span> 1000/ mariano<span class="o">)</span>   Gid: <span class="o">(</span> 1000/ mariano<span class="o">)</span>
+  Acceso: 2017-05-31 15:17:23.460862535 <span class="nt">-0300</span>
+  Modificación: 2017-01-13 20:48:39.716785878 <span class="nt">-0300</span>
+        Cambio: 2017-01-13 20:48:39.760786398 <span class="nt">-0300</span>
+      Creación: -
+</code></pre></div></div>
+<ol>
+  <li>Datos: son los datos propiamente dichos que quieren ser almacenados. Desde el punto de vista del Sistema Operativo, un archivo o file no es mas que un arreglo de bytes sin tipo.</li>
+</ol>
+
+<h2 id="directorios-o-directories">Directorios o Directories</h2>
+<p>Mientras que los archivos almacenan metadatos definidos por el S.O. y datos arbitrarios de los programas; los <strong>directorios</strong> proveen los nombres para estos archivos. En particular un directorio es una lista de nombre human-friendly y su mapeo a un archivo o a otro directorio.</p>
+
+<p><img src="../images/file_system/fs1.jpg" alt="file system" width="512px" /></p>
+
+<ul>
+  <li>
+    <p>_path o ruta _ es el string que identifica unívocamente a un directorio o archivo dentro de un dispositivo.</p>
+  </li>
+  <li>
+    <p><em>root directory o directorio raiz</em> es el directorio de que cuelgan todos los demás.</p>
+  </li>
+  <li>
+    <p><em>absolute path</em> es la ruta desde el directorio raiz e.i. “/home/mariano/prueba”.</p>
+  </li>
+  <li>
+    <p><em>relative path</em> es el path relativo que se interpreta a partir del directorio actual.</p>
+  </li>
+  <li>
+    <p><em>current directory</em> es el directorio actual en el cual se está ejecutando el proceso.</p>
+  </li>
+  <li>
+    <p><em>hard link</em> es el mapeo entre el nombre y el archivo subyaciente, esto implica que la estructura de un file system que permite multiples hard links ya no es de árbol invertido. Aquelllos S.O. que lo permiten se cuidan de no crear ciclos asegurandose que la estructura sea un grafo dirigido aciclico.</p>
+  </li>
+</ul>
+
+<p><img src="../images/file_system/fs2.jpg" alt="hardlink" with="256px" /></p>
+
+<ul>
+  <li><em>soft links</em> se da cuando un archivo puede ser llamado por distintos nombres.</li>
+</ul>
+
+<p><img src="../images/file_system/links.jpg" alt="links" width="512px" /></p>
+
+<ul>
+  <li><em>Volumen</em> es una una abstracción que corresponde a un disco lógico. En el caso más simple un disco corresponde a un disco físico. Es una colección de recursos físicos de almacenamiento.</li>
+</ul>
+
+<p><img src="../images/file_system/fs3volume.jpg" alt="links" /></p>
+
+<ul>
+  <li><em>mount point</em> es un punto en el cual el root de un volumen se engancha dentro de la estructura existente de otro file system, mejor verlo:</li>
+</ul>
+
+<p><img src="../images/file_system/fs4mount.jpg" alt="links" /></p>
+
+<p>Ejecutar el comando :</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>mount | column <span class="nt">-t</span>
+</code></pre></div></div>
+
+<h2 id="el-api">EL API</h2>
+
+<ol>
+  <li>Creacionales:</li>
+</ol>
+
+<ul>
+  <li><strong>create(pathName)</strong> crea un nuevo archivo con el nombre especificado.Hace dos cosas:
+    <ol>
+      <li>crea un nuevo archivo con su meta data pero sin datos asociados a este.</li>
+      <li>crea un nombre para ese achivo en el directorio.</li>
+    </ol>
+  </li>
+  <li>
+    <p><strong>link(existingName,newName)</strong> crea un hardlink, el NewName va a apuntar a un archivo ya existente, basicamente crea un nuevo path para un archivo ya existente. Linux soporta hard link para archivos pero no para directorios.</p>
+  </li>
+  <li>
+    <p><strong>unlink(pathname)</strong> elimina el nombre especificado de un archivo de su directorio. Si es el ultimo hard link al archivo subyacente se borra el archivo y liberan los recursos utilizados por este. Si el archivo tiene varios nombres, unlink sólo elimina el especificado. Ahora si el especificado es el último o (único) también borra el archivo y libera los recursos que este ocupa.</p>
+  </li>
+  <li>
+    <p><strong>mkdir(pathName)</strong> se crea un nuevo directorio con el nombre especificado.</p>
+  </li>
+  <li><strong>rmdir(pathname)</strong> elimina el directorio cuyo nombre se especifica.</li>
+</ul>
+
+<ol>
+  <li>Apertura y Cierre</li>
+</ol>
+
+<ul>
+  <li>
+    <p><strong>fileDescriptor open(pathName)</strong> se prepara para acceder al archivo especificado. Chequea permisos de acceso, inicializa estructuras de datos del kernel para el seguimiento per-process del estado de los archivos abiertos, etc.</p>
+  </li>
+  <li>
+    <p><strong>close(fileDescriptor)</strong> se liberan recursos asociados al archivo abierto cuyo nombre es especificado.</p>
+  </li>
+</ul>
+
+<p><strong>Nota:</strong> En <em>Unix</em> el concepto de <em>File Descriptor</em> es equivalente a lo que en otros sistemas es el <em>file stream</em> o <em>file handler</em>.</p>
+
+<p>El Sistema Operativo requiere que un proceso explicitamente llame a open() y acceda al archivo via read() y write() mediante el filedescriptor y no por su path por:</p>
+<ol>
+  <li>el parseo de la ruta con el nombre del archivo y el chequeo de los permisos se realiza únicamente una vez en el open().</li>
+  <li>
+    <p>cuando El Sistema Operativo abre un archivo se crea una estructura de datos que guarda información sobre los archivos abiertos que tiene el proceso con datos como por ejemplo el ID, la posicion actual, etc.</p>
+  </li>
+  <li>Acceso a datos</li>
+</ol>
+
+<ul>
+  <li>
+    <p><strong>read(fileDescriptor,buf,len)</strong> lee la cantidad len de bytes de la posicion actual del proceso en el archivo abiarto fileDescriptor y copia el resultado el el buffer buf.</p>
+  </li>
+  <li>
+    <p><strong>write(fileDescriptor,len,buff)</strong> escribe la cantidad len de bytes de datos desde un buffer llamado buf en la memoria de un proceso a la posicion actual del archivo abierto fileDescriptor.</p>
+  </li>
+  <li>
+    <p><strong>seek(fileDescriptor,offset)</strong> cambia la posiscion del archivo abierto fileDescriptor en el en el actual proceso por el especificado en el offset.</p>
+  </li>
+  <li>
+    <p><strong>dataPtr mmap(fileDescriptor,off,len)</strong> mapea el archivo fileDescriptor desde off hasta off+ len en la memoria virtual a partir de dataPtr hasta dataPtr+len.</p>
+  </li>
+  <li>
+    <p><strong>munmap(dataPtr,len)</strong> elimina el mapeo entre la memoria virtual del programa y el archivo mapeado.</p>
+  </li>
+  <li>
+    <p><strong>fsync(fileDescriptor)</strong> fuerza a bajar al dispositivo todo lo bufereado, dirty pages del archivo asociado al fileDescriptor.</p>
+  </li>
+</ul>
+
+<p>Ejemplo del uso de mmap:</p>
+
+<pre><code class="language-C">#include &lt;stdio.h&gt;
+#include &lt;fcntl.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;sys/stat.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;sys/io.h&gt;
+#include &lt;sys/mman.h&gt;
+
+int main(int argc, char const *argv[])
+{
+    unsigned char *f;
+    int size;
+    struct stat s;
+    const char * file_name = argv[1];
+    int fd = open (argv[1], O_RDONLY);
+
+    /* Get the size of the file. */
+    int status = fstat (fd, &amp; s);
+    size = s.st_size;
+
+    f = (char *) mmap (0, size, PROT_READ, MAP_PRIVATE, fd, 0);
+    for (int i = 0; i &lt; size; i++) {
+        char c;
+
+        c = f[i];
+        putchar(c);
+    }
+
+    return 0;
+}
+
+</code></pre>
+<ol>
+  <li>Metadata:
+    <ul>
+      <li><strong>stat(filePath, struct stat *buf)</strong> muestra los de el archivo cuya ruta esta dada por filePath. esta estructura es la siguiente:
+        <pre><code class="language-C">struct stat{
+dev_t     st_dev     ID of device containing file
+ino_t     st_ino     file serial number
+mode_t    st_mode    mode of file (see below)
+nlink_t   st_nlink   number of hardlinks to the file
+uid_t     st_uid     user ID of file
+gid_t     st_gid     group ID of file
+dev_t     st_rdev    device ID (if file is character or block special)
+off_t     st_size    file size in bytes (if file is a regular file)
+time_t    st_atime   time of last access
+time_t    st_mtime   time of last data modification
+time_t    st_ctime   time of last status change
+blksize_t st_blksize a filesystem-specific preferred I/O block size for
+                this object.  In some filesystem types, this may
+                vary from file to file
+blkcnt_t  st_blocks  number of blocks allocated for this object
+}
+</code></pre>
+      </li>
+      <li><strong>fsstat(fileDescriptor, struct stst * buff)</strong></li>
+    </ul>
+  </li>
+</ol>
+
+<h2 id="software-layers">Software Layers</h2>
+<p>Los sistemas operativos implementan la abstracción de un <strong>file system</strong> a travez de una serie de capas de software. Estas capas son :</p>
+
+<ol>
+  <li>Application</li>
+  <li>Library</li>
+  <li>File System</li>
+  <li>Block Cache</li>
+  <li>Block Device Interface</li>
+  <li>Device Driver</li>
+  <li>Memory Mapped I/O,DM</li>
+  <li>Phisical Device</li>
+</ol>
+
+<p>y están separadas en dos conjuntos:</p>
+
+<h3 id="api-y-performance-234"><strong>API y Performance</strong> (2,3,4)</h3>
+
+<p>Las capas de alto nivel proveen un API para trabajar con archivos con nombre y minimizar los costos en tiempos de acceso como por ejemplo utilizando <em>caching</em>, <em>buffering</em> y <em>prefetching</em>:</p>
+
+<ol>
+  <li>
+    <p><strong>System Call y bibliotecas</strong>: la abstracción del file system se provee mediante un API usando <em>system calls</em> o mediante la implemetacion de bibliotecas que esconden el uso de estas system calls.<br />
+    Por ejemplo en <em>Unix</em> puede accederse a un archivo mediante las system calls: open(),read(),write() y close(). Sino, alternativamente utilizando las funciones de stdio.h: fopen(), fread(), fwrite() y fclose().<br />
+    La diferencia entre la primer forma y la segunda, es que esta última usa buffers para traer más datos.</p>
+  </li>
+  <li>
+    <p><strong>Block Cache</strong>: Es sabido que la mayoria de los dispositivos de almacenamiento son más lentos que la memoria principal de la computadora. Por ende el sistema operativo tiene un <em>cache de bloques</em> en el cual se guardan los bloques recientemente leídos o los bloques recientemente escritos. Además de mejorar el rendimiento en lo que respecta a tiempos, los cache de bloques se utilizan como punto de sincronización (se prevee que un proceso lea un bloque mientras otro lo está escribiendo).</p>
+  </li>
+  <li>
+    <p><strong>Prefetching</strong>: El Sistema Operativo usa esta tecnica para mejorar el rendimiento respecto a los tiempos de Acceso I/O. Si un proceso lee los 5 primeros bloques de un archivo, el sistema operativo trae los 25 siguientes bloques. Esto tiene un aspecto positivo:</p>
+  </li>
+</ol>
+
+<ul>
+  <li>reduce latencia</li>
+  <li>reduce overhead, la sobrecarga de los dispositivos.</li>
+  <li>Ayuda al paralelismo, permite multiples pedidos de una sola ves (RAID,Flash)</li>
+</ul>
+
+<p>y tiene un aspecto negativo:</p>
+
+<ul>
+  <li>cache preasure, mucho movimiento del cache idas y vueltas de bloques.</li>
+  <li>I/O contention, consumo de I/O.</li>
+</ul>
+
+<h3 id="device-access">Device Access</h3>
+
+<p>La parte baja de las capas de software permite a los Sistemas Operativos acceder a un rango muy amplio de dispositivos. Los Manejadores de Dispositivos o <strong>device drivers</strong> esconden la implementación especifica del hardware de I/O poniendo ese codigo de una forma más simple, más general.</p>
+
+<p>Los Device Drivers realizan la traducción entre los detalles especificos de los dispositivos de entrada y salida a las abstracciones de alto nivel implementadas por el sistema operativo.<br />
+Las capas simplifican la tarea del sistema operativo y proveen formas comunes de acceder a distintos dispositivos.Por ejemplo existen dispositivos llamados <strong>block devices</strong> y los sistemas operativos implementan los drivers para este tipo de hardware, que leen y escriben en bloques de tamaño fijo.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>lsblk
+NAME   MAJ:MIN RM   SIZE RO TYPE MOUNTPOINT
+sda      8:0    0 698,7G  0 disk 
+├─sda1   8:1    0   487M  0 part /boot/efi
+├─sda2   8:2    0  93,1G  0 part /
+├─sda3   8:3    0 599,1G  0 part /home
+└─sda5   8:5    0   5,9G  0 part <span class="o">[</span>SWAP]
+sr0     11:0    1  1024M  0 rom  
+loop0    7:0    0  79,5M  0 loop /snap/core/1689
+loop1    7:1    0  78,3M  0 loop /snap/core/1441
+loop2    7:2    0  78,4M  0 loop /snap/core/1577
+loop3    7:3    0    32K  0 loop /snap/tio/4
+</code></pre></div></div>
+
+<h3 id="memory-mapped-io">Memory Mapped I/O</h3>
+
+<ol>
+  <li>Los dispositivos de I/O están conectados a un bus de I/O, que a su vez está conectado con el bus de la memoria del sistema.</li>
+  <li>Cada dispositivo de I/O posee un controlador con un conjunto de registros que pueden ser escritos o leidos para transmitir comandos y datos al mismo.</li>
+</ol>
+
+<p><img src="../images/file_system/device.jpg" alt="links" /></p>
+
+<ol>
+  <li>
+    <p>Para permitir que los registros de los dispositivos de I/O puedan ser leidos y escritos, se implemeta el <strong>Mapeo de memoria o memory mapped I/O</strong> que consiste en mapear los registros de los dispositivos a un rango de memoria física en el bus de memoria.</p>
+  </li>
+  <li>
+    <p>Las lecturas y escrituras de la CPU a estas posiciones no van a la memoria principal sino a los registros de los dispositivos de I/O. Por ejemplo para saber cual fue la ultima tecla que se presiona se debe leer la direccion de memoria fisica 0xC00002000.</p>
+  </li>
+</ol>
+
+<p><img src="../images/file_system/fsmap.jpg" alt="links" /></p>
+
+<p>Estas direcciones pueden ser vistas ejecutando el comando:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span><span class="nb">cat</span> /proc/iomem
+000a0000-000bffff : Video RAM area
+000c0000-000ccfff : Video ROM
+000d1000-000d1fff : Adapter ROM
+000f0000-000fffff : System ROM
+d7f00000-f7efffff : PCI Bus <span class="c">#01</span>
+ e8000000-efffffff : 0000:01:00.0
+ fc700000-fccfffff : PCI Bus <span class="c">#01</span>
+  fcc00000-fcc0ffff : 0000:01:00.0
+</code></pre></div></div>
+
+<p><img src="../images/file_system/fsmap2.jpg" alt="links" /></p>
+
+<p><img src="../images/file_system/bus1.jpg" alt="links" /></p>
+
+<p>Un ejemplo clásico es la extensión de I/O que permitia el bus PC ISA:</p>
+
+<p><img src="../images/file_system/busisa.jpg" alt="links" /></p>
+
+<h3 id="dma">DMA</h3>
+
+<p>En la actualidad la mayoria de los dispositivos mandan los datos en grandes cantidades, no se leen del disco uno o dos bytes de datos, usualmente se transfieren varios Kb por vez. Los dispositivos de  I/O actualmente permiten copiar bloques de datos entre su memoria interna y la memoria de la computadora, esta técnica se denomina <strong>Direct Memory Access</strong>.</p>
+
+<p><img src="../images/file_system/dma.jpg" alt="links" /></p>
+
+<h3 id="interupciones">Interupciones</h3>
+
+<p>El sistema Operativo necesita saber cuando un dispositivo de I/O terminó de manejar una petición de I/O, o saber cuando una nueva petición se inicio. Para ello se utilizan interrupciones para notificar al sistema operativo que está sucediendo un evento importante, normalmente se las conoce como IRQ. Utilizando el comando cat /proc/interrupts se pueden listar todas las interrupciones del systema.</p>
+
+<h3 id="conclusión">Conclusión</h3>
+
+<p>Cuando un proceso llama a una system call como read() para leer datos del disco a la memoria del proceso:</p>
+
+<ol>
+  <li>El sistema operativo pasa ese thread a el estado wait y lo coloca en la waiting queue</li>
+  <li>Entonces el Sistema Operativo usa la memoria mapeada de I/O para decirle al disco que lea los datos requeridos e inicie el DMA de forma tal que el dispositivo pueda copiar los datos directamente en la memoria  del kernel.</li>
+  <li>El disco lee los datos y hace los DMA necesarios para poner los datos en la memoria.</li>
+  <li>Cuando esto está hecho el disco dispara una interrupción IRQ.</li>
+  <li>El sistema operativo maneja esa interrupcion pasa los datos del buffer que están en el kernel a la memoria del proceso.</li>
+  <li>Finalmente el thread se mueve a la ready list.</li>
+  <li>Cuando el thread vuelve a correr los datos están en el buffer requerido.</li>
+</ol>
+
+<p>Dahlin Capítulo 11</p>
+
+<h2 id="implementación-de-un-file-system">Implementación de un File System</h2>
+<p>A continuación se verá la descripción de la implementacion de vsfv ( Very Simple File System) descriptto en el capitulo 40 del ++[ARP]++. Este file system es una versión simplificada de un típico sistema de archivos unix-like. Existen diferentes systemas de archivos y cada uno tiene ventajas y desventajas.</p>
+
+<p>Para pensar en un file system hay que comprender dos conceptos fundamentales:</p>
+
+<ol>
+  <li>
+    <p>El primero es la estructura de datos de un sistema de archivos. En otras palabras como se guarda la informacion en el disco para organizar los datos y metadatos de los archivos. El sistema de archivos vsfs emplea una simple estructura, que parece un arreglo de bloques.</p>
+  </li>
+  <li>
+    <p>El segundo aspecto es el método de acceso, como se machean las llamadas hechas por los procesos , como open(), read(), write(), etc. en la estructura del sistema de archivos.</p>
+  </li>
+</ol>
+
+<h2 id="organización-general">Organización general</h2>
+<p>A continuación se analizará la organización general de los datos en el disco del vsfs. Lo primero que se debe hacer es dividir al disco en bloques, los sistemas de archivos simples, como este suelen tener bloques de un solo tamaño. Los bloques tienen un tamaño de 4 kBytes.</p>
+
+<p>La vision del sistema de archivos debe ser la de una particion de <em>N</em> bloques ( de 0 a <em>N</em>-1) de un tamaño de <em>N</em> * 4 KB bloques. si suponemos en un disco muy pequeño, de unos 64 bloques, este podria verse así:</p>
+
+<p><img src="../images/file_system/inodes1.jpg" alt="bloques" /></p>
+
+<p>A la hora de armar un sistema de archivos una de las cosas que es necesario almacenar es …. porsupuesto que <strong>datos</strong>, de hecho la mayor cantidad del espacio ocupado en un file system es por los datos de usuarios. Esta región se llama por ende <strong>data region</strong>.</p>
+
+<p>Otra vez en nuestro pequeño disco es ocupado por ejemplo por 56 bloques de datos de los 64:</p>
+
+<p><img src="../images/file_system/inodes2.jpg" alt="bloques" /></p>
+
+<p>Como se ha visto anteriormente el sistema de archivos debe mantener informacion sobre cada uno de estos archivos. Esta informacion es la <strong>metadata</strong> y es de vital importancia ya que mantiene información como que bloque da datos pertenece a un determinado archivo, el tamaño del archivo, etc. Para guardar esta información, en los sistemas operativos unix-like, se almacena en una estructura llamada <strong>inodo</strong>.</p>
+
+<p>Los <strong>inodos</strong> tambien deben guardarse en el disco, para ello se los guarda en una tabla llamada <strong>inode table</strong> que simplemente es un array de inodos almacenados en el disco:</p>
+
+<p><img src="../images/file_system/inodes3.jpg" alt="bloques" /></p>
+
+<p>Cabe destacar que los inodos no son estructuras muy grandes, normalmente ocupan unos 128 o 256 bytes. Suponiendo que los inodos ocupan 256 bytes , un bloque de 4KB puede guardar 16 inodos por ende nuetro sistema de archivo tendrá como maximo 80 inodos. Esto representa tambien la cantidad maxima de archivos que podrá contener nuestro sistema de archivos.</p>
+
+<p>El sistema de archivo tiene los datos (D) y los inodos (I) pero todavia nos falta. Una de las cosas que faltan es saber cuales inodos y cuales bloques están siendo utilizados o está libres. Esta *estructura de alocación** es fundamental en cualquier sistema de archivos. Existen muchos metodos para llevar este registro pero en este caso se utilizará una estructura muy popular llamada bitmap. Una para los datos <strong>data bitmap</strong> ora para los inodos ** inode bitmap**.</p>
+
+<p>Un bitmap es una estructura bastante sencilla en la que se mapea 0 si un objeto está libre y 1 si el objeto está ocupado. En este cado i seria el bitmap de inodos y d seria el bitmap de datos:</p>
+
+<p><img src="../images/file_system/inodes4.jpg" alt="bloques" /></p>
+
+<p>Obviamente cada bitmap ocupa menos de 4KB, pero se utiliza un bloque por cada uno indefectiblemente.</p>
+
+<p>Se podrá observar que queda un único bloque libre en todo el disco. Este bloque es llamado <strong>Super Bloque</strong> (S). El superbloque contiene la información de todo el file system, incluyendo:</p>
+<ul>
+  <li>cantidad inodos</li>
+  <li>cantidad de bloques</li>
+  <li>donde comienza la tabla de inodos –&gt; bloque 3</li>
+  <li>donde comienzan los bitmaps</li>
+</ul>
+
+<p><img src="../images/file_system/inodes5.jpg" alt="bloques" /></p>
+
+<h3 id="los-inodos">Los Inodos</h3>
+<p>Esta es una de las estructuras almacenadas en el disco más importantes. Casi todos los sistemas de archivos unix-like son así. Su nombre , probablemente ṕrovenga de los viejos sistemas UNIX enlos que estos se almacenaban en un arreglo, y este arreglo estaba indexado de forma de como acceder a un inodo en particular.</p>
+
+<p>Un inodo simplemente es referido por un número llamado <em>inumber</em> que sería lo que hemos llamado el nombre subyacente en el disco de un archivo. el este sistema de archivos y en varios otros, dado un inumber se puede saber directamente en que parte del disco se encuentra el inodo correspondiente:</p>
+
+<p><img src="../images/file_system/inodes6.jpg" alt="bloques" /></p>
+
+<p>Para leer el inodo  numero 32, el sistema de archivos debe:</p>
+<ol>
+  <li>debe calcular el offset en la regio de inodos  32* <em>sizeof(inode)</em> = 8192</li>
+  <li>sumarlo a la direccion inicial de la <strong>inode table</strong> en el disco o sea 12Kb+ 8192 bytes</li>
+  <li>llegar a la direccion en el disco deseada que es la 20 KB.</li>
+</ol>
+
+<p><img src="../images/file_system/inode.jpg" alt="bloques" /></p>
+
+<h3 id="sistemas-de-archivos">Sistemas de Archivos</h3>
+<ul>
+  <li>FAT : File Allocation Table</li>
+  <li>NTFS : New Technology File System</li>
+  <li>EXT : Extended File System</li>
+  <li>NFS : Network File System</li>
+</ul>
+
+  </div>
+
+</article>
+
+      </div>
+    </main>
+
+    
+
+  </body>
+
+</html>
